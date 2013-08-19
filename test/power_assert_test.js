@@ -1,464 +1,98 @@
-var q = require('../test_helper').QUnit,
-    instrument = require('../test_helper').instrument,
-    formatter = require('../lib/power-assert-formatter'),
-    enhance = require('../lib/empower').enhance,
-    powerAssertTextLines = [],
-    _pa_ = enhance(q.assert, formatter, function (context, message) {
-        powerAssertTextLines = formatter.format(context);
-    });
+var espower = require('../lib/espower'),
+    esprima = require('esprima'),
+    escodegen = require('escodegen'),
+    assert = require('assert');
 
-q.module('formatter & reporter', {
-    setup: function () {
-        powerAssertTextLines.length = 0;
+describe('instrumentation spec', function () {
+    function extractBodyFrom (source) {
+        var tree = esprima.parse(source, {tolerant: true, loc: true, range: true});
+        return tree.body[0];
     }
-});
-
-q.test('Identifier with empty string', function (assert) {
-    var falsyStr = '';
-    _pa_.ok(eval(instrument('assert(falsyStr);')));
-    assert.deepEqual(powerAssertTextLines, [
-        '# /path/to/some_test.js:1',
-        '',
-        'assert(falsyStr);',
-        '       |         ',
-        '       ""        ',
-        ''
-    ]);
-});
+    function inst (jsCode, expected, options) {
+        it(jsCode, function () {
+            var jsAST = extractBodyFrom(jsCode);
+            var espoweredAST = espower(jsAST, options);
+            var instrumentedCode = escodegen.generate(espoweredAST, {format: {compact: true}});
+            assert.equal(instrumentedCode, expected);
+        });
+    }
 
 
-q.test('ReturnStatement', function (assert) {
-    var falsyStr = '';
-    _pa_.ok(eval(instrument('return assert(falsyStr);')));
-    assert.deepEqual(powerAssertTextLines, [
-        '# /path/to/some_test.js:1',
-        '',
-        'return assert(falsyStr);',
-        '              |         ',
-        '              ""        ',
-        ''
-    ]);
-});
+    // questionable
+    inst("assert(delete foo.bar);",
+         "assert(assert.expr(delete assert.capture(assert.capture(foo,'ident',{start:{line:1,column:14}}).bar,'ident',{start:{line:1,column:18}}),{start:{line:1,column:7}}));");
 
 
-q.test('Identifier with falsy number', function (assert) {
-    var falsyNum = 0;
-    _pa_.ok(eval(instrument('assert(falsyNum);')));
-    assert.deepEqual(powerAssertTextLines, [
-        '# /path/to/some_test.js:1',
-        '',
-        'assert(falsyNum);',
-        '       |         ',
-        '       0         ',
-        ''
-    ]);
-});
 
+    inst("assert(falsyStr);",
+         "assert(assert.expr(assert.capture(falsyStr,'ident',{start:{line:1,column:7}}),{start:{line:1,column:7}}));");
 
-q.test('UnaryExpression, negation', function (assert) {
-    var truth = true;
-    _pa_.ok(eval(instrument('assert(!truth);')));
-    assert.deepEqual(powerAssertTextLines, [
-        '# /path/to/some_test.js:1',
-        '',
-        'assert(!truth);',
-        '        |      ',
-        '        true   ',
-        ''
-    ]);
-});
+    inst("assert.ok(hoge === fuga, 'comment');",
+         "assert.ok(assert.expr(assert.capture(assert.capture(hoge,'ident',{start:{line:1,column:10}})===assert.capture(fuga,'ident',{start:{line:1,column:19}}),'binary',{start:{line:1,column:15}}),{start:{line:1,column:10}}),'comment');");
 
+    inst("return assert(falsyStr);",
+         "return assert(assert.expr(assert.capture(falsyStr,'ident',{start:{line:1,column:14}}),{start:{line:1,column:14}}));");
 
-q.test('UnaryExpression, double negative', function (assert) {
-    var some = '';
-    _pa_.ok(eval(instrument('assert(!!some);')));
-    assert.deepEqual(powerAssertTextLines, [
-        '# /path/to/some_test.js:1',
-        '',
-        'assert(!!some);',
-        '         |     ',
-        '         ""    ',
-        ''
-    ]);
-});
+    inst("assert(!truth);",
+         "assert(assert.expr(!assert.capture(truth,'ident',{start:{line:1,column:8}}),{start:{line:1,column:7}}));");
 
+    inst("assert(!!some);",
+         "assert(assert.expr(!!assert.capture(some,'ident',{start:{line:1,column:9}}),{start:{line:1,column:7}}));");
+    
+    inst("assert(4 !== 4);",
+         "assert(assert.expr(assert.capture(4!==4,'binary',{start:{line:1,column:9}}),{start:{line:1,column:7}}));");
 
-q.test('typeof operator: assert(typeof foo !== "undefined");', function (assert) {
-    _pa_.ok(eval(instrument('assert(typeof foo !== "undefined");')));
-    assert.deepEqual(powerAssertTextLines, [
-        '# /path/to/some_test.js:1',
-        '',
-        'assert(typeof foo !== "undefined");',
-        '                  |                ',
-        '                  false            ',
-        ''
-    ]);
-});
+    inst("assert(fuga !== 4);",
+         "assert(assert.expr(assert.capture(assert.capture(fuga,'ident',{start:{line:1,column:7}})!==4,'binary',{start:{line:1,column:12}}),{start:{line:1,column:7}}));");
 
+    inst("assert(fuga === piyo);",
+         "assert(assert.expr(assert.capture(assert.capture(fuga,'ident',{start:{line:1,column:7}})===assert.capture(piyo,'ident',{start:{line:1,column:16}}),'binary',{start:{line:1,column:12}}),{start:{line:1,column:7}}));");
 
-q.test('assert(delete foo.bar);', function (assert) {
-    var foo = {
-        bar: {
-            baz: false
-        }
-    };
-    _pa_.ok(eval(instrument('assert(delete foo.bar);')));
-    assert.deepEqual(powerAssertTextLines, [
-    ]);
-});
+    inst("assert(fuga !== piyo);",
+         "assert(assert.expr(assert.capture(assert.capture(fuga,'ident',{start:{line:1,column:7}})!==assert.capture(piyo,'ident',{start:{line:1,column:16}}),'binary',{start:{line:1,column:12}}),{start:{line:1,column:7}}));");
 
+    inst("assert(typeof foo !== 'undefined');",
+         "assert(assert.expr(assert.capture(typeof foo!=='undefined','binary',{start:{line:1,column:18}}),{start:{line:1,column:7}}));");
 
-q.test('assert(fuga === piyo);', function (assert) {
-    var fuga = 'foo',
-        piyo = 8;
-    _pa_.ok(eval(instrument('assert(fuga === piyo);')));
-    assert.deepEqual(powerAssertTextLines, [
-        '# /path/to/some_test.js:1',
-        '',
-        'assert(fuga === piyo);',
-        '       |    |   |     ',
-        '       |    |   8     ',
-        '       |    false     ',
-        '       "foo"          ',
-        ''
-    ]);
-});
+    inst("assert(typeof foo.bar !== 'undefined');",
+         "assert(assert.expr(assert.capture(typeof foo.bar!=='undefined','binary',{start:{line:1,column:22}}),{start:{line:1,column:7}}));");
 
+    inst("assert(ary1.length === ary2.length);",
+         "assert(assert.expr(assert.capture(assert.capture(assert.capture(ary1,'ident',{start:{line:1,column:7}}).length,'ident',{start:{line:1,column:12}})===assert.capture(assert.capture(ary2,'ident',{start:{line:1,column:23}}).length,'ident',{start:{line:1,column:28}}),'binary',{start:{line:1,column:19}}),{start:{line:1,column:7}}));");
 
-q.test('assert(fuga !== piyo);', function (assert) {
-    var fuga = 'foo',
-        piyo = 'foo';
-    _pa_.ok(eval(instrument('assert(fuga !== piyo);')));
-    assert.deepEqual(powerAssertTextLines, [
-        '# /path/to/some_test.js:1',
-        '',
-        'assert(fuga !== piyo);',
-        '       |    |   |     ',
-        '       |    |   "foo" ',
-        '       |    false     ',
-        '       "foo"          ',
-        ''
-    ]);
-});
+    inst("assert(5 < actual && actual < 13);",
+         "assert(assert.expr(assert.capture(5<assert.capture(actual,'ident',{start:{line:1,column:11}}),'binary',{start:{line:1,column:9}})&&assert.capture(assert.capture(actual,'ident',{start:{line:1,column:21}})<13,'binary',{start:{line:1,column:28}}),{start:{line:1,column:7}}));");
 
+    inst("assert.ok(actual < 5 || 13 < actual);",
+         "assert.ok(assert.expr(assert.capture(assert.capture(actual,'ident',{start:{line:1,column:10}})<5,'binary',{start:{line:1,column:17}})||assert.capture(13<assert.capture(actual,'ident',{start:{line:1,column:29}}),'binary',{start:{line:1,column:27}}),{start:{line:1,column:10}}));");
 
-q.test('BinaryExpression with Literal and Identifier: assert(fuga !== 4);', function (assert) {
-    var fuga = 4;
-    _pa_.ok(eval(instrument('assert(fuga !== 4);')));
-    assert.deepEqual(powerAssertTextLines, [
-        '# /path/to/some_test.js:1',
-        '',
-        'assert(fuga !== 4);',
-        '       |    |      ',
-        '       4    false  ',
-        ''
-    ]);
-});
+    inst("assert(2 > actual && actual < 13);",
+         "assert(assert.expr(assert.capture(2>assert.capture(actual,'ident',{start:{line:1,column:11}}),'binary',{start:{line:1,column:9}})&&assert.capture(assert.capture(actual,'ident',{start:{line:1,column:21}})<13,'binary',{start:{line:1,column:28}}),{start:{line:1,column:7}}));");
 
+    inst("assert(foo.bar.baz);",
+         "assert(assert.expr(assert.capture(assert.capture(assert.capture(foo,'ident',{start:{line:1,column:7}}).bar,'ident',{start:{line:1,column:11}}).baz,'ident',{start:{line:1,column:15}}),{start:{line:1,column:7}}));");
 
-q.test('assert(4 !== 4);', function (assert) {
-    _pa_.ok(eval(instrument('assert(4 !== 4);')));
-    assert.deepEqual(powerAssertTextLines, [
-        '# /path/to/some_test.js:1',
-        '',
-        'assert(4 !== 4);',
-        '         |      ',
-        '         false  ',
-        ''
-    ]);
-});
+    inst("assert(func());",
+         "assert(assert.expr(assert.capture(func(),'funcall',{start:{line:1,column:7}}),{start:{line:1,column:7}}));");
 
+    inst("assert(obj.age());",
+         "assert(assert.expr(assert.capture(assert.capture(obj,'ident',{start:{line:1,column:7}}).age(),'funcall',{start:{line:1,column:11}}),{start:{line:1,column:7}}));");
 
-q.test('MemberExpression: assert(ary1.length === ary2.length);', function (assert) {
-    var ary1 = ['foo', 'bar'];
-    var ary2 = ['aaa', 'bbb', 'ccc'];
-    _pa_.ok(eval(instrument('assert(ary1.length === ary2.length);')));
-    assert.deepEqual(powerAssertTextLines, [
-        '# /path/to/some_test.js:1',
-        '',
-        'assert(ary1.length === ary2.length);',
-        '       |    |      |   |    |       ',
-        '       |    |      |   |    3       ',
-        '       |    |      |   ["aaa","bbb","ccc"]',
-        '       |    2      false            ',
-        '       ["foo","bar"]                ',
-        ''
-    ]);
-});
+    inst("assert(isFalsy(positiveInt));",
+         "assert(assert.expr(assert.capture(isFalsy(assert.capture(positiveInt,'ident',{start:{line:1,column:15}})),'funcall',{start:{line:1,column:7}}),{start:{line:1,column:7}}));");
 
+    inst("assert(sum(one, two, three) === seven);",
+         "assert(assert.expr(assert.capture(assert.capture(sum(assert.capture(one,'ident',{start:{line:1,column:11}}),assert.capture(two,'ident',{start:{line:1,column:16}}),assert.capture(three,'ident',{start:{line:1,column:21}})),'funcall',{start:{line:1,column:7}})===assert.capture(seven,'ident',{start:{line:1,column:32}}),'binary',{start:{line:1,column:28}}),{start:{line:1,column:7}}));");
 
-q.test('LogicalExpression: assert(5 < actual && actual < 13);', function (assert) {
-    var actual = 16;
-    _pa_.ok(eval(instrument('assert(5 < actual && actual < 13);')));
-    assert.deepEqual(powerAssertTextLines, [
-        '# /path/to/some_test.js:1',
-        '',
-        'assert(5 < actual && actual < 13);',
-        '         | |         |      |     ',
-        '         | 16        16     false ',
-        '         true                     ',
-        ''
-    ]);
-});
+    inst("assert(sum(sum(one, two), three) === sum(sum(two, three), seven));",
+         "assert(assert.expr(assert.capture(assert.capture(sum(assert.capture(sum(assert.capture(one,'ident',{start:{line:1,column:15}}),assert.capture(two,'ident',{start:{line:1,column:20}})),'funcall',{start:{line:1,column:11}}),assert.capture(three,'ident',{start:{line:1,column:26}})),'funcall',{start:{line:1,column:7}})===assert.capture(sum(assert.capture(sum(assert.capture(two,'ident',{start:{line:1,column:45}}),assert.capture(three,'ident',{start:{line:1,column:50}})),'funcall',{start:{line:1,column:41}}),assert.capture(seven,'ident',{start:{line:1,column:58}})),'funcall',{start:{line:1,column:37}}),'binary',{start:{line:1,column:33}}),{start:{line:1,column:7}}));");
 
+    inst("assert(math.calc.sum(one, two, three) === seven);",
+         "assert(assert.expr(assert.capture(assert.capture(assert.capture(assert.capture(math,'ident',{start:{line:1,column:7}}).calc,'ident',{start:{line:1,column:12}}).sum(assert.capture(one,'ident',{start:{line:1,column:21}}),assert.capture(two,'ident',{start:{line:1,column:26}}),assert.capture(three,'ident',{start:{line:1,column:31}})),'funcall',{start:{line:1,column:17}})===assert.capture(seven,'ident',{start:{line:1,column:42}}),'binary',{start:{line:1,column:38}}),{start:{line:1,column:7}}));");
 
-q.test('LogicalExpression OR: assert.ok(actual < 5 || 13 < actual);', function (assert) {
-    var actual = 10;
-    _pa_.ok(eval(instrument('assert.ok(actual < 5 || 13 < actual);')));
-    assert.deepEqual(powerAssertTextLines, [
-        '# /path/to/some_test.js:1',
-        '',
-        'assert.ok(actual < 5 || 13 < actual);',
-        '          |      |         | |       ',
-        '          |      |         | 10      ',
-        '          10     false     false     ',
-        ''
-    ]);
-});
+    inst("assert((three * (seven * ten)) === three);",
+         "assert(assert.expr(assert.capture(assert.capture(assert.capture(three,'ident',{start:{line:1,column:8}})*assert.capture(assert.capture(seven,'ident',{start:{line:1,column:17}})*assert.capture(ten,'ident',{start:{line:1,column:25}}),'binary',{start:{line:1,column:23}}),'binary',{start:{line:1,column:14}})===assert.capture(three,'ident',{start:{line:1,column:35}}),'binary',{start:{line:1,column:30}}),{start:{line:1,column:7}}));");
 
-
-q.test('Characterization test of LogicalExpression current spec: assert(2 > actual && actual < 13);', function (assert) {
-    var actual = 5;
-    _pa_.ok(eval(instrument('assert(2 > actual && actual < 13);')));
-    assert.deepEqual(powerAssertTextLines, [
-        '# /path/to/some_test.js:1',
-        '',
-        'assert(2 > actual && actual < 13);',
-        '         | |                      ',
-        '         | 5                      ',
-        '         false                    ',
-        ''
-    ]);
-});
-
-
-q.test('Deep MemberExpression chain: assert(foo.bar.baz);', function (assert) {
-    var foo = {
-        bar: {
-            baz: false
-        }
-    };
-    _pa_.ok(eval(instrument('assert(foo.bar.baz);')));
-    assert.deepEqual(powerAssertTextLines, [
-        '# /path/to/some_test.js:1',
-        '',
-        'assert(foo.bar.baz);',
-        '       |   |   |    ',
-        '       |   |   false',
-        '       |   {"baz":false}',
-        '       {"bar":{"baz":false}}',
-        ''
-    ]);
-});
-
-
-q.test('assert(func());', function (assert) {
-    var func = function () { return false; };
-    _pa_.ok(eval(instrument('assert(func());')));
-    assert.deepEqual(powerAssertTextLines, [
-        '# /path/to/some_test.js:1',
-        '',
-        'assert(func());',
-        '       |       ',
-        '       false   ',
-        ''
-    ]);
-});
-
-
-q.test('assert(obj.age());', function (assert) {
-    var obj = {
-        age: function () {
-            return 0;
-        }
-    };
-    _pa_.ok(eval(instrument('assert(obj.age());')));
-    assert.deepEqual(powerAssertTextLines, [
-        '# /path/to/some_test.js:1',
-        '',
-        'assert(obj.age());',
-        '       |   |      ',
-        '       {}  0      ',
-        ''
-    ]);
-});
-
-
-q.test('CallExpression with arguments: assert(isFalsy(positiveInt));', function (assert) {
-    var isFalsy = function (arg) {
-        return !(arg);
-    };
-    var positiveInt = 50;
-    _pa_.ok(eval(instrument('assert(isFalsy(positiveInt));')));
-    assert.deepEqual(powerAssertTextLines, [
-        '# /path/to/some_test.js:1',
-        '',
-        'assert(isFalsy(positiveInt));',
-        '       |       |             ',
-        '       false   50            ',
-        ''
-    ]);
-});
-
-
-q.test('assert(sum(one, two, three) === seven);', function (assert) {
-    var sum = function () {
-        var result = 0;
-        for (var i = 0; i < arguments.length; i += 1) {
-            result += arguments[i];
-        }
-        return result;
-    };
-    var one = 1, two = 2, three = 3, seven = 7, ten = 10;
-    _pa_.ok(eval(instrument('assert(sum(one, two, three) === seven);')));
-    assert.deepEqual(powerAssertTextLines, [
-        '# /path/to/some_test.js:1',
-        '',
-        'assert(sum(one, two, three) === seven);',
-        '       |   |    |    |      |   |      ',
-        '       |   |    |    |      |   7      ',
-        '       6   1    2    3      false      ',
-        ''
-    ]);
-});
-
-
-q.test('CallExpression with CallExpressions as arguments: assert(sum(sum(one, two), three) === sum(sum(two, three), seven));', function (assert) {
-    var sum = function () {
-        var result = 0;
-        for (var i = 0; i < arguments.length; i += 1) {
-            result += arguments[i];
-        }
-        return result;
-    };
-    var one = 1, two = 2, three = 3, seven = 7, ten = 10;
-    _pa_.ok(eval(instrument('assert(sum(sum(one, two), three) === sum(sum(two, three), seven));')));
-    assert.deepEqual(powerAssertTextLines, [
-        '# /path/to/some_test.js:1',
-        '',
-        'assert(sum(sum(one, two), three) === sum(sum(two, three), seven));',
-        '       |   |   |    |     |      |   |   |   |    |       |       ',
-        '       |   |   |    |     |      |   12  5   2    3       7       ',
-        '       6   3   1    2     3      false                            ',
-        ''
-    ]);
-});
-
-
-q.test('assert(math.calc.sum(one, two, three) === seven);', function (assert) {
-    var math = {
-        calc: {
-            sum: function () {
-                var result = 0;
-                for (var i = 0; i < arguments.length; i += 1) {
-                    result += arguments[i];
-                }
-                return result;
-            }
-        }
-    };
-    var one = 1, two = 2, three = 3, seven = 7, ten = 10;
-    _pa_.ok(eval(instrument('assert(math.calc.sum(one, two, three) === seven);')));
-    assert.deepEqual(powerAssertTextLines, [
-        '# /path/to/some_test.js:1',
-        '',
-        'assert(math.calc.sum(one, two, three) === seven);',
-        '       |    |    |   |    |    |      |   |      ',
-        '       |    |    |   |    |    |      |   7      ',
-        '       |    {}   6   1    2    3      false      ',
-        '       {"calc":{}}                               ',
-        ''
-    ]);
-});
-
-
-q.test('Nested CallExpression with BinaryExpression: assert((three * (seven * ten)) === three);', function (assert) {
-    var one = 1, two = 2, three = 3, seven = 7, ten = 10;
-    _pa_.ok(eval(instrument('assert((three * (seven * ten)) === three);')));
-    assert.deepEqual(powerAssertTextLines, [
-        '# /path/to/some_test.js:1',
-        '',
-        'assert((three * (seven * ten)) === three);',
-        '        |     |  |     | |     |   |      ',
-        '        |     |  |     | |     |   3      ',
-        '        |     |  |     | 10    false      ',
-        '        |     |  7     70                 ',
-        '        3     210                         ',
-        ''
-    ]);
-});
-
-
-q.test('Simple BinaryExpression with comment', function (assert) {
-    var hoge = 'foo';
-    var fuga = 'bar';
-    _pa_.ok(eval(instrument('assert.ok(hoge === fuga, "comment");')));
-    assert.deepEqual(powerAssertTextLines, [
-        '# /path/to/some_test.js:1',
-        '',
-        'assert.ok(hoge === fuga, "comment");',
-        '          |    |   |                ',
-        '          |    |   "bar"            ',
-        '          |    false                ',
-        '          "foo"                     ',
-        ''
-    ]);
-});
-
-
-q.test('Looooong string', function (assert) {
-    var longString = 'very very loooooooooooooooooooooooooooooooooooooooooooooooooooong message';
-    var anotherLongString = 'yet another loooooooooooooooooooooooooooooooooooooooooooooooooooong message';
-    _pa_.ok(eval(instrument('assert(longString === anotherLongString);')));
-    assert.deepEqual(powerAssertTextLines, [
-        '# /path/to/some_test.js:1',
-        '',
-        'assert(longString === anotherLongString);',
-        '       |          |   |                  ',
-        '       |          |   "yet another loooooooooooooooooooooooooooooooooooooooooooooooooooong message"',
-        '       |          false                  ',
-        '       "very very loooooooooooooooooooooooooooooooooooooooooooooooooooong message"',
-        ''
-    ]);
-});
-
-
-q.test('double byte character width', function (assert) {
-    var fuga = 'あい',
-        piyo = 'うえお';
-    var concat = function (a, b) {
-        return a + b;
-    };
-    _pa_.ok(eval(instrument('assert(!concat(fuga, piyo));')));
-    assert.deepEqual(powerAssertTextLines, [
-        '# /path/to/some_test.js:1',
-        '',
-        'assert(!concat(fuga, piyo));',
-        '        |      |     |      ',
-        '        |      |     "うえお"',
-        '        |      "あい"       ',
-        '        "あいうえお"        ',
-        ''
-    ]);
-
-});
-
-
-q.test('Japanese hankaku width', function (assert) {
-    var fuga = 'ｱｲ',
-        piyo = 'ｳｴｵ';
-    var concat = function (a, b) {
-        return a + b;
-    };
-    _pa_.ok(eval(instrument('assert(!concat(fuga, piyo));')));
-    assert.deepEqual(powerAssertTextLines, [
-        '# /path/to/some_test.js:1',
-        '',
-        'assert(!concat(fuga, piyo));',
-        '        |      |     |      ',
-        '        |      "ｱｲ"  "ｳｴｵ"  ',
-        '        "ｱｲｳｴｵ"             ',
-        ''
-    ]);
-
+    inst("assert(!concat(fuga, piyo));",
+         "assert(assert.expr(!assert.capture(concat(assert.capture(fuga,'ident',{start:{line:1,column:15}}),assert.capture(piyo,'ident',{start:{line:1,column:21}})),'funcall',{start:{line:1,column:8}}),{start:{line:1,column:7}}));");
 });
