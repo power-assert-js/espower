@@ -4,38 +4,7 @@ var espower = require('../lib/espower'),
     assert = require('assert');
 
 
-describe('destructive option', function () {
-    var destructiveOptionTest = function (testName, option, callback) {
-        it(testName, function () {
-            var tree = esprima.parse('assert(falsyStr);', {tolerant: true, loc: true, range: true}),
-                saved = espower.deepCopy(tree),
-                result = espower(tree, option);
-            callback(assert, saved, tree, result);
-        });
-    };
-
-    destructiveOptionTest('default option', {}, function (assert, before, tree, after) {
-        assert.deepEqual(tree, before);
-        assert.notDeepEqual(after, before);
-        assert.notDeepEqual(after, tree);
-    });
-
-    destructiveOptionTest('destructive: false', {destructive: false}, function (assert, before, tree, after) {
-        assert.deepEqual(tree, before);
-        assert.notDeepEqual(after, before);
-        assert.notDeepEqual(after, tree);
-    });
-
-    destructiveOptionTest('destructive: true', {destructive: true}, function (assert, before, tree, after) {
-        assert.notDeepEqual(tree, before);
-        assert.notDeepEqual(after, before);
-        assert.deepEqual(after, tree);
-    });
-});
-
-
-
-describe('source option and path option.', function () {
+describe('instrumentation tests for options', function () {
     var extractBodyFrom = function (source) {
         var tree = esprima.parse(source, {tolerant: true, loc: true, range: true});
         return tree.body[0];
@@ -56,24 +25,57 @@ describe('source option and path option.', function () {
         return instrumentedCode;
     };
 
-    it('path: null, source: null', function () {
-        var instrumentedCode = instrument('assert(falsyStr);', {});
-        assert.equal(instrumentedCode, "assert.expr(assert.capture(falsyStr,'ident',{start:{line:1,column:7}}),{start:{line:1,column:7}})");
+
+    describe('destructive option', function () {
+        var destructiveOptionTest = function (testName, option, callback) {
+            it(testName, function () {
+                var tree = esprima.parse('assert(falsyStr);', {tolerant: true, loc: true, range: true}),
+                    saved = espower.deepCopy(tree),
+                    result = espower(tree, option);
+                callback(assert, saved, tree, result);
+            });
+        };
+
+        destructiveOptionTest('default option', {}, function (assert, before, tree, after) {
+            assert.deepEqual(tree, before);
+            assert.notDeepEqual(after, before);
+            assert.notDeepEqual(after, tree);
+        });
+
+        destructiveOptionTest('destructive: false', {destructive: false}, function (assert, before, tree, after) {
+            assert.deepEqual(tree, before);
+            assert.notDeepEqual(after, before);
+            assert.notDeepEqual(after, tree);
+        });
+
+        destructiveOptionTest('destructive: true', {destructive: true}, function (assert, before, tree, after) {
+            assert.notDeepEqual(tree, before);
+            assert.notDeepEqual(after, before);
+            assert.deepEqual(after, tree);
+        });
     });
 
-    it('source: null', function () {
-        var instrumentedCode = instrument('assert(falsyStr);', {path: '/path/to/baz_test.js'});
-        assert.equal(instrumentedCode, "assert.expr(assert.capture(falsyStr,'ident',{start:{line:1,column:7}}),{start:{line:1,column:7},path:'/path/to/baz_test.js'})");
-    });
 
-    it('path: null', function () {
-        var instrumentedCode = instrument('assert(falsyStr);', {source: 'assert(falsyStr);'});
-        assert.equal(instrumentedCode, "assert.expr(assert.capture(falsyStr,'ident',{start:{line:1,column:7}}),{start:{line:1,column:7}},'assert(falsyStr);')");
-    });
+    describe('source option and path option.', function () {
+        it('path: null, source: null', function () {
+            var instrumentedCode = instrument('assert(falsyStr);', {});
+            assert.equal(instrumentedCode, "assert.expr(assert.capture(falsyStr,'ident',{start:{line:1,column:7}}),{start:{line:1,column:7}})");
+        });
 
-    it('with source and path', function () {
-        var instrumentedCode = instrument('assert(falsyStr);', {source: 'assert(falsyStr);', path: '/path/to/baz_test.js'});
-        assert.equal(instrumentedCode, "assert.expr(assert.capture(falsyStr,'ident',{start:{line:1,column:7}}),{start:{line:1,column:7},path:'/path/to/baz_test.js'},'assert(falsyStr);')");
+        it('source: null', function () {
+            var instrumentedCode = instrument('assert(falsyStr);', {path: '/path/to/baz_test.js'});
+            assert.equal(instrumentedCode, "assert.expr(assert.capture(falsyStr,'ident',{start:{line:1,column:7}}),{start:{line:1,column:7},path:'/path/to/baz_test.js'})");
+        });
+
+        it('path: null', function () {
+            var instrumentedCode = instrument('assert(falsyStr);', {source: 'assert(falsyStr);'});
+            assert.equal(instrumentedCode, "assert.expr(assert.capture(falsyStr,'ident',{start:{line:1,column:7}}),{start:{line:1,column:7}},'assert(falsyStr);')");
+        });
+
+        it('with source and path', function () {
+            var instrumentedCode = instrument('assert(falsyStr);', {source: 'assert(falsyStr);', path: '/path/to/baz_test.js'});
+            assert.equal(instrumentedCode, "assert.expr(assert.capture(falsyStr,'ident',{start:{line:1,column:7}}),{start:{line:1,column:7},path:'/path/to/baz_test.js'},'assert(falsyStr);')");
+        });
     });
 });
 
