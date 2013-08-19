@@ -16,6 +16,7 @@ describe('instrumentation tests for options', function () {
         return instrumentedCode;
     }
 
+
     describe('destructive option', function () {
         function destructiveOptionTest (testName, option, callback) {
             it(testName, function () {
@@ -25,19 +26,16 @@ describe('instrumentation tests for options', function () {
                 callback(assert, saved, tree, result);
             });
         }
-
         destructiveOptionTest('default option', {}, function (assert, before, tree, after) {
             assert.deepEqual(tree, before);
             assert.notDeepEqual(after, before);
             assert.notDeepEqual(after, tree);
         });
-
         destructiveOptionTest('destructive: false', {destructive: false}, function (assert, before, tree, after) {
             assert.deepEqual(tree, before);
             assert.notDeepEqual(after, before);
             assert.notDeepEqual(after, tree);
         });
-
         destructiveOptionTest('destructive: true', {destructive: true}, function (assert, before, tree, after) {
             assert.notDeepEqual(tree, before);
             assert.notDeepEqual(after, before);
@@ -51,20 +49,33 @@ describe('instrumentation tests for options', function () {
             var instrumentedCode = instrument('assert(falsyStr);', {});
             assert.equal(instrumentedCode, "assert(assert.expr(assert.capture(falsyStr,'ident',{start:{line:1,column:7}}),{start:{line:1,column:7}}));");
         });
-
         it('source: null', function () {
             var instrumentedCode = instrument('assert(falsyStr);', {path: '/path/to/baz_test.js'});
             assert.equal(instrumentedCode, "assert(assert.expr(assert.capture(falsyStr,'ident',{start:{line:1,column:7}}),{start:{line:1,column:7},path:'/path/to/baz_test.js'}));");
         });
-
         it('path: null', function () {
             var instrumentedCode = instrument('assert(falsyStr);', {source: 'assert(falsyStr);'});
             assert.equal(instrumentedCode, "assert(assert.expr(assert.capture(falsyStr,'ident',{start:{line:1,column:7}}),{start:{line:1,column:7}},'assert(falsyStr);'));");
         });
-
         it('with source and path', function () {
             var instrumentedCode = instrument('assert(falsyStr);', {source: 'assert(falsyStr);', path: '/path/to/baz_test.js'});
             assert.equal(instrumentedCode, "assert(assert.expr(assert.capture(falsyStr,'ident',{start:{line:1,column:7}}),{start:{line:1,column:7},path:'/path/to/baz_test.js'},'assert(falsyStr);'));");
+        });
+    });
+
+
+    describe('powerAssertVariableName option.', function () {
+        it('default is "assert"', function () {
+            var instrumentedCode = instrument('assert(falsyStr);', {source: 'assert(falsyStr);'});
+            assert.equal(instrumentedCode, "assert(assert.expr(assert.capture(falsyStr,'ident',{start:{line:1,column:7}}),{start:{line:1,column:7}},'assert(falsyStr);'));");
+        });
+        it('powerAssertVariableName: "test"', function () {
+            var instrumentedCode = instrument('test.ok(falsyStr);', {source: 'test.ok(falsyStr);', powerAssertVariableName: 'test'});
+            assert.equal(instrumentedCode, "test.ok(test.expr(test.capture(falsyStr,'ident',{start:{line:1,column:8}}),{start:{line:1,column:8}},'test.ok(falsyStr);'));");
+        });
+        it('not instrumented if powerAssertVariableName and actual variable name is different.', function () {
+            var instrumentedCode = instrument('assert.ok(falsyStr);', {source: 'assert.ok(falsyStr);', powerAssertVariableName: 'test'});
+            assert.equal(instrumentedCode, "assert.ok(falsyStr);");
         });
     });
 });
