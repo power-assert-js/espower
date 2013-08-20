@@ -26,7 +26,7 @@ describe('instrumentation tests for options', function () {
                 callback(assert, saved, tree, result);
             });
         }
-        destructiveOptionTest('default option', {}, function (assert, before, tree, after) {
+        destructiveOptionTest('default is false', {}, function (assert, before, tree, after) {
             assert.deepEqual(tree, before);
             assert.notDeepEqual(after, before);
             assert.notDeepEqual(after, tree);
@@ -109,7 +109,7 @@ describe('AST prerequisites. Error should be thrown if location is missing.', fu
 
 
 
-describe('preserve location information', function () {
+describe('location information', function () {
     it('preserve location of instrumented nodes.', function () {
         var jsCode = 'assert((three * (seven * ten)) === three);',
             tree = esprima.parse(jsCode, {tolerant: true, loc: true, range: true}),
