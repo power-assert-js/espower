@@ -18,12 +18,6 @@ describe('instrumentation spec', function () {
     }
 
 
-    // questionable
-    inst("assert(delete foo.bar);",
-         "assert(assert.expr(delete assert.capture(assert.capture(foo,'ident',{start:{line:1,column:14}}).bar,'ident',{start:{line:1,column:18}}),{start:{line:1,column:7}}));");
-
-
-
     inst("assert(falsyStr);",
          "assert(assert.expr(assert.capture(falsyStr,'ident',{start:{line:1,column:7}}),{start:{line:1,column:7}}));");
 
@@ -34,14 +28,14 @@ describe('instrumentation spec', function () {
          "return assert(assert.expr(assert.capture(falsyStr,'ident',{start:{line:1,column:14}}),{start:{line:1,column:14}}));");
 
     inst("assert(!truth);",
-         "assert(assert.expr(!assert.capture(truth,'ident',{start:{line:1,column:8}}),{start:{line:1,column:7}}));");
+         "assert(assert.expr(assert.capture(!assert.capture(truth,'ident',{start:{line:1,column:8}}),'unary',{start:{line:1,column:7}}),{start:{line:1,column:7}}));");
 
     inst("assert(!!some);",
-         "assert(assert.expr(!!assert.capture(some,'ident',{start:{line:1,column:9}}),{start:{line:1,column:7}}));");
-    
+         "assert(assert.expr(assert.capture(!assert.capture(!assert.capture(some,'ident',{start:{line:1,column:9}}),'unary',{start:{line:1,column:8}}),'unary',{start:{line:1,column:7}}),{start:{line:1,column:7}}));");
+
     inst("assert(!!foo.bar);",
-         "assert(assert.expr(!!assert.capture(assert.capture(foo,'ident',{start:{line:1,column:9}}).bar,'ident',{start:{line:1,column:13}}),{start:{line:1,column:7}}));");
-    
+         "assert(assert.expr(assert.capture(!assert.capture(!assert.capture(assert.capture(foo,'ident',{start:{line:1,column:9}}).bar,'ident',{start:{line:1,column:13}}),'unary',{start:{line:1,column:8}}),'unary',{start:{line:1,column:7}}),{start:{line:1,column:7}}));");
+
     inst("assert(4 !== 4);",
          "assert(assert.expr(assert.capture(4!==4,'binary',{start:{line:1,column:9}}),{start:{line:1,column:7}}));");
 
@@ -55,10 +49,16 @@ describe('instrumentation spec', function () {
          "assert(assert.expr(assert.capture(assert.capture(fuga,'ident',{start:{line:1,column:7}})!==assert.capture(piyo,'ident',{start:{line:1,column:16}}),'binary',{start:{line:1,column:12}}),{start:{line:1,column:7}}));");
 
     inst("assert(typeof foo !== 'undefined');",
-         "assert(assert.expr(assert.capture(typeof foo!=='undefined','binary',{start:{line:1,column:18}}),{start:{line:1,column:7}}));");
+         "assert(assert.expr(assert.capture(assert.capture(typeof foo,'unary',{start:{line:1,column:7}})!=='undefined','binary',{start:{line:1,column:18}}),{start:{line:1,column:7}}));");
 
     inst("assert(typeof foo.bar !== 'undefined');",
-         "assert(assert.expr(assert.capture(typeof assert.capture(assert.capture(foo,'ident',{start:{line:1,column:14}}).bar,'ident',{start:{line:1,column:18}})!=='undefined','binary',{start:{line:1,column:22}}),{start:{line:1,column:7}}));");
+         "assert(assert.expr(assert.capture(assert.capture(typeof assert.capture(assert.capture(foo,'ident',{start:{line:1,column:14}}).bar,'ident',{start:{line:1,column:18}}),'unary',{start:{line:1,column:7}})!=='undefined','binary',{start:{line:1,column:22}}),{start:{line:1,column:7}}));");
+
+    inst("assert(delete foo);",
+         "assert(assert.expr(assert.capture(delete foo,'unary',{start:{line:1,column:7}}),{start:{line:1,column:7}}));");
+
+    inst("assert(delete foo.bar);",
+         "assert(assert.expr(assert.capture(delete assert.capture(assert.capture(foo,'ident',{start:{line:1,column:14}}).bar,'ident',{start:{line:1,column:18}}),'unary',{start:{line:1,column:7}}),{start:{line:1,column:7}}));");
 
     inst("assert(ary1.length === ary2.length);",
          "assert(assert.expr(assert.capture(assert.capture(assert.capture(ary1,'ident',{start:{line:1,column:7}}).length,'ident',{start:{line:1,column:12}})===assert.capture(assert.capture(ary2,'ident',{start:{line:1,column:23}}).length,'ident',{start:{line:1,column:28}}),'binary',{start:{line:1,column:19}}),{start:{line:1,column:7}}));");
@@ -97,5 +97,5 @@ describe('instrumentation spec', function () {
          "assert(assert.expr(assert.capture(assert.capture(assert.capture(three,'ident',{start:{line:1,column:8}})*assert.capture(assert.capture(seven,'ident',{start:{line:1,column:17}})*assert.capture(ten,'ident',{start:{line:1,column:25}}),'binary',{start:{line:1,column:23}}),'binary',{start:{line:1,column:14}})===assert.capture(three,'ident',{start:{line:1,column:35}}),'binary',{start:{line:1,column:30}}),{start:{line:1,column:7}}));");
 
     inst("assert(!concat(fuga, piyo));",
-         "assert(assert.expr(!assert.capture(concat(assert.capture(fuga,'ident',{start:{line:1,column:15}}),assert.capture(piyo,'ident',{start:{line:1,column:21}})),'funcall',{start:{line:1,column:8}}),{start:{line:1,column:7}}));");
+         "assert(assert.expr(assert.capture(!assert.capture(concat(assert.capture(fuga,'ident',{start:{line:1,column:15}}),assert.capture(piyo,'ident',{start:{line:1,column:21}})),'funcall',{start:{line:1,column:8}}),'unary',{start:{line:1,column:7}}),{start:{line:1,column:7}}));");
 });
