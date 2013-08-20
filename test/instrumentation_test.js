@@ -39,6 +39,9 @@ describe('instrumentation spec', function () {
     inst("assert(!!some);",
          "assert(assert.expr(!!assert.capture(some,'ident',{start:{line:1,column:9}}),{start:{line:1,column:7}}));");
     
+    inst("assert(!!foo.bar);",
+         "assert(assert.expr(!!assert.capture(assert.capture(foo,'ident',{start:{line:1,column:9}}).bar,'ident',{start:{line:1,column:13}}),{start:{line:1,column:7}}));");
+    
     inst("assert(4 !== 4);",
          "assert(assert.expr(assert.capture(4!==4,'binary',{start:{line:1,column:9}}),{start:{line:1,column:7}}));");
 
@@ -55,7 +58,7 @@ describe('instrumentation spec', function () {
          "assert(assert.expr(assert.capture(typeof foo!=='undefined','binary',{start:{line:1,column:18}}),{start:{line:1,column:7}}));");
 
     inst("assert(typeof foo.bar !== 'undefined');",
-         "assert(assert.expr(assert.capture(typeof foo.bar!=='undefined','binary',{start:{line:1,column:22}}),{start:{line:1,column:7}}));");
+         "assert(assert.expr(assert.capture(typeof assert.capture(assert.capture(foo,'ident',{start:{line:1,column:14}}).bar,'ident',{start:{line:1,column:18}})!=='undefined','binary',{start:{line:1,column:22}}),{start:{line:1,column:7}}));");
 
     inst("assert(ary1.length === ary2.length);",
          "assert(assert.expr(assert.capture(assert.capture(assert.capture(ary1,'ident',{start:{line:1,column:7}}).length,'ident',{start:{line:1,column:12}})===assert.capture(assert.capture(ary2,'ident',{start:{line:1,column:23}}).length,'ident',{start:{line:1,column:28}}),'binary',{start:{line:1,column:19}}),{start:{line:1,column:7}}));");
