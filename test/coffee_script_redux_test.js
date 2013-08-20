@@ -18,6 +18,6 @@ describe('CoffeeScriptRedux learning & spike', function () {
         var jsGenerateOptions = {compact: true};
         var jsCode = CoffeeScript.js(espoweredAst, jsGenerateOptions);
 
-        assert.equal(jsCode, "assert.ok(assert.expr(assert.capture(assert.capture(assert.capture(dog,'ident',{start:{line:1,column:10}}).speak(),'funcall',{start:{line:1,column:14}})===assert.capture(says,'ident',{start:{line:1,column:25}}),'binary',{start:{line:1,column:22}}),{start:{line:1,column:10},path:'/path/to/foo_test.coffee'},'assert.ok dog.speak() == says'))");
+        assert.equal(jsCode, "assert.ok(assert._expr(assert._capt(assert._capt(assert._capt(dog,'ident',{start:{line:1,column:10}}).speak(),'funcall',{start:{line:1,column:14}})===assert._capt(says,'ident',{start:{line:1,column:25}}),'binary',{start:{line:1,column:22}}),{start:{line:1,column:10},path:'/path/to/foo_test.coffee'},'assert.ok dog.speak() == says'))");
     });
 });

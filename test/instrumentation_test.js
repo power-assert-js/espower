@@ -19,83 +19,83 @@ describe('instrumentation spec', function () {
 
 
     inst("assert(falsyStr);",
-         "assert(assert.expr(assert.capture(falsyStr,'ident',{start:{line:1,column:7}}),{start:{line:1,column:7}}));");
+         "assert(assert._expr(assert._capt(falsyStr,'ident',{start:{line:1,column:7}}),{start:{line:1,column:7}}));");
 
     inst("assert.ok(hoge === fuga, 'comment');",
-         "assert.ok(assert.expr(assert.capture(assert.capture(hoge,'ident',{start:{line:1,column:10}})===assert.capture(fuga,'ident',{start:{line:1,column:19}}),'binary',{start:{line:1,column:15}}),{start:{line:1,column:10}}),'comment');");
+         "assert.ok(assert._expr(assert._capt(assert._capt(hoge,'ident',{start:{line:1,column:10}})===assert._capt(fuga,'ident',{start:{line:1,column:19}}),'binary',{start:{line:1,column:15}}),{start:{line:1,column:10}}),'comment');");
 
     inst("return assert(falsyStr);",
-         "return assert(assert.expr(assert.capture(falsyStr,'ident',{start:{line:1,column:14}}),{start:{line:1,column:14}}));");
+         "return assert(assert._expr(assert._capt(falsyStr,'ident',{start:{line:1,column:14}}),{start:{line:1,column:14}}));");
 
     inst("assert(!truth);",
-         "assert(assert.expr(assert.capture(!assert.capture(truth,'ident',{start:{line:1,column:8}}),'unary',{start:{line:1,column:7}}),{start:{line:1,column:7}}));");
+         "assert(assert._expr(assert._capt(!assert._capt(truth,'ident',{start:{line:1,column:8}}),'unary',{start:{line:1,column:7}}),{start:{line:1,column:7}}));");
 
     inst("assert(!!some);",
-         "assert(assert.expr(assert.capture(!assert.capture(!assert.capture(some,'ident',{start:{line:1,column:9}}),'unary',{start:{line:1,column:8}}),'unary',{start:{line:1,column:7}}),{start:{line:1,column:7}}));");
+         "assert(assert._expr(assert._capt(!assert._capt(!assert._capt(some,'ident',{start:{line:1,column:9}}),'unary',{start:{line:1,column:8}}),'unary',{start:{line:1,column:7}}),{start:{line:1,column:7}}));");
 
     inst("assert(!!foo.bar);",
-         "assert(assert.expr(assert.capture(!assert.capture(!assert.capture(assert.capture(foo,'ident',{start:{line:1,column:9}}).bar,'ident',{start:{line:1,column:13}}),'unary',{start:{line:1,column:8}}),'unary',{start:{line:1,column:7}}),{start:{line:1,column:7}}));");
+         "assert(assert._expr(assert._capt(!assert._capt(!assert._capt(assert._capt(foo,'ident',{start:{line:1,column:9}}).bar,'ident',{start:{line:1,column:13}}),'unary',{start:{line:1,column:8}}),'unary',{start:{line:1,column:7}}),{start:{line:1,column:7}}));");
 
     inst("assert(4 !== 4);",
-         "assert(assert.expr(assert.capture(4!==4,'binary',{start:{line:1,column:9}}),{start:{line:1,column:7}}));");
+         "assert(assert._expr(assert._capt(4!==4,'binary',{start:{line:1,column:9}}),{start:{line:1,column:7}}));");
 
     inst("assert(fuga !== 4);",
-         "assert(assert.expr(assert.capture(assert.capture(fuga,'ident',{start:{line:1,column:7}})!==4,'binary',{start:{line:1,column:12}}),{start:{line:1,column:7}}));");
+         "assert(assert._expr(assert._capt(assert._capt(fuga,'ident',{start:{line:1,column:7}})!==4,'binary',{start:{line:1,column:12}}),{start:{line:1,column:7}}));");
 
     inst("assert(fuga === piyo);",
-         "assert(assert.expr(assert.capture(assert.capture(fuga,'ident',{start:{line:1,column:7}})===assert.capture(piyo,'ident',{start:{line:1,column:16}}),'binary',{start:{line:1,column:12}}),{start:{line:1,column:7}}));");
+         "assert(assert._expr(assert._capt(assert._capt(fuga,'ident',{start:{line:1,column:7}})===assert._capt(piyo,'ident',{start:{line:1,column:16}}),'binary',{start:{line:1,column:12}}),{start:{line:1,column:7}}));");
 
     inst("assert(fuga !== piyo);",
-         "assert(assert.expr(assert.capture(assert.capture(fuga,'ident',{start:{line:1,column:7}})!==assert.capture(piyo,'ident',{start:{line:1,column:16}}),'binary',{start:{line:1,column:12}}),{start:{line:1,column:7}}));");
+         "assert(assert._expr(assert._capt(assert._capt(fuga,'ident',{start:{line:1,column:7}})!==assert._capt(piyo,'ident',{start:{line:1,column:16}}),'binary',{start:{line:1,column:12}}),{start:{line:1,column:7}}));");
 
     inst("assert(typeof foo !== 'undefined');",
-         "assert(assert.expr(assert.capture(assert.capture(typeof foo,'unary',{start:{line:1,column:7}})!=='undefined','binary',{start:{line:1,column:18}}),{start:{line:1,column:7}}));");
+         "assert(assert._expr(assert._capt(assert._capt(typeof foo,'unary',{start:{line:1,column:7}})!=='undefined','binary',{start:{line:1,column:18}}),{start:{line:1,column:7}}));");
 
     inst("assert(typeof foo.bar !== 'undefined');",
-         "assert(assert.expr(assert.capture(assert.capture(typeof assert.capture(assert.capture(foo,'ident',{start:{line:1,column:14}}).bar,'ident',{start:{line:1,column:18}}),'unary',{start:{line:1,column:7}})!=='undefined','binary',{start:{line:1,column:22}}),{start:{line:1,column:7}}));");
+         "assert(assert._expr(assert._capt(assert._capt(typeof assert._capt(assert._capt(foo,'ident',{start:{line:1,column:14}}).bar,'ident',{start:{line:1,column:18}}),'unary',{start:{line:1,column:7}})!=='undefined','binary',{start:{line:1,column:22}}),{start:{line:1,column:7}}));");
 
     inst("assert(delete foo);",
-         "assert(assert.expr(assert.capture(delete foo,'unary',{start:{line:1,column:7}}),{start:{line:1,column:7}}));");
+         "assert(assert._expr(assert._capt(delete foo,'unary',{start:{line:1,column:7}}),{start:{line:1,column:7}}));");
 
     inst("assert(delete foo.bar);",
-         "assert(assert.expr(assert.capture(delete assert.capture(assert.capture(foo,'ident',{start:{line:1,column:14}}).bar,'ident',{start:{line:1,column:18}}),'unary',{start:{line:1,column:7}}),{start:{line:1,column:7}}));");
+         "assert(assert._expr(assert._capt(delete assert._capt(assert._capt(foo,'ident',{start:{line:1,column:14}}).bar,'ident',{start:{line:1,column:18}}),'unary',{start:{line:1,column:7}}),{start:{line:1,column:7}}));");
 
     inst("assert(ary1.length === ary2.length);",
-         "assert(assert.expr(assert.capture(assert.capture(assert.capture(ary1,'ident',{start:{line:1,column:7}}).length,'ident',{start:{line:1,column:12}})===assert.capture(assert.capture(ary2,'ident',{start:{line:1,column:23}}).length,'ident',{start:{line:1,column:28}}),'binary',{start:{line:1,column:19}}),{start:{line:1,column:7}}));");
+         "assert(assert._expr(assert._capt(assert._capt(assert._capt(ary1,'ident',{start:{line:1,column:7}}).length,'ident',{start:{line:1,column:12}})===assert._capt(assert._capt(ary2,'ident',{start:{line:1,column:23}}).length,'ident',{start:{line:1,column:28}}),'binary',{start:{line:1,column:19}}),{start:{line:1,column:7}}));");
 
     inst("assert(5 < actual && actual < 13);",
-         "assert(assert.expr(assert.capture(5<assert.capture(actual,'ident',{start:{line:1,column:11}}),'binary',{start:{line:1,column:9}})&&assert.capture(assert.capture(actual,'ident',{start:{line:1,column:21}})<13,'binary',{start:{line:1,column:28}}),{start:{line:1,column:7}}));");
+         "assert(assert._expr(assert._capt(5<assert._capt(actual,'ident',{start:{line:1,column:11}}),'binary',{start:{line:1,column:9}})&&assert._capt(assert._capt(actual,'ident',{start:{line:1,column:21}})<13,'binary',{start:{line:1,column:28}}),{start:{line:1,column:7}}));");
 
     inst("assert.ok(actual < 5 || 13 < actual);",
-         "assert.ok(assert.expr(assert.capture(assert.capture(actual,'ident',{start:{line:1,column:10}})<5,'binary',{start:{line:1,column:17}})||assert.capture(13<assert.capture(actual,'ident',{start:{line:1,column:29}}),'binary',{start:{line:1,column:27}}),{start:{line:1,column:10}}));");
+         "assert.ok(assert._expr(assert._capt(assert._capt(actual,'ident',{start:{line:1,column:10}})<5,'binary',{start:{line:1,column:17}})||assert._capt(13<assert._capt(actual,'ident',{start:{line:1,column:29}}),'binary',{start:{line:1,column:27}}),{start:{line:1,column:10}}));");
 
     inst("assert(2 > actual && actual < 13);",
-         "assert(assert.expr(assert.capture(2>assert.capture(actual,'ident',{start:{line:1,column:11}}),'binary',{start:{line:1,column:9}})&&assert.capture(assert.capture(actual,'ident',{start:{line:1,column:21}})<13,'binary',{start:{line:1,column:28}}),{start:{line:1,column:7}}));");
+         "assert(assert._expr(assert._capt(2>assert._capt(actual,'ident',{start:{line:1,column:11}}),'binary',{start:{line:1,column:9}})&&assert._capt(assert._capt(actual,'ident',{start:{line:1,column:21}})<13,'binary',{start:{line:1,column:28}}),{start:{line:1,column:7}}));");
 
     inst("assert(foo.bar.baz);",
-         "assert(assert.expr(assert.capture(assert.capture(assert.capture(foo,'ident',{start:{line:1,column:7}}).bar,'ident',{start:{line:1,column:11}}).baz,'ident',{start:{line:1,column:15}}),{start:{line:1,column:7}}));");
+         "assert(assert._expr(assert._capt(assert._capt(assert._capt(foo,'ident',{start:{line:1,column:7}}).bar,'ident',{start:{line:1,column:11}}).baz,'ident',{start:{line:1,column:15}}),{start:{line:1,column:7}}));");
 
     inst("assert(func());",
-         "assert(assert.expr(assert.capture(func(),'funcall',{start:{line:1,column:7}}),{start:{line:1,column:7}}));");
+         "assert(assert._expr(assert._capt(func(),'funcall',{start:{line:1,column:7}}),{start:{line:1,column:7}}));");
 
     inst("assert(obj.age());",
-         "assert(assert.expr(assert.capture(assert.capture(obj,'ident',{start:{line:1,column:7}}).age(),'funcall',{start:{line:1,column:11}}),{start:{line:1,column:7}}));");
+         "assert(assert._expr(assert._capt(assert._capt(obj,'ident',{start:{line:1,column:7}}).age(),'funcall',{start:{line:1,column:11}}),{start:{line:1,column:7}}));");
 
     inst("assert(isFalsy(positiveInt));",
-         "assert(assert.expr(assert.capture(isFalsy(assert.capture(positiveInt,'ident',{start:{line:1,column:15}})),'funcall',{start:{line:1,column:7}}),{start:{line:1,column:7}}));");
+         "assert(assert._expr(assert._capt(isFalsy(assert._capt(positiveInt,'ident',{start:{line:1,column:15}})),'funcall',{start:{line:1,column:7}}),{start:{line:1,column:7}}));");
 
     inst("assert(sum(one, two, three) === seven);",
-         "assert(assert.expr(assert.capture(assert.capture(sum(assert.capture(one,'ident',{start:{line:1,column:11}}),assert.capture(two,'ident',{start:{line:1,column:16}}),assert.capture(three,'ident',{start:{line:1,column:21}})),'funcall',{start:{line:1,column:7}})===assert.capture(seven,'ident',{start:{line:1,column:32}}),'binary',{start:{line:1,column:28}}),{start:{line:1,column:7}}));");
+         "assert(assert._expr(assert._capt(assert._capt(sum(assert._capt(one,'ident',{start:{line:1,column:11}}),assert._capt(two,'ident',{start:{line:1,column:16}}),assert._capt(three,'ident',{start:{line:1,column:21}})),'funcall',{start:{line:1,column:7}})===assert._capt(seven,'ident',{start:{line:1,column:32}}),'binary',{start:{line:1,column:28}}),{start:{line:1,column:7}}));");
 
     inst("assert(sum(sum(one, two), three) === sum(sum(two, three), seven));",
-         "assert(assert.expr(assert.capture(assert.capture(sum(assert.capture(sum(assert.capture(one,'ident',{start:{line:1,column:15}}),assert.capture(two,'ident',{start:{line:1,column:20}})),'funcall',{start:{line:1,column:11}}),assert.capture(three,'ident',{start:{line:1,column:26}})),'funcall',{start:{line:1,column:7}})===assert.capture(sum(assert.capture(sum(assert.capture(two,'ident',{start:{line:1,column:45}}),assert.capture(three,'ident',{start:{line:1,column:50}})),'funcall',{start:{line:1,column:41}}),assert.capture(seven,'ident',{start:{line:1,column:58}})),'funcall',{start:{line:1,column:37}}),'binary',{start:{line:1,column:33}}),{start:{line:1,column:7}}));");
+         "assert(assert._expr(assert._capt(assert._capt(sum(assert._capt(sum(assert._capt(one,'ident',{start:{line:1,column:15}}),assert._capt(two,'ident',{start:{line:1,column:20}})),'funcall',{start:{line:1,column:11}}),assert._capt(three,'ident',{start:{line:1,column:26}})),'funcall',{start:{line:1,column:7}})===assert._capt(sum(assert._capt(sum(assert._capt(two,'ident',{start:{line:1,column:45}}),assert._capt(three,'ident',{start:{line:1,column:50}})),'funcall',{start:{line:1,column:41}}),assert._capt(seven,'ident',{start:{line:1,column:58}})),'funcall',{start:{line:1,column:37}}),'binary',{start:{line:1,column:33}}),{start:{line:1,column:7}}));");
 
     inst("assert(math.calc.sum(one, two, three) === seven);",
-         "assert(assert.expr(assert.capture(assert.capture(assert.capture(assert.capture(math,'ident',{start:{line:1,column:7}}).calc,'ident',{start:{line:1,column:12}}).sum(assert.capture(one,'ident',{start:{line:1,column:21}}),assert.capture(two,'ident',{start:{line:1,column:26}}),assert.capture(three,'ident',{start:{line:1,column:31}})),'funcall',{start:{line:1,column:17}})===assert.capture(seven,'ident',{start:{line:1,column:42}}),'binary',{start:{line:1,column:38}}),{start:{line:1,column:7}}));");
+         "assert(assert._expr(assert._capt(assert._capt(assert._capt(assert._capt(math,'ident',{start:{line:1,column:7}}).calc,'ident',{start:{line:1,column:12}}).sum(assert._capt(one,'ident',{start:{line:1,column:21}}),assert._capt(two,'ident',{start:{line:1,column:26}}),assert._capt(three,'ident',{start:{line:1,column:31}})),'funcall',{start:{line:1,column:17}})===assert._capt(seven,'ident',{start:{line:1,column:42}}),'binary',{start:{line:1,column:38}}),{start:{line:1,column:7}}));");
 
     inst("assert((three * (seven * ten)) === three);",
-         "assert(assert.expr(assert.capture(assert.capture(assert.capture(three,'ident',{start:{line:1,column:8}})*assert.capture(assert.capture(seven,'ident',{start:{line:1,column:17}})*assert.capture(ten,'ident',{start:{line:1,column:25}}),'binary',{start:{line:1,column:23}}),'binary',{start:{line:1,column:14}})===assert.capture(three,'ident',{start:{line:1,column:35}}),'binary',{start:{line:1,column:30}}),{start:{line:1,column:7}}));");
+         "assert(assert._expr(assert._capt(assert._capt(assert._capt(three,'ident',{start:{line:1,column:8}})*assert._capt(assert._capt(seven,'ident',{start:{line:1,column:17}})*assert._capt(ten,'ident',{start:{line:1,column:25}}),'binary',{start:{line:1,column:23}}),'binary',{start:{line:1,column:14}})===assert._capt(three,'ident',{start:{line:1,column:35}}),'binary',{start:{line:1,column:30}}),{start:{line:1,column:7}}));");
 
     inst("assert(!concat(fuga, piyo));",
-         "assert(assert.expr(assert.capture(!assert.capture(concat(assert.capture(fuga,'ident',{start:{line:1,column:15}}),assert.capture(piyo,'ident',{start:{line:1,column:21}})),'funcall',{start:{line:1,column:8}}),'unary',{start:{line:1,column:7}}),{start:{line:1,column:7}}));");
+         "assert(assert._expr(assert._capt(!assert._capt(concat(assert._capt(fuga,'ident',{start:{line:1,column:15}}),assert._capt(piyo,'ident',{start:{line:1,column:21}})),'funcall',{start:{line:1,column:8}}),'unary',{start:{line:1,column:7}}),{start:{line:1,column:7}}));");
 });
