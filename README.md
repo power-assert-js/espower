@@ -1,6 +1,8 @@
 espower
 ================================
 
+[![Build Status](https://travis-ci.org/twada/espower.png?branch=master)](https://travis-ci.org/twada/espower)
+
 Power Assert feature instrumentor based on the Mozilla JavaScript AST.
 
 
