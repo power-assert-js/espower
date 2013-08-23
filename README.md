@@ -22,4 +22,4 @@ AUTHOR
 
 LICENSE
 ---------------------------------------
-Licensed under the [MIT](https://raw.github.com/twada/empower/master/MIT-LICENSE.txt) license.
+Licensed under the [MIT](https://raw.github.com/twada/espower/master/MIT-LICENSE.txt) license.
