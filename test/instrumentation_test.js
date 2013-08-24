@@ -75,6 +75,21 @@ describe('instrumentation spec', function () {
     inst("assert(foo.bar.baz);",
          "assert(assert._expr(assert._capt(assert._capt(assert._capt(foo,'ident',{start:{line:1,column:7}}).bar,'ident',{start:{line:1,column:11}}).baz,'ident',{start:{line:1,column:15}}),{start:{line:1,column:7}}));");
 
+    inst("assert(foo.bar);",
+         "assert(assert._expr(assert._capt(assert._capt(foo,'ident',{start:{line:1,column:7}}).bar,'ident',{start:{line:1,column:11}}),{start:{line:1,column:7}}));");
+
+    inst("assert(foo['bar']);",
+         "assert(assert._expr(assert._capt(assert._capt(foo,'ident',{start:{line:1,column:7}})['bar'],'ident',{start:{line:1,column:10}}),{start:{line:1,column:7}}));");
+
+    inst("assert(foo[propName]);",
+         "assert(assert._expr(assert._capt(assert._capt(foo,'ident',{start:{line:1,column:7}})[assert._capt(propName,'ident',{start:{line:1,column:11}})],'ident',{start:{line:1,column:10}}),{start:{line:1,column:7}}));");
+
+    inst("assert(foo[func(key)]);",
+         "assert(assert._expr(assert._capt(assert._capt(foo,'ident',{start:{line:1,column:7}})[assert._capt(func(assert._capt(key,'ident',{start:{line:1,column:16}})),'funcall',{start:{line:1,column:11}})],'ident',{start:{line:1,column:10}}),{start:{line:1,column:7}}));");
+
+    inst("assert(foo[propName]['key'][keys()['name']]);",
+         "assert(assert._expr(assert._capt(assert._capt(assert._capt(assert._capt(foo,'ident',{start:{line:1,column:7}})[assert._capt(propName,'ident',{start:{line:1,column:11}})],'ident',{start:{line:1,column:10}})['key'],'ident',{start:{line:1,column:20}})[assert._capt(assert._capt(keys(),'funcall',{start:{line:1,column:28}})['name'],'ident',{start:{line:1,column:34}})],'ident',{start:{line:1,column:27}}),{start:{line:1,column:7}}));");
+
     inst("assert(func());",
          "assert(assert._expr(assert._capt(func(),'funcall',{start:{line:1,column:7}}),{start:{line:1,column:7}}));");
 
