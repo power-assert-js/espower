@@ -2,6 +2,7 @@ espower
 ================================
 
 [![Build Status](https://travis-ci.org/twada/espower.png?branch=master)](https://travis-ci.org/twada/espower)
+[![NPM version](https://badge.fury.io/js/espower.png)](http://badge.fury.io/js/espower)
 
 Power Assert feature instrumentor based on the Mozilla JavaScript AST.
 
