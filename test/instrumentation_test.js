@@ -63,14 +63,16 @@ describe('instrumentation spec', function () {
     inst("assert(ary1.length === ary2.length);",
          "assert(assert._expr(assert._capt(assert._capt(assert._capt(ary1,'ident',{start:{line:1,column:7}}).length,'ident',{start:{line:1,column:12}})===assert._capt(assert._capt(ary2,'ident',{start:{line:1,column:23}}).length,'ident',{start:{line:1,column:28}}),'binary',{start:{line:1,column:19}}),{start:{line:1,column:7}}));");
 
+
     inst("assert(5 < actual && actual < 13);",
-         "assert(assert._expr(assert._capt(5<assert._capt(actual,'ident',{start:{line:1,column:11}}),'binary',{start:{line:1,column:9}})&&assert._capt(assert._capt(actual,'ident',{start:{line:1,column:21}})<13,'binary',{start:{line:1,column:28}}),{start:{line:1,column:7}}));");
+         "assert(assert._expr(assert._capt(assert._capt(5<assert._capt(actual,'ident',{start:{line:1,column:11}}),'binary',{start:{line:1,column:9}})&&assert._capt(assert._capt(actual,'ident',{start:{line:1,column:21}})<13,'binary',{start:{line:1,column:28}}),'logical',{start:{line:1,column:18}}),{start:{line:1,column:7}}));");
 
     inst("assert.ok(actual < 5 || 13 < actual);",
-         "assert.ok(assert._expr(assert._capt(assert._capt(actual,'ident',{start:{line:1,column:10}})<5,'binary',{start:{line:1,column:17}})||assert._capt(13<assert._capt(actual,'ident',{start:{line:1,column:29}}),'binary',{start:{line:1,column:27}}),{start:{line:1,column:10}}));");
+         "assert.ok(assert._expr(assert._capt(assert._capt(assert._capt(actual,'ident',{start:{line:1,column:10}})<5,'binary',{start:{line:1,column:17}})||assert._capt(13<assert._capt(actual,'ident',{start:{line:1,column:29}}),'binary',{start:{line:1,column:27}}),'logical',{start:{line:1,column:21}}),{start:{line:1,column:10}}));");
 
     inst("assert(2 > actual && actual < 13);",
-         "assert(assert._expr(assert._capt(2>assert._capt(actual,'ident',{start:{line:1,column:11}}),'binary',{start:{line:1,column:9}})&&assert._capt(assert._capt(actual,'ident',{start:{line:1,column:21}})<13,'binary',{start:{line:1,column:28}}),{start:{line:1,column:7}}));");
+         "assert(assert._expr(assert._capt(assert._capt(2>assert._capt(actual,'ident',{start:{line:1,column:11}}),'binary',{start:{line:1,column:9}})&&assert._capt(assert._capt(actual,'ident',{start:{line:1,column:21}})<13,'binary',{start:{line:1,column:28}}),'logical',{start:{line:1,column:18}}),{start:{line:1,column:7}}));");
+
 
     inst("assert(foo.bar.baz);",
          "assert(assert._expr(assert._capt(assert._capt(assert._capt(foo,'ident',{start:{line:1,column:7}}).bar,'ident',{start:{line:1,column:11}}).baz,'ident',{start:{line:1,column:15}}),{start:{line:1,column:7}}));");
