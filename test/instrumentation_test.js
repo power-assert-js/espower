@@ -113,4 +113,10 @@ describe('instrumentation spec', function () {
 
     inst("assert(!concat(fuga, piyo));",
          "assert(assert._expr(assert._capt(!assert._capt(concat(assert._capt(fuga,'ident',{start:{line:1,column:15}}),assert._capt(piyo,'ident',{start:{line:1,column:21}})),'funcall',{start:{line:1,column:8}}),'unary',{start:{line:1,column:7}}),{start:{line:1,column:7}}));");
+
+    inst("assert(counter += 1);",
+         "assert(assert._expr(assert._capt(counter+=1,'assignment',{start:{line:1,column:15}}),{start:{line:1,column:7}}));");
+
+    inst("assert(dog.age += 1);",
+         "assert(assert._expr(assert._capt(dog.age+=1,'assignment',{start:{line:1,column:15}}),{start:{line:1,column:7}}));");
 });
