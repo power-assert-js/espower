@@ -149,4 +149,12 @@ describe('instrumentation spec', function () {
              "assert(assert._expr(assert._capt(assert._capt(typeof[[assert._capt(assert._capt(foo,'ident',{start:{line:1,column:16}}).bar,'ident',{start:{line:1,column:20}}),assert._capt(baz(assert._capt(moo,'ident',{start:{line:1,column:29}})),'funcall',{start:{line:1,column:25}})],assert._capt(+assert._capt(fourStr,'ident',{start:{line:1,column:38}}),'unary',{start:{line:1,column:36}})],'unary',{start:{line:1,column:7}})==='number','binary',{start:{line:1,column:47}}),{start:{line:1,column:7}}));");
     });
 
+
+    describe('ArrayExpression', function () {
+        inst("assert(++foo);",
+             "assert(assert._expr(assert._capt(++foo,'update',{start:{line:1,column:7}}),{start:{line:1,column:7}}));");
+
+        inst("assert(bar--);",
+             "assert(assert._expr(assert._capt(bar--,'update',{start:{line:1,column:7}}),{start:{line:1,column:7}}));");
+    });
 });
