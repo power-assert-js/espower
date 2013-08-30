@@ -30,7 +30,8 @@
     "coffee-script-redux": "2.0.0-beta6",
     "mocha": "1.12.0",
     "grunt": "~0.4.1",
-    "grunt-mocha-test": "~0.6.2"
+    "grunt-mocha-test": "~0.6.2",
+    "grunt-contrib-jshint": "~0.6.4"
   },
   "licenses": [
     {
