@@ -4,6 +4,19 @@ var espower = require('../lib/espower'),
     assert = require('assert');
 
 
+describe('espower.DEFAULT_OPTIONS', function () {
+    beforeEach(function () {
+        this.options = espower.DEFAULT_OPTIONS;
+    });
+    it('destructive: false', function () {
+        assert.equal(this.options.destructive, false);
+    });
+    it('powerAssertVariableName: "assert"', function () {
+        assert.equal(this.options.powerAssertVariableName, 'assert');
+    });
+});
+
+
 describe('instrumentation tests for options', function () {
     function extractBodyFrom (source) {
         var tree = esprima.parse(source, {tolerant: true, loc: true, range: true});
@@ -81,7 +94,6 @@ describe('instrumentation tests for options', function () {
 });
 
 
-
 describe('AST prerequisites. Error should be thrown if location is missing.', function () {
     beforeEach(function () {
         this.jsCode = 'assert(falsyStr);';
@@ -106,7 +118,6 @@ describe('AST prerequisites. Error should be thrown if location is missing.', fu
         }
     });
 });
-
 
 
 describe('location information', function () {
