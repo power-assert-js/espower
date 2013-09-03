@@ -150,7 +150,7 @@ describe('instrumentation spec', function () {
     });
 
 
-    describe('ArrayExpression', function () {
+    describe('UpdateExpression', function () {
         inst("assert(++foo);",
              "assert(assert._expr(assert._capt(++foo,'update',{start:{line:1,column:7}}),{start:{line:1,column:7}}));");
 
