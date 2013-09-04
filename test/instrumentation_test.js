@@ -157,4 +157,17 @@ describe('instrumentation spec', function () {
         inst("assert(bar--);",
              "assert(assert._expr(assert._capt(bar--,'update',{start:{line:1,column:7}}),{start:{line:1,column:7}}));");
     });
+
+
+    describe('ConditionalExpression', function () {
+        inst("assert(foo ? bar : baz);",
+             "assert(assert._expr(assert._capt(foo,'ident',{start:{line:1,column:7}})?assert._capt(bar,'ident',{start:{line:1,column:13}}):assert._capt(baz,'ident',{start:{line:1,column:19}}),{start:{line:1,column:7}}));");
+
+        inst("assert(falsy ? truthy : truthy ? anotherFalsy : truthy);",
+             "assert(assert._expr(assert._capt(falsy,'ident',{start:{line:1,column:7}})?assert._capt(truthy,'ident',{start:{line:1,column:15}}):assert._capt(truthy,'ident',{start:{line:1,column:24}})?assert._capt(anotherFalsy,'ident',{start:{line:1,column:33}}):assert._capt(truthy,'ident',{start:{line:1,column:48}}),{start:{line:1,column:7}}));");
+
+        inst("assert(foo() ? bar.baz : (typeof goo));",
+             "assert(assert._expr(assert._capt(foo(),'funcall',{start:{line:1,column:7}})?assert._capt(assert._capt(bar,'ident',{start:{line:1,column:15}}).baz,'ident',{start:{line:1,column:19}}):assert._capt(typeof goo,'unary',{start:{line:1,column:26}}),{start:{line:1,column:7}}));");
+    });
+
 });
