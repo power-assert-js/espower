@@ -18,6 +18,15 @@ describe('instrumentation spec', function () {
     }
 
 
+    describe('Literal', function () {
+        inst("assert(false);",
+             "assert(false);");
+
+        inst("assert(0);",
+             "assert(0);");
+    });
+
+
     describe('Identifier', function () {
         inst("assert(falsyStr);",
              "assert(assert._expr(assert._capt(falsyStr,'ident',{start:{line:1,column:7}}),{start:{line:1,column:7}}));");
