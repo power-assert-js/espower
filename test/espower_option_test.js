@@ -4,9 +4,9 @@ var espower = require('../lib/espower'),
     assert = require('assert');
 
 
-describe('espower.DEFAULT_OPTIONS', function () {
+describe('espower.defaultOptions()', function () {
     beforeEach(function () {
-        this.options = espower.DEFAULT_OPTIONS;
+        this.options = espower.defaultOptions();
     });
     it('destructive: false', function () {
         assert.equal(this.options.destructive, false);
