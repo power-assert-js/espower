@@ -5,7 +5,9 @@
   "keywords": [
     "test",
     "assert",
-    "testing"
+    "testing",
+    "ecmascript",
+    "ast"
   ],
   "homepage": "http://github.com/twada/espower",
   "author": {
