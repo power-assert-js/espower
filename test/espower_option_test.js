@@ -39,17 +39,17 @@ describe('instrumentation tests for options', function () {
                 callback(assert, saved, tree, result);
             });
         }
-        destructiveOptionTest('default is false', {}, function (assert, before, tree, after) {
+        destructiveOptionTest('default is false', {source: 'assert(falsyStr);'}, function (assert, before, tree, after) {
             assert.deepEqual(tree, before);
             assert.notDeepEqual(after, before);
             assert.notDeepEqual(after, tree);
         });
-        destructiveOptionTest('destructive: false', {destructive: false}, function (assert, before, tree, after) {
+        destructiveOptionTest('destructive: false', {source: 'assert(falsyStr);', destructive: false}, function (assert, before, tree, after) {
             assert.deepEqual(tree, before);
             assert.notDeepEqual(after, before);
             assert.notDeepEqual(after, tree);
         });
-        destructiveOptionTest('destructive: true', {destructive: true}, function (assert, before, tree, after) {
+        destructiveOptionTest('destructive: true', {source: 'assert(falsyStr);', destructive: true}, function (assert, before, tree, after) {
             assert.notDeepEqual(tree, before);
             assert.notDeepEqual(after, before);
             assert.deepEqual(after, tree);
@@ -58,14 +58,6 @@ describe('instrumentation tests for options', function () {
 
 
     describe('source option and path option.', function () {
-        it('path: null, source: null', function () {
-            var instrumentedCode = instrument('assert(falsyStr);', {});
-            assert.equal(instrumentedCode, "assert(assert._expr(assert._capt(falsyStr,'ident',{start:{line:1,column:7}}),{start:{line:1,column:7}}));");
-        });
-        it('source: null', function () {
-            var instrumentedCode = instrument('assert(falsyStr);', {path: '/path/to/baz_test.js'});
-            assert.equal(instrumentedCode, "assert(assert._expr(assert._capt(falsyStr,'ident',{start:{line:1,column:7}}),{start:{line:1,column:7},path:'/path/to/baz_test.js'}));");
-        });
         it('path: null', function () {
             var instrumentedCode = instrument('assert(falsyStr);', {source: 'assert(falsyStr);'});
             assert.equal(instrumentedCode, "assert(assert._expr(assert._capt(falsyStr,'ident',{start:{line:1,column:7}}),{start:{line:1,column:7}},'assert(falsyStr);'));");
@@ -90,6 +82,22 @@ describe('instrumentation tests for options', function () {
             var instrumentedCode = instrument('assert.ok(falsyStr);', {source: 'assert.ok(falsyStr);', powerAssertVariableName: 'test'});
             assert.equal(instrumentedCode, "assert.ok(falsyStr);");
         });
+    });
+});
+
+
+describe('option prerequisites. Error should be thrown if source is missing.', function () {
+    beforeEach(function () {
+        this.tree = esprima.parse('assert(falsyStr);', {tolerant: true, loc: true, range: true});
+    });
+    it('error message when path option is not specified', function () {
+        try {
+            espower(this.tree, {destructive: false, powerAssertVariableName: 'assert'});
+            assert.ok(false, 'Error should be thrown');
+        } catch (e) {
+            assert.equal(e.name, 'Error');
+            assert.equal(e.message, 'Target source code content should be specified by options.source.');
+        }
     });
 });
 
