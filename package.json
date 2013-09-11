@@ -28,7 +28,7 @@
   },
   "devDependencies": {
     "esprima": "1.0.4",
-    "escodegen": "0.0.26",
+    "escodegen": "~0.0.27",
     "coffee-script-redux": "2.0.0-beta7",
     "mocha": "1.12.1",
     "grunt": "~0.4.1",
