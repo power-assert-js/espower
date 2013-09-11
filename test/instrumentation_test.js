@@ -179,4 +179,10 @@ describe('instrumentation spec', function () {
              "assert(assert._expr(assert._capt(foo(),'funcall',{start:{line:1,column:7}})?assert._capt(assert._capt(bar,'ident',{start:{line:1,column:15}}).baz,'ident',{start:{line:1,column:19}}):assert._capt(typeof goo,'unary',{start:{line:1,column:26}}),{start:{line:1,column:7}},'assert(foo() ? bar.baz : (typeof goo));'));");
     });
 
+
+    describe('RegularExpression will not be instrumented', function () {
+        inst("assert(/^not/.exec(str));",
+             "assert(assert._expr(assert._capt(/^not/.exec(assert._capt(str,'ident',{start:{line:1,column:19}})),'funcall',{start:{line:1,column:14}}),{start:{line:1,column:7}},'assert(/^not/.exec(str));'));");
+    });
+
 });
