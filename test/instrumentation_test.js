@@ -4,13 +4,9 @@ var espower = require('../lib/espower'),
     assert = require('assert');
 
 describe('instrumentation spec', function () {
-    function extractBodyFrom (source) {
-        var tree = esprima.parse(source, {tolerant: true, loc: true, range: true});
-        return tree.body[0];
-    }
     function inst (jsCode, expected, options) {
         it(jsCode, function () {
-            var jsAST = extractBodyFrom(jsCode);
+            var jsAST = esprima.parse(jsCode, {tolerant: true, loc: true, range: true});;
             var espoweredAST = espower(jsAST, {source: jsCode});
             var instrumentedCode = escodegen.generate(espoweredAST, {format: {compact: true}});
             assert.equal(instrumentedCode, expected);
