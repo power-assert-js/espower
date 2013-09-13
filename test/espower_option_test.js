@@ -18,14 +18,10 @@ describe('espower.defaultOptions()', function () {
 
 
 describe('instrumentation tests for options', function () {
-    function extractBodyFrom (source) {
-        var tree = esprima.parse(source, {tolerant: true, loc: true, range: true});
-        return tree.body[0];
-    }
     function instrument (jsCode, options) {
-            var jsAST = extractBodyFrom(jsCode);
-            var espoweredAST = espower(jsAST, options);
-            var instrumentedCode = escodegen.generate(espoweredAST, {format: {compact: true}});
+        var jsAST = esprima.parse(jsCode, {tolerant: true, loc: true, range: true});;
+        var espoweredAST = espower(jsAST, options);
+        var instrumentedCode = escodegen.generate(espoweredAST, {format: {compact: true}});
         return instrumentedCode;
     }
 
@@ -81,6 +77,50 @@ describe('instrumentation tests for options', function () {
         it('not instrumented if powerAssertVariableName and actual variable name is different.', function () {
             var instrumentedCode = instrument('assert.ok(falsyStr);', {source: 'assert.ok(falsyStr);', powerAssertVariableName: 'test'});
             assert.equal(instrumentedCode, "assert.ok(falsyStr);");
+        });
+    });
+
+
+    describe('lineSeparator option', function () {
+        var lineDetected = "var falsyStr='';assert.ok(assert._expr(assert._capt(falsyStr,'ident',{start:{line:3,column:10}}),{start:{line:3,column:10}},'assert.ok(falsyStr);'));",
+            lineNotDetected = "var falsyStr='';assert.ok(assert._expr(assert._capt(falsyStr,'ident',{start:{line:3,column:10}}),{start:{line:3,column:10}}));";
+        function lineSeparatorTest (name, lineSeparatorInCode, options, expected) {
+            it(name, function () {
+                var sourceLines = [
+                    'var falsyStr = "";',
+                    '// comment line',
+                    'assert.ok(falsyStr);'
+                ].join(lineSeparatorInCode);
+                options.source = sourceLines;
+                assert.equal(instrument(sourceLines, options), expected);
+            });
+        }
+        context('code: LF', function () {
+            function when (name, opt, expected) {
+                lineSeparatorTest(name, '\n', opt, expected);
+            }
+            when('option: default', {},                   lineDetected);
+            when('option: LF',   {lineSeparator: '\n'},   lineDetected);
+            when('option: CR',   {lineSeparator: '\r'},   lineNotDetected);
+            when('option: CRLF', {lineSeparator: '\r\n'}, lineNotDetected);
+        });
+        context('code: CR', function () {
+            function when (name, opt, expected) {
+                lineSeparatorTest(name, '\r', opt, expected);
+            }
+            when('option: default', {},                   lineNotDetected);
+            when('option: LF',   {lineSeparator: '\n'},   lineNotDetected);
+            when('option: CR',   {lineSeparator: '\r'},   lineDetected);
+            when('option: CRLF', {lineSeparator: '\r\n'}, lineNotDetected);
+        });
+        context('code: CRLF', function () {
+            function when (name, opt, expected) {
+                lineSeparatorTest(name, '\r\n', opt, expected);
+            }
+            when('option: default', {},                   lineDetected);
+            when('option: LF',   {lineSeparator: '\n'},   lineDetected);
+            when('option: CR',   {lineSeparator: '\r'},   "var falsyStr='';assert.ok(assert._expr(assert._capt(falsyStr,'ident',{start:{line:3,column:10}}),{start:{line:3,column:10}},'\\nassert.ok(falsyStr);'));");
+            when('option: CRLF', {lineSeparator: '\r\n'}, lineDetected);
         });
     });
 });
