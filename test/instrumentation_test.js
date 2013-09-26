@@ -189,4 +189,13 @@ describe('instrumentation spec', function () {
         inst("assert(!({ foo: bar.baz, name: nameOf({firstName: first, lastName: last}) }));",
              "assert(assert._expr(assert._capt(!{foo:assert._capt(assert._capt(bar,'ident',{start:{line:1,column:16}}).baz,'ident',{start:{line:1,column:20}}),name:assert._capt(nameOf({firstName:assert._capt(first,'ident',{start:{line:1,column:50}}),lastName:assert._capt(last,'ident',{start:{line:1,column:67}})}),'funcall',{start:{line:1,column:31}})},'unary',{start:{line:1,column:7}}),{start:{line:1,column:7}},'assert(!({ foo: bar.baz, name: nameOf({firstName: first, lastName: last}) }));'));");
     });
+
+
+    describe('NewExpression', function () {
+        inst("assert(new Date());",
+             "assert(assert._expr(assert._capt(new Date(),'new',{start:{line:1,column:7}}),{start:{line:1,column:7}},'assert(new Date());'));");
+
+        inst("assert(!(new Array(foo, bar, baz)));",
+             "assert(assert._expr(assert._capt(!assert._capt(new Array(assert._capt(foo,'ident',{start:{line:1,column:19}}),assert._capt(bar,'ident',{start:{line:1,column:24}}),assert._capt(baz,'ident',{start:{line:1,column:29}})),'new',{start:{line:1,column:9}}),'unary',{start:{line:1,column:7}}),{start:{line:1,column:7}},'assert(!(new Array(foo, bar, baz)));'));");
+    });
 });
