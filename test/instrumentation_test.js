@@ -198,4 +198,10 @@ describe('instrumentation spec', function () {
         inst("assert(!(new Array(foo, bar, baz)));",
              "assert(assert._expr(assert._capt(!assert._capt(new Array(assert._capt(foo,'ident',{start:{line:1,column:19}}),assert._capt(bar,'ident',{start:{line:1,column:24}}),assert._capt(baz,'ident',{start:{line:1,column:29}})),'new',{start:{line:1,column:9}}),'unary',{start:{line:1,column:7}}),{start:{line:1,column:7}},'assert(!(new Array(foo, bar, baz)));'));");
     });
+
+
+    describe('FunctionExpression will not be instrumented', function () {
+        inst("assert(baz === (function (a, b) { return a + b; })(foo, bar));",
+             "assert(assert._expr(assert._capt(assert._capt(baz,'ident',{start:{line:1,column:7}})===assert._capt(function(a,b){return a+b;}(assert._capt(foo,'ident',{start:{line:1,column:51}}),assert._capt(bar,'ident',{start:{line:1,column:56}})),'funcall',{start:{line:1,column:15}}),'binary',{start:{line:1,column:11}}),{start:{line:1,column:7}},'assert(baz === (function (a, b) { return a + b; })(foo, bar));'));");
+    });
 });
