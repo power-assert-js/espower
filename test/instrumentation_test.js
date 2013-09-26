@@ -181,4 +181,12 @@ describe('instrumentation spec', function () {
              "assert(assert._expr(assert._capt(/^not/.exec(assert._capt(str,'ident',{start:{line:1,column:19}})),'funcall',{start:{line:1,column:14}}),{start:{line:1,column:7}},'assert(/^not/.exec(str));'));");
     });
 
+
+    describe('ObjectExpression', function () {
+        inst("assert({foo: bar, hoge: fuga});",
+             "assert(assert._expr({foo:assert._capt(bar,'ident',{start:{line:1,column:13}}),hoge:assert._capt(fuga,'ident',{start:{line:1,column:24}})},{start:{line:1,column:7}},'assert({foo: bar, hoge: fuga});'));");
+
+        inst("assert(!({ foo: bar.baz, name: nameOf({firstName: first, lastName: last}) }));",
+             "assert(assert._expr(assert._capt(!{foo:assert._capt(assert._capt(bar,'ident',{start:{line:1,column:16}}).baz,'ident',{start:{line:1,column:20}}),name:assert._capt(nameOf({firstName:assert._capt(first,'ident',{start:{line:1,column:50}}),lastName:assert._capt(last,'ident',{start:{line:1,column:67}})}),'funcall',{start:{line:1,column:31}})},'unary',{start:{line:1,column:7}}),{start:{line:1,column:7}},'assert(!({ foo: bar.baz, name: nameOf({firstName: first, lastName: last}) }));'));");
+    });
 });
