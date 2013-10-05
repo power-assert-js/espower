@@ -23,9 +23,15 @@ module.exports = function(grunt) {
         mochaTest: {
             unit: {
                 options: {
-                    reporter: 'spec'
+                    reporter: 'dot'
                 },
                 src: ['test/**/*.js']
+            }
+        },
+        watch: {
+            unit: {
+                files: ['test/**/*.js', 'lib/**/*.js'],
+                tasks: ['test']
             }
         }
     });
