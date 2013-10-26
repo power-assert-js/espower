@@ -20,6 +20,9 @@ describe('instrumentation spec', function () {
 
         inst("assert(0);",
              "assert(0);");
+
+        inst("assert.equal(1, 0);",
+             "assert.equal(1,0);");
     });
 
 
@@ -29,6 +32,9 @@ describe('instrumentation spec', function () {
 
         inst("return assert(falsyStr);",
              "return assert(assert._expr(assert._capt(falsyStr,'ident',{start:{line:1,column:14}}),{start:{line:1,column:14}},'return assert(falsyStr);'));");
+
+        inst("assert.equal(str, anotherStr);",
+             "assert.equal(assert._expr(assert._capt(str,'ident',{start:{line:1,column:13}}),{start:{line:1,column:13}},'assert.equal(str, anotherStr);'),assert._expr(assert._capt(anotherStr,'ident',{start:{line:1,column:18}}),{start:{line:1,column:18}},'assert.equal(str, anotherStr);'));");
     });
 
 
@@ -50,6 +56,9 @@ describe('instrumentation spec', function () {
 
         inst("assert(ary1.length === ary2.length);",
              "assert(assert._expr(assert._capt(assert._capt(assert._capt(ary1,'ident',{start:{line:1,column:7}}).length,'ident',{start:{line:1,column:12}})===assert._capt(assert._capt(ary2,'ident',{start:{line:1,column:23}}).length,'ident',{start:{line:1,column:28}}),'binary',{start:{line:1,column:19}}),{start:{line:1,column:7}},'assert(ary1.length === ary2.length);'));");
+
+        inst("assert.equal(ary1.length, ary2.length);",
+             "assert.equal(assert._expr(assert._capt(assert._capt(ary1,'ident',{start:{line:1,column:13}}).length,'ident',{start:{line:1,column:18}}),{start:{line:1,column:13}},'assert.equal(ary1.length, ary2.length);'),assert._expr(assert._capt(assert._capt(ary2,'ident',{start:{line:1,column:26}}).length,'ident',{start:{line:1,column:31}}),{start:{line:1,column:26}},'assert.equal(ary1.length, ary2.length);'));");
     });
 
 
@@ -74,6 +83,9 @@ describe('instrumentation spec', function () {
 
         inst("assert(typeof foo.bar !== 'undefined');",
              "assert(assert._expr(assert._capt(assert._capt(typeof assert._capt(assert._capt(foo,'ident',{start:{line:1,column:14}}).bar,'ident',{start:{line:1,column:18}}),'unary',{start:{line:1,column:7}})!=='undefined','binary',{start:{line:1,column:22}}),{start:{line:1,column:7}},'assert(typeof foo.bar !== \\'undefined\\');'));");
+
+        inst("assert.strictEqual(typeof foo, typeof bar);",
+             "assert.strictEqual(assert._expr(assert._capt(typeof foo,'unary',{start:{line:1,column:19}}),{start:{line:1,column:19}},'assert.strictEqual(typeof foo, typeof bar);'),assert._expr(assert._capt(typeof bar,'unary',{start:{line:1,column:31}}),{start:{line:1,column:31}},'assert.strictEqual(typeof foo, typeof bar);'));");
     });
 
 
@@ -86,6 +98,9 @@ describe('instrumentation spec', function () {
 
         inst("assert(2 > actual && actual < 13);",
              "assert(assert._expr(assert._capt(assert._capt(2>assert._capt(actual,'ident',{start:{line:1,column:11}}),'binary',{start:{line:1,column:9}})&&assert._capt(assert._capt(actual,'ident',{start:{line:1,column:21}})<13,'binary',{start:{line:1,column:28}}),'logical',{start:{line:1,column:18}}),{start:{line:1,column:7}},'assert(2 > actual && actual < 13);'));");
+
+        inst("assert.equal(5 < actual && actual < 13, falsy);",
+             "assert.equal(assert._expr(assert._capt(assert._capt(5<assert._capt(actual,'ident',{start:{line:1,column:17}}),'binary',{start:{line:1,column:15}})&&assert._capt(assert._capt(actual,'ident',{start:{line:1,column:27}})<13,'binary',{start:{line:1,column:34}}),'logical',{start:{line:1,column:24}}),{start:{line:1,column:13}},'assert.equal(5 < actual && actual < 13, falsy);'),assert._expr(assert._capt(falsy,'ident',{start:{line:1,column:40}}),{start:{line:1,column:40}},'assert.equal(5 < actual && actual < 13, falsy);'));");
     });
 
 
@@ -107,6 +122,9 @@ describe('instrumentation spec', function () {
 
         inst("assert(foo[propName]['key'][keys()['name']]);",
              "assert(assert._expr(assert._capt(assert._capt(assert._capt(assert._capt(foo,'ident',{start:{line:1,column:7}})[assert._capt(propName,'ident',{start:{line:1,column:11}})],'ident',{start:{line:1,column:10}})['key'],'ident',{start:{line:1,column:20}})[assert._capt(assert._capt(keys(),'funcall',{start:{line:1,column:28}})['name'],'ident',{start:{line:1,column:34}})],'ident',{start:{line:1,column:27}}),{start:{line:1,column:7}},'assert(foo[propName][\\'key\\'][keys()[\\'name\\']]);'));");
+
+        inst("assert.deepEqual(foo.propName, foo[key]);",
+             "assert.deepEqual(assert._expr(assert._capt(assert._capt(foo,'ident',{start:{line:1,column:17}}).propName,'ident',{start:{line:1,column:21}}),{start:{line:1,column:17}},'assert.deepEqual(foo.propName, foo[key]);'),assert._expr(assert._capt(assert._capt(foo,'ident',{start:{line:1,column:31}})[assert._capt(key,'ident',{start:{line:1,column:35}})],'ident',{start:{line:1,column:34}}),{start:{line:1,column:31}},'assert.deepEqual(foo.propName, foo[key]);'));");
     });
 
 
@@ -134,6 +152,9 @@ describe('instrumentation spec', function () {
 
         inst("assert(!concat(fuga, piyo));",
              "assert(assert._expr(assert._capt(!assert._capt(concat(assert._capt(fuga,'ident',{start:{line:1,column:15}}),assert._capt(piyo,'ident',{start:{line:1,column:21}})),'funcall',{start:{line:1,column:8}}),'unary',{start:{line:1,column:7}}),{start:{line:1,column:7}},'assert(!concat(fuga, piyo));'));");
+
+        inst("assert.strictEqual((three * (seven * ten)), math.calc.sum(one, two, three));",
+             "assert.strictEqual(assert._expr(assert._capt(assert._capt(three,'ident',{start:{line:1,column:20}})*assert._capt(assert._capt(seven,'ident',{start:{line:1,column:29}})*assert._capt(ten,'ident',{start:{line:1,column:37}}),'binary',{start:{line:1,column:35}}),'binary',{start:{line:1,column:26}}),{start:{line:1,column:20}},'assert.strictEqual((three * (seven * ten)), math.calc.sum(one, two, three));'),assert._expr(assert._capt(assert._capt(assert._capt(math,'ident',{start:{line:1,column:44}}).calc,'ident',{start:{line:1,column:49}}).sum(assert._capt(one,'ident',{start:{line:1,column:58}}),assert._capt(two,'ident',{start:{line:1,column:63}}),assert._capt(three,'ident',{start:{line:1,column:68}})),'funcall',{start:{line:1,column:54}}),{start:{line:1,column:44}},'assert.strictEqual((three * (seven * ten)), math.calc.sum(one, two, three));'));");
     });
 
 
@@ -143,6 +164,9 @@ describe('instrumentation spec', function () {
 
         inst("assert(dog.age += 1);",
              "assert(assert._expr(assert._capt(dog.age+=1,'assignment',{start:{line:1,column:15}}),{start:{line:1,column:7}},'assert(dog.age += 1);'));");
+
+        inst("assert.strictEqual(dog.age += 1, three);",
+             "assert.strictEqual(assert._expr(assert._capt(dog.age+=1,'assignment',{start:{line:1,column:27}}),{start:{line:1,column:19}},'assert.strictEqual(dog.age += 1, three);'),assert._expr(assert._capt(three,'ident',{start:{line:1,column:33}}),{start:{line:1,column:33}},'assert.strictEqual(dog.age += 1, three);'));");
     });
 
 
@@ -152,6 +176,9 @@ describe('instrumentation spec', function () {
 
         inst("assert(typeof [[foo.bar, baz(moo)], + fourStr] === 'number');",
              "assert(assert._expr(assert._capt(assert._capt(typeof[[assert._capt(assert._capt(foo,'ident',{start:{line:1,column:16}}).bar,'ident',{start:{line:1,column:20}}),assert._capt(baz(assert._capt(moo,'ident',{start:{line:1,column:29}})),'funcall',{start:{line:1,column:25}})],assert._capt(+assert._capt(fourStr,'ident',{start:{line:1,column:38}}),'unary',{start:{line:1,column:36}})],'unary',{start:{line:1,column:7}})==='number','binary',{start:{line:1,column:47}}),{start:{line:1,column:7}},'assert(typeof [[foo.bar, baz(moo)], + fourStr] === \\'number\\');'));");
+
+        inst("assert.notDeepEqual([foo, bar], [hoge, fuga, piyo]);",
+             "assert.notDeepEqual(assert._expr([assert._capt(foo,'ident',{start:{line:1,column:21}}),assert._capt(bar,'ident',{start:{line:1,column:26}})],{start:{line:1,column:20}},'assert.notDeepEqual([foo, bar], [hoge, fuga, piyo]);'),assert._expr([assert._capt(hoge,'ident',{start:{line:1,column:33}}),assert._capt(fuga,'ident',{start:{line:1,column:39}}),assert._capt(piyo,'ident',{start:{line:1,column:45}})],{start:{line:1,column:32}},'assert.notDeepEqual([foo, bar], [hoge, fuga, piyo]);'));");
     });
 
 
@@ -161,6 +188,9 @@ describe('instrumentation spec', function () {
 
         inst("assert(bar--);",
              "assert(assert._expr(assert._capt(bar--,'update',{start:{line:1,column:7}}),{start:{line:1,column:7}},'assert(bar--);'));");
+
+        inst("assert.strictEqual(++foo, bar--);",
+             "assert.strictEqual(assert._expr(assert._capt(++foo,'update',{start:{line:1,column:19}}),{start:{line:1,column:19}},'assert.strictEqual(++foo, bar--);'),assert._expr(assert._capt(bar--,'update',{start:{line:1,column:26}}),{start:{line:1,column:26}},'assert.strictEqual(++foo, bar--);'));");
     });
 
 
@@ -173,6 +203,9 @@ describe('instrumentation spec', function () {
 
         inst("assert(foo() ? bar.baz : (typeof goo));",
              "assert(assert._expr(assert._capt(foo(),'funcall',{start:{line:1,column:7}})?assert._capt(assert._capt(bar,'ident',{start:{line:1,column:15}}).baz,'ident',{start:{line:1,column:19}}):assert._capt(typeof goo,'unary',{start:{line:1,column:26}}),{start:{line:1,column:7}},'assert(foo() ? bar.baz : (typeof goo));'));");
+
+        inst("assert.equal((foo ? bar : baz), (falsy ? truthy : truthy ? anotherFalsy : truthy));",
+             "assert.equal(assert._expr(assert._capt(foo,'ident',{start:{line:1,column:14}})?assert._capt(bar,'ident',{start:{line:1,column:20}}):assert._capt(baz,'ident',{start:{line:1,column:26}}),{start:{line:1,column:14}},'assert.equal((foo ? bar : baz), (falsy ? truthy : truthy ? anotherFalsy : truthy));'),assert._expr(assert._capt(falsy,'ident',{start:{line:1,column:33}})?assert._capt(truthy,'ident',{start:{line:1,column:41}}):assert._capt(truthy,'ident',{start:{line:1,column:50}})?assert._capt(anotherFalsy,'ident',{start:{line:1,column:59}}):assert._capt(truthy,'ident',{start:{line:1,column:74}}),{start:{line:1,column:33}},'assert.equal((foo ? bar : baz), (falsy ? truthy : truthy ? anotherFalsy : truthy));'));");
     });
 
 
@@ -188,6 +221,9 @@ describe('instrumentation spec', function () {
 
         inst("assert(!({ foo: bar.baz, name: nameOf({firstName: first, lastName: last}) }));",
              "assert(assert._expr(assert._capt(!{foo:assert._capt(assert._capt(bar,'ident',{start:{line:1,column:16}}).baz,'ident',{start:{line:1,column:20}}),name:assert._capt(nameOf({firstName:assert._capt(first,'ident',{start:{line:1,column:50}}),lastName:assert._capt(last,'ident',{start:{line:1,column:67}})}),'funcall',{start:{line:1,column:31}})},'unary',{start:{line:1,column:7}}),{start:{line:1,column:7}},'assert(!({ foo: bar.baz, name: nameOf({firstName: first, lastName: last}) }));'));");
+
+        inst("assert.deepEqual({foo: bar, hoge: fuga}, {hoge: fuga, foo: bar});",
+             "assert.deepEqual(assert._expr({foo:assert._capt(bar,'ident',{start:{line:1,column:23}}),hoge:assert._capt(fuga,'ident',{start:{line:1,column:34}})},{start:{line:1,column:17}},'assert.deepEqual({foo: bar, hoge: fuga}, {hoge: fuga, foo: bar});'),assert._expr({hoge:assert._capt(fuga,'ident',{start:{line:1,column:48}}),foo:assert._capt(bar,'ident',{start:{line:1,column:59}})},{start:{line:1,column:41}},'assert.deepEqual({foo: bar, hoge: fuga}, {hoge: fuga, foo: bar});'));");
     });
 
 
@@ -197,6 +233,9 @@ describe('instrumentation spec', function () {
 
         inst("assert(!(new Array(foo, bar, baz)));",
              "assert(assert._expr(assert._capt(!assert._capt(new Array(assert._capt(foo,'ident',{start:{line:1,column:19}}),assert._capt(bar,'ident',{start:{line:1,column:24}}),assert._capt(baz,'ident',{start:{line:1,column:29}})),'new',{start:{line:1,column:9}}),'unary',{start:{line:1,column:7}}),{start:{line:1,column:7}},'assert(!(new Array(foo, bar, baz)));'));");
+
+        inst("assert.notEqual(new Date(), new Date('2013-01-12'));",
+             "assert.notEqual(assert._expr(assert._capt(new Date(),'new',{start:{line:1,column:16}}),{start:{line:1,column:16}},'assert.notEqual(new Date(), new Date(\\'2013-01-12\\'));'),assert._expr(assert._capt(new Date('2013-01-12'),'new',{start:{line:1,column:28}}),{start:{line:1,column:28}},'assert.notEqual(new Date(), new Date(\\'2013-01-12\\'));'));");
     });
 
 
