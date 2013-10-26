@@ -32,7 +32,7 @@
     "coffee-script-redux": "2.0.0-beta7",
     "grunt": "~0.4.1",
     "grunt-mocha-test": "~0.7.0",
-    "grunt-contrib-jshint": "~0.6.4",
+    "grunt-contrib-jshint": "~0.7.0",
     "grunt-contrib-watch": "~0.5.3"
   },
   "licenses": [
