@@ -28,11 +28,11 @@
   },
   "devDependencies": {
     "esprima": "1.0.4",
-    "escodegen": "~0.0.27",
+    "escodegen": "~0.0.28",
     "coffee-script-redux": "2.0.0-beta7",
     "grunt": "~0.4.1",
-    "grunt-mocha-test": "~0.7.0",
-    "grunt-contrib-jshint": "~0.7.0",
+    "grunt-mocha-test": "~0.8.0",
+    "grunt-contrib-jshint": "~0.7.1",
     "grunt-contrib-watch": "~0.5.3"
   },
   "licenses": [
