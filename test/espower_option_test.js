@@ -126,19 +126,53 @@ describe('instrumentation tests for options', function () {
 });
 
 
-describe('option prerequisites. Error should be thrown if source is missing.', function () {
+describe('option prerequisites', function () {
     beforeEach(function () {
         this.tree = esprima.parse('assert(falsyStr);', {tolerant: true, loc: true, range: true});
     });
-    it('error message when path option is not specified', function () {
-        try {
-            espower(this.tree, {destructive: false, powerAssertVariableName: 'assert'});
-            assert.ok(false, 'Error should be thrown');
-        } catch (e) {
-            assert.equal(e.name, 'Error');
-            assert.equal(e.message, 'Target source code content should be specified by options.source.');
-        }
-    });
+    function optionPrerequisitesTest (name, options, expected) {
+        it(name, function () {
+            try {
+                espower(this.tree, options);
+                assert.ok(false, 'Error should be thrown');
+            } catch (e) {
+                assert.equal(e.name, 'Error');
+                assert.equal(e.message, expected);
+            }
+        });
+    }
+
+    optionPrerequisitesTest('source option is undefined',
+                            {destructive: false, powerAssertVariableName: 'assert'},
+                            'Target source code content should be specified by options.source.');
+
+    optionPrerequisitesTest('source option is empty',
+                            {source: '', destructive: false, powerAssertVariableName: 'assert'},
+                            'Target source code content should be specified by options.source.');
+
+    optionPrerequisitesTest('destructive option is undefined',
+                            {source: 'assert(falsyStr);', destructive: undefined},
+                            'options.destructive should be specified.');
+
+    optionPrerequisitesTest('powerAssertVariableName option is undefined',
+                            {source: 'assert(falsyStr);', powerAssertVariableName: undefined},
+                            'options.powerAssertVariableName should be specified.');
+
+    optionPrerequisitesTest('lineSeparator option is undefined',
+                            {source: 'assert(falsyStr);', lineSeparator: undefined},
+                            'options.lineSeparator should be specified.');
+
+    optionPrerequisitesTest('targetMethods option is undefined',
+                            {source: 'assert(falsyStr);', targetMethods: undefined},
+                            'options.targetMethods should be specified.');
+
+    optionPrerequisitesTest('targetMethods.oneArg option is undefined',
+                            {source: 'assert(falsyStr);', targetMethods: { twoArgs: ['equal'] }},
+                            'options.targetMethods.oneArg should be specified.');
+
+    optionPrerequisitesTest('targetMethods.twoArgs option is undefined',
+                            {source: 'assert(falsyStr);', targetMethods: { oneArg: ['ok'] }},
+                            'options.targetMethods.twoArgs should be specified.');
 });
 
 
