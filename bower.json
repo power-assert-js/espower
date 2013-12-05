@@ -1,0 +1,17 @@
+{
+    "name": "espower",
+    "version": "0.2.1",
+    "main": "lib/espower.js",
+    "ignore": [
+        "**/.*",
+        "Gruntfile.js",
+        "expr.js",
+        "node_modules",
+        "package.json",
+        "test"
+    ],
+    "devDependencies": {
+        "esprima": "~1.0.4",
+        "escodegen": "~0.0.28"
+    }
+}
