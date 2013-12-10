@@ -24,7 +24,8 @@
     "url": "http://github.com/twada/espower.git"
   },
   "scripts": {
-    "test": "grunt test"
+    "test": "grunt test",
+    "coveralls": "grunt coverage && cat ./coverage.lcov | ./node_modules/coveralls/bin/coveralls.js"
   },
   "devDependencies": {
     "esprima": "~1.0.4",
@@ -34,7 +35,10 @@
     "grunt-mocha-test": "~0.8.1",
     "grunt-contrib-jshint": "~0.7.1",
     "grunt-contrib-watch": "~0.5.3",
-    "grunt-bump": "0.0.11"
+    "grunt-bump": "~0.0.13",
+    "mocha-lcov-reporter": "0.0.1",
+    "blanket": "~1.1.5",
+    "coveralls": "~2.6.0"
   },
   "licenses": [
     {

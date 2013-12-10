@@ -9,3 +9,5 @@ js.jar
 TODO.txt
 scripts/run_examples.sh
 scripts/example_runners/*
+coverage.lcov
+coverage.html

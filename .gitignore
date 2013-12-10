@@ -11,3 +11,5 @@
 /js.jar
 /TODO.txt
 /espowered_tests
+/coverage.lcov
+/coverage.html
