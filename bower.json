@@ -12,6 +12,6 @@
     ],
     "devDependencies": {
         "esprima": "~1.0.4",
-        "escodegen": "~0.0.28"
+        "escodegen": "~1.0.1"
     }
 }
