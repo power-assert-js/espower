@@ -1,6 +1,7 @@
 var espower = require('../lib/espower'),
     esprima = require('esprima'),
     escodegen = require('escodegen'),
+    deepcopy = require('deepcopy'),
     assert = require('assert');
 
 
@@ -30,7 +31,7 @@ describe('instrumentation tests for options', function () {
         function destructiveOptionTest (testName, option, callback) {
             it(testName, function () {
                 var tree = esprima.parse('assert(falsyStr);', {tolerant: true, loc: true, range: true}),
-                    saved = espower.deepCopy(tree),
+                    saved = deepcopy(tree),
                     result = espower(tree, option);
                 callback(assert, saved, tree, result);
             });
@@ -206,7 +207,7 @@ describe('location information', function () {
     it('preserve location of instrumented nodes.', function () {
         var jsCode = 'assert((three * (seven * ten)) === three);',
             tree = esprima.parse(jsCode, {tolerant: true, loc: true, range: true}),
-            saved = espower.deepCopy(tree),
+            saved = deepcopy(tree),
             result = espower(tree, {destructive: false, source: jsCode, path: '/path/to/baz_test.js'});
         espower.traverse(result, function (node) {
             if (typeof node.type === 'undefined') return;

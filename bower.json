@@ -10,6 +10,9 @@
         "package.json",
         "test"
     ],
+    "dependencies": {
+        "deepcopy": "~0.3.2"
+    },
     "devDependencies": {
         "esprima": "~1.0.4",
         "escodegen": "~1.0.1"
