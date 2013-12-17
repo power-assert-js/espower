@@ -1,6 +1,7 @@
 var espower = require('../lib/espower'),
     esprima = require('esprima'),
     escodegen = require('escodegen'),
+    estraverse = require('estraverse'),
     deepcopy = require('deepcopy'),
     assert = require('assert');
 
@@ -209,7 +210,7 @@ describe('location information', function () {
             tree = esprima.parse(jsCode, {tolerant: true, loc: true, range: true}),
             saved = deepcopy(tree),
             result = espower(tree, {destructive: false, source: jsCode, path: '/path/to/baz_test.js'});
-        espower.traverse(result, function (node) {
+        estraverse.traverse(result, function (node) {
             if (typeof node.type === 'undefined') return;
             assert.ok(node.loc !== 'undefined', 'type: ' + node.type);
             assert.ok(typeof node.range !== 'undefined', 'type: ' + node.type);

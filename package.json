@@ -28,6 +28,7 @@
     "coveralls": "grunt coverage && cat ./coverage.lcov | ./node_modules/coveralls/bin/coveralls.js"
   },
   "dependencies": {
+    "estraverse": "~1.5.0",
     "deepcopy": "~0.3.2"
   },
   "devDependencies": {
