@@ -18,6 +18,7 @@
         "esprima": "~1.0.4",
         "escodegen": "~0.0.28",
         "mocha": "~1.14.0",
+        "requirejs": "~2.1.5",
         "assert": "Jxck/assert"
     }
 }

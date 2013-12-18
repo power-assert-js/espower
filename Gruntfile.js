@@ -5,6 +5,14 @@ module.exports = function(grunt) {
 
     grunt.initConfig({
         pkg: pkg,
+        bower: {
+            all: {
+                rjsConfig: 'test/rjsconfig.js',
+                options: {
+                    baseUrl: 'test'
+                }
+            }
+        },
         bump: {
             options: {
                 files: ['package.json', 'bower.json'],
@@ -33,7 +41,7 @@ module.exports = function(grunt) {
                 options: {
                     reporter: 'dot'
                 },
-                src: ['test/**/*.js']
+                src: ['test/**/*_test.js']
             },
             coverage: {
                 options: {
@@ -42,7 +50,7 @@ module.exports = function(grunt) {
                     quiet: true,
                     captureFile: 'coverage.lcov'
                 },
-                src: ['test/**/*.js']
+                src: ['test/**/*_test.js']
             }
         },
         watch: {
