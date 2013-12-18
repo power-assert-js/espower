@@ -36,6 +36,20 @@ module.exports = function(grunt) {
                 jshintrc: '.jshintrc'
             }
         },
+        mocha: {
+            browser: {
+                src: ['test/test-browser.html'],
+                options: {
+                    run: true
+                }
+            },
+            amd: {
+                src: ['test/test-amd.html'],
+                options: {
+                    run: false
+                }
+            }
+        },
         mochaTest: {
             unit: {
                 options: {
@@ -56,11 +70,12 @@ module.exports = function(grunt) {
         watch: {
             unit: {
                 files: ['test/**/*.js', 'lib/**/*.js'],
-                tasks: ['test']
+                tasks: ['unit']
             }
         }
     });
 
-    grunt.registerTask('test', ['jshint', 'mochaTest:unit']);
+    grunt.registerTask('unit', ['jshint', 'mochaTest:unit']);
+    grunt.registerTask('test', ['jshint', 'mochaTest:unit', 'mocha:browser', 'mocha:amd']);
     grunt.registerTask('coverage', ['mochaTest:coverage']);
 };
