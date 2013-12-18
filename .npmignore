@@ -2,6 +2,7 @@
 .idea*
 .travis.yml
 node_modules/
+bower_components/
 npm-debug.log
 coverage.lcov
 coverage.html

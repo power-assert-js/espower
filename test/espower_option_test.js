@@ -1,9 +1,38 @@
-var espower = require('../lib/espower'),
-    esprima = require('esprima'),
-    escodegen = require('escodegen'),
-    estraverse = require('estraverse'),
-    deepcopy = require('deepcopy'),
-    assert = require('assert');
+(function (root, factory) {
+    'use strict';
+
+    var dependencies = [
+        '../lib/espower',
+        'esprima',
+        'escodegen',
+        'estraverse',
+        'deepcopy',
+        'assert'
+    ];
+
+    if (typeof define === 'function' && define.amd) {
+        define(dependencies, factory);
+    } else if (typeof exports === 'object') {
+        factory.apply(root, dependencies.map(function (path) { return require(path); }));
+    } else {
+        factory.apply(root, dependencies.map(function (path) {
+            var tokens = path.split('/');
+            return root[tokens[tokens.length - 1]];
+        }));
+    }
+}(this, function (
+    espower,
+    esprima,
+    escodegen,
+    estraverse,
+    deepcopy,
+    assert
+) {
+
+// see: https://github.com/Constellation/escodegen/issues/115
+if (typeof define === 'function' && define.amd) {
+    escodegen = window.escodegen;
+}
 
 
 describe('espower.defaultOptions()', function () {
@@ -217,3 +246,5 @@ describe('location information', function () {
         });
     });
 });
+
+}));
