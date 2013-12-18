@@ -28,6 +28,15 @@ module.exports = function(grunt) {
                 gitDescribeOptions: '--tags --always --abbrev=1 --dirty=-d' // options to use with '$ git describe'
             }
         },
+        connect: {
+            server: {
+                options: {
+                    port: 9001,
+                    base: '.',
+                    keepalive: true
+                }
+            }
+        },
         jshint: {
             files: [
                 'lib/**/*.js'
