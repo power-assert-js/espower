@@ -50,6 +50,12 @@ describe('instrumentation spec', function () {
 
         inst("assert.equal(1, 0);",
              "assert.equal(1,0);");
+
+        inst("assert(false, 'message');",
+             "assert(false,'message');");
+
+        inst("assert(false, messageStr);",
+             "assert(false,messageStr);");
     });
 
 
@@ -57,11 +63,17 @@ describe('instrumentation spec', function () {
         inst("assert(falsyStr);",
              "assert(assert._expr(assert._capt(falsyStr,'ident',{start:{line:1,column:7}}),{start:{line:1,column:7}},'assert(falsyStr);'));");
 
+        inst("assert(falsyStr, messageStr);",
+             "assert(assert._expr(assert._capt(falsyStr,'ident',{start:{line:1,column:7}}),{start:{line:1,column:7}},'assert(falsyStr, messageStr);'),messageStr);");
+
         inst("return assert(falsyStr);",
              "return assert(assert._expr(assert._capt(falsyStr,'ident',{start:{line:1,column:14}}),{start:{line:1,column:14}},'return assert(falsyStr);'));");
 
         inst("assert.equal(str, anotherStr);",
              "assert.equal(assert._expr(assert._capt(str,'ident',{start:{line:1,column:13}}),{start:{line:1,column:13}},'assert.equal(str, anotherStr);'),assert._expr(assert._capt(anotherStr,'ident',{start:{line:1,column:18}}),{start:{line:1,column:18}},'assert.equal(str, anotherStr);'));");
+
+        inst("assert.equal(str, anotherStr, messageStr);",
+             "assert.equal(assert._expr(assert._capt(str,'ident',{start:{line:1,column:13}}),{start:{line:1,column:13}},'assert.equal(str, anotherStr, messageStr);'),assert._expr(assert._capt(anotherStr,'ident',{start:{line:1,column:18}}),{start:{line:1,column:18}},'assert.equal(str, anotherStr, messageStr);'),messageStr);");
     });
 
 
