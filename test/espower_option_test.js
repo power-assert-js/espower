@@ -1,7 +1,36 @@
-var espower = require('../lib/espower'),
-    esprima = require('esprima'),
-    escodegen = require('escodegen'),
-    assert = require('assert');
+(function (root, factory) {
+    'use strict';
+
+    var dependencies = [
+        '../lib/espower',
+        'esprima',
+        'escodegen',
+        'estraverse',
+        'assert'
+    ];
+
+    if (typeof define === 'function' && define.amd) {
+        define(dependencies, factory);
+    } else if (typeof exports === 'object') {
+        factory.apply(root, dependencies.map(function (path) { return require(path); }));
+    } else {
+        factory.apply(root, dependencies.map(function (path) {
+            var tokens = path.split('/');
+            return root[tokens[tokens.length - 1]];
+        }));
+    }
+}(this, function (
+    espower,
+    esprima,
+    escodegen,
+    estraverse,
+    assert
+) {
+
+// see: https://github.com/Constellation/escodegen/issues/115
+if (typeof define === 'function' && define.amd) {
+    escodegen = window.escodegen;
+}
 
 
 describe('espower.defaultOptions()', function () {
@@ -208,10 +237,12 @@ describe('location information', function () {
             tree = esprima.parse(jsCode, {tolerant: true, loc: true, range: true}),
             saved = espower.deepCopy(tree),
             result = espower(tree, {destructive: false, source: jsCode, path: '/path/to/baz_test.js'});
-        espower.traverse(result, function (node) {
+        estraverse.traverse(result, function (node) {
             if (typeof node.type === 'undefined') return;
             assert.ok(node.loc !== 'undefined', 'type: ' + node.type);
             assert.ok(typeof node.range !== 'undefined', 'type: ' + node.type);
         });
     });
 });
+
+}));

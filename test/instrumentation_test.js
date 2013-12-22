@@ -1,7 +1,34 @@
-var espower = require('../lib/espower'),
-    esprima = require('esprima'),
-    escodegen = require('escodegen'),
-    assert = require('assert');
+(function (root, factory) {
+    'use strict';
+
+    var dependencies = [
+        '../lib/espower',
+        'esprima',
+        'escodegen',
+        'assert'
+    ];
+
+    if (typeof define === 'function' && define.amd) {
+        define(dependencies, factory);
+    } else if (typeof exports === 'object') {
+        factory.apply(root, dependencies.map(function (path) { return require(path); }));
+    } else {
+        factory.apply(root, dependencies.map(function (path) {
+            var tokens = path.split('/');
+            return root[tokens[tokens.length - 1]];
+        }));
+    }
+}(this, function (
+    espower,
+    esprima,
+    escodegen,
+    assert
+) {
+
+// see: https://github.com/Constellation/escodegen/issues/115
+if (typeof define === 'function' && define.amd) {
+    escodegen = window.escodegen;
+}
 
 describe('instrumentation spec', function () {
     function inst (jsCode, expected, options) {
@@ -23,6 +50,12 @@ describe('instrumentation spec', function () {
 
         inst("assert.equal(1, 0);",
              "assert.equal(1,0);");
+
+        inst("assert(false, 'message');",
+             "assert(false,'message');");
+
+        inst("assert(false, messageStr);",
+             "assert(false,messageStr);");
     });
 
 
@@ -30,11 +63,17 @@ describe('instrumentation spec', function () {
         inst("assert(falsyStr);",
              "assert(assert._expr(assert._capt(falsyStr,'ident',{start:{line:1,column:7}}),{start:{line:1,column:7}},'assert(falsyStr);'));");
 
+        inst("assert(falsyStr, messageStr);",
+             "assert(assert._expr(assert._capt(falsyStr,'ident',{start:{line:1,column:7}}),{start:{line:1,column:7}},'assert(falsyStr, messageStr);'),messageStr);");
+
         inst("return assert(falsyStr);",
              "return assert(assert._expr(assert._capt(falsyStr,'ident',{start:{line:1,column:14}}),{start:{line:1,column:14}},'return assert(falsyStr);'));");
 
         inst("assert.equal(str, anotherStr);",
              "assert.equal(assert._expr(assert._capt(str,'ident',{start:{line:1,column:13}}),{start:{line:1,column:13}},'assert.equal(str, anotherStr);'),assert._expr(assert._capt(anotherStr,'ident',{start:{line:1,column:18}}),{start:{line:1,column:18}},'assert.equal(str, anotherStr);'));");
+
+        inst("assert.equal(str, anotherStr, messageStr);",
+             "assert.equal(assert._expr(assert._capt(str,'ident',{start:{line:1,column:13}}),{start:{line:1,column:13}},'assert.equal(str, anotherStr, messageStr);'),assert._expr(assert._capt(anotherStr,'ident',{start:{line:1,column:18}}),{start:{line:1,column:18}},'assert.equal(str, anotherStr, messageStr);'),messageStr);");
     });
 
 
@@ -244,3 +283,5 @@ describe('instrumentation spec', function () {
              "assert(assert._expr(assert._capt(assert._capt(baz,'ident',{start:{line:1,column:7}})===assert._capt(function(a,b){return a+b;}(assert._capt(foo,'ident',{start:{line:1,column:51}}),assert._capt(bar,'ident',{start:{line:1,column:56}})),'funcall',{start:{line:1,column:15}}),'binary',{start:{line:1,column:11}}),{start:{line:1,column:7}},'assert(baz === (function (a, b) { return a + b; })(foo, bar));'));");
     });
 });
+
+}));

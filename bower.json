@@ -10,8 +10,14 @@
         "package.json",
         "test"
     ],
+    "dependencies": {
+        "estraverse": "~1.5.0"
+    },
     "devDependencies": {
         "esprima": "~1.0.4",
-        "escodegen": "~1.0.1"
+        "escodegen": "~0.0.28",
+        "mocha": "~1.14.0",
+        "requirejs": "~2.1.5",
+        "assert": "Jxck/assert"
     }
 }
