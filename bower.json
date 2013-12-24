@@ -8,6 +8,7 @@
         "expr.js",
         "node_modules",
         "package.json",
+        "coverage",
         "test"
     ],
     "dependencies": {
