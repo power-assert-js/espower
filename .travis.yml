@@ -4,8 +4,9 @@ node_js:
   - "0.8"
 before_install:
   - "npm install -g grunt-cli"
-script:
+before_script:
   - "npm run-script bower"
+script:
   - "npm test"
 after_success:
   - "npm run-script coveralls"
