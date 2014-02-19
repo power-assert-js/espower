@@ -16,9 +16,9 @@
     },
     "devDependencies": {
         "esprima": "~1.0.4",
-        "escodegen": "~1.1.0",
+        "escodegen": "~1.2.0",
         "mocha": "~1.17.1",
-        "requirejs": "~2.1.10",
+        "requirejs": "~2.1.11",
         "assert": "Jxck/assert"
     }
 }
