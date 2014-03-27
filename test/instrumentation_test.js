@@ -31,12 +31,31 @@ if (typeof define === 'function' && define.amd) {
 }
 
 describe('instrumentation spec', function () {
-    function inst (jsCode, expected, options) {
+    function testWithEsprimaOptions (jsCode, expected, options) {
         it(jsCode, function () {
-            var jsAST = esprima.parse(jsCode, {tolerant: true, loc: true, range: true});;
-            var espoweredAST = espower(jsAST, {source: jsCode});
-            var instrumentedCode = escodegen.generate(espoweredAST, {format: {compact: true}});
+            var jsAST = esprima.parse(jsCode, options),
+                espoweredAST = espower(jsAST, {source: jsCode}),
+                instrumentedCode = escodegen.generate(espoweredAST, {format: {compact: true}});
             assert.equal(instrumentedCode, expected);
+        });
+    }
+
+    function inst (jsCode, expected) {
+        describe('with loc, range, tokens', function () {
+            var options = {tolerant: true, loc: true, range: true, tokens: true};
+            testWithEsprimaOptions(jsCode, expected, options);
+        });
+        describe('with loc, range', function () {
+            var options = {tolerant: true, loc: true, range: true};
+            testWithEsprimaOptions(jsCode, expected, options);
+        });
+        describe('with loc, tokens', function () {
+            var options = {tolerant: true, loc: true, tokens: true};
+            testWithEsprimaOptions(jsCode, expected, options);
+        });
+        describe('with loc', function () {
+            var options = {tolerant: true, loc: true};
+            testWithEsprimaOptions(jsCode, expected, options);
         });
     }
 
@@ -86,6 +105,9 @@ describe('instrumentation spec', function () {
 
         inst("assert(fuga === piyo);",
              "assert(assert._expr(assert._capt(assert._capt(fuga,'ident',{start:{line:1,column:7}})===assert._capt(piyo,'ident',{start:{line:1,column:16}}),'binary',{start:{line:1,column:12}}),{start:{line:1,column:7}},'assert(fuga === piyo);'));");
+
+        inst("assert(fuga   ===   piyo);",
+             "assert(assert._expr(assert._capt(assert._capt(fuga,'ident',{start:{line:1,column:7}})===assert._capt(piyo,'ident',{start:{line:1,column:20}}),'binary',{start:{line:1,column:14}}),{start:{line:1,column:7}},'assert(fuga   ===   piyo);'));");
 
         inst("assert(fuga !== piyo);",
              "assert(assert._expr(assert._capt(assert._capt(fuga,'ident',{start:{line:1,column:7}})!==assert._capt(piyo,'ident',{start:{line:1,column:16}}),'binary',{start:{line:1,column:12}}),{start:{line:1,column:7}},'assert(fuga !== piyo);'));");
@@ -138,6 +160,9 @@ describe('instrumentation spec', function () {
         inst("assert(2 > actual && actual < 13);",
              "assert(assert._expr(assert._capt(assert._capt(2>assert._capt(actual,'ident',{start:{line:1,column:11}}),'binary',{start:{line:1,column:9}})&&assert._capt(assert._capt(actual,'ident',{start:{line:1,column:21}})<13,'binary',{start:{line:1,column:28}}),'logical',{start:{line:1,column:18}}),{start:{line:1,column:7}},'assert(2 > actual && actual < 13);'));");
 
+        inst("assert(2   >   actual    &&  actual     <  13);",
+             "assert(assert._expr(assert._capt(assert._capt(2>assert._capt(actual,'ident',{start:{line:1,column:15}}),'binary',{start:{line:1,column:11}})&&assert._capt(assert._capt(actual,'ident',{start:{line:1,column:29}})<13,'binary',{start:{line:1,column:40}}),'logical',{start:{line:1,column:25}}),{start:{line:1,column:7}},'assert(2   >   actual    &&  actual     <  13);'));");
+
         inst("assert.equal(5 < actual && actual < 13, falsy);",
              "assert.equal(assert._expr(assert._capt(assert._capt(5<assert._capt(actual,'ident',{start:{line:1,column:17}}),'binary',{start:{line:1,column:15}})&&assert._capt(assert._capt(actual,'ident',{start:{line:1,column:27}})<13,'binary',{start:{line:1,column:34}}),'logical',{start:{line:1,column:24}}),{start:{line:1,column:13}},'assert.equal(5 < actual && actual < 13, falsy);'),assert._expr(assert._capt(falsy,'ident',{start:{line:1,column:40}}),{start:{line:1,column:40}},'assert.equal(5 < actual && actual < 13, falsy);'));");
     });
@@ -156,11 +181,17 @@ describe('instrumentation spec', function () {
         inst("assert(foo[propName]);",
              "assert(assert._expr(assert._capt(assert._capt(foo,'ident',{start:{line:1,column:7}})[assert._capt(propName,'ident',{start:{line:1,column:11}})],'ident',{start:{line:1,column:10}}),{start:{line:1,column:7}},'assert(foo[propName]);'));");
 
+        inst("assert(foo  [  propName  ]  );",
+             "assert(assert._expr(assert._capt(assert._capt(foo,'ident',{start:{line:1,column:7}})[assert._capt(propName,'ident',{start:{line:1,column:15}})],'ident',{start:{line:1,column:12}}),{start:{line:1,column:7}},'assert(foo  [  propName  ]  );'));");
+
         inst("assert(foo[func(key)]);",
              "assert(assert._expr(assert._capt(assert._capt(foo,'ident',{start:{line:1,column:7}})[assert._capt(func(assert._capt(key,'ident',{start:{line:1,column:16}})),'funcall',{start:{line:1,column:11}})],'ident',{start:{line:1,column:10}}),{start:{line:1,column:7}},'assert(foo[func(key)]);'));");
 
         inst("assert(foo[propName]['key'][keys()['name']]);",
              "assert(assert._expr(assert._capt(assert._capt(assert._capt(assert._capt(foo,'ident',{start:{line:1,column:7}})[assert._capt(propName,'ident',{start:{line:1,column:11}})],'ident',{start:{line:1,column:10}})['key'],'ident',{start:{line:1,column:20}})[assert._capt(assert._capt(keys(),'funcall',{start:{line:1,column:28}})['name'],'ident',{start:{line:1,column:34}})],'ident',{start:{line:1,column:27}}),{start:{line:1,column:7}},'assert(foo[propName][\\'key\\'][keys()[\\'name\\']]);'));");
+
+        inst("assert( foo [  propName  ] [  'key' ]   [ keys  (  )  [   'name'  ] ]  );",
+             "assert(assert._expr(assert._capt(assert._capt(assert._capt(assert._capt(foo,'ident',{start:{line:1,column:8}})[assert._capt(propName,'ident',{start:{line:1,column:15}})],'ident',{start:{line:1,column:12}})['key'],'ident',{start:{line:1,column:27}})[assert._capt(assert._capt(keys(),'funcall',{start:{line:1,column:42}})['name'],'ident',{start:{line:1,column:54}})],'ident',{start:{line:1,column:40}}),{start:{line:1,column:8}},'assert( foo [  propName  ] [  \\'key\\' ]   [ keys  (  )  [   \\'name\\'  ] ]  );'));");
 
         inst("assert.deepEqual(foo.propName, foo[key]);",
              "assert.deepEqual(assert._expr(assert._capt(assert._capt(foo,'ident',{start:{line:1,column:17}}).propName,'ident',{start:{line:1,column:21}}),{start:{line:1,column:17}},'assert.deepEqual(foo.propName, foo[key]);'),assert._expr(assert._capt(assert._capt(foo,'ident',{start:{line:1,column:31}})[assert._capt(key,'ident',{start:{line:1,column:35}})],'ident',{start:{line:1,column:34}}),{start:{line:1,column:31}},'assert.deepEqual(foo.propName, foo[key]);'));");
@@ -203,6 +234,9 @@ describe('instrumentation spec', function () {
 
         inst("assert(dog.age += 1);",
              "assert(assert._expr(assert._capt(dog.age+=1,'assignment',{start:{line:1,column:15}}),{start:{line:1,column:7}},'assert(dog.age += 1);'));");
+
+        inst("assert(dog.age    +=  1);",
+             "assert(assert._expr(assert._capt(dog.age+=1,'assignment',{start:{line:1,column:18}}),{start:{line:1,column:7}},'assert(dog.age    +=  1);'));");
 
         inst("assert.strictEqual(dog.age += 1, three);",
              "assert.strictEqual(assert._expr(assert._capt(dog.age+=1,'assignment',{start:{line:1,column:27}}),{start:{line:1,column:19}},'assert.strictEqual(dog.age += 1, three);'),assert._expr(assert._capt(three,'ident',{start:{line:1,column:33}}),{start:{line:1,column:33}},'assert.strictEqual(dog.age += 1, three);'));");
