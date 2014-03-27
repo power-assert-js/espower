@@ -181,11 +181,17 @@ describe('instrumentation spec', function () {
         inst("assert(foo[propName]);",
              "assert(assert._expr(assert._capt(assert._capt(foo,'ident',{start:{line:1,column:7}})[assert._capt(propName,'ident',{start:{line:1,column:11}})],'ident',{start:{line:1,column:10}}),{start:{line:1,column:7}},'assert(foo[propName]);'));");
 
+        inst("assert(foo  [  propName  ]  );",
+             "assert(assert._expr(assert._capt(assert._capt(foo,'ident',{start:{line:1,column:7}})[assert._capt(propName,'ident',{start:{line:1,column:15}})],'ident',{start:{line:1,column:12}}),{start:{line:1,column:7}},'assert(foo  [  propName  ]  );'));");
+
         inst("assert(foo[func(key)]);",
              "assert(assert._expr(assert._capt(assert._capt(foo,'ident',{start:{line:1,column:7}})[assert._capt(func(assert._capt(key,'ident',{start:{line:1,column:16}})),'funcall',{start:{line:1,column:11}})],'ident',{start:{line:1,column:10}}),{start:{line:1,column:7}},'assert(foo[func(key)]);'));");
 
         inst("assert(foo[propName]['key'][keys()['name']]);",
              "assert(assert._expr(assert._capt(assert._capt(assert._capt(assert._capt(foo,'ident',{start:{line:1,column:7}})[assert._capt(propName,'ident',{start:{line:1,column:11}})],'ident',{start:{line:1,column:10}})['key'],'ident',{start:{line:1,column:20}})[assert._capt(assert._capt(keys(),'funcall',{start:{line:1,column:28}})['name'],'ident',{start:{line:1,column:34}})],'ident',{start:{line:1,column:27}}),{start:{line:1,column:7}},'assert(foo[propName][\\'key\\'][keys()[\\'name\\']]);'));");
+
+        inst("assert( foo [  propName  ] [  'key' ]   [ keys  (  )  [   'name'  ] ]  );",
+             "assert(assert._expr(assert._capt(assert._capt(assert._capt(assert._capt(foo,'ident',{start:{line:1,column:8}})[assert._capt(propName,'ident',{start:{line:1,column:15}})],'ident',{start:{line:1,column:12}})['key'],'ident',{start:{line:1,column:27}})[assert._capt(assert._capt(keys(),'funcall',{start:{line:1,column:42}})['name'],'ident',{start:{line:1,column:54}})],'ident',{start:{line:1,column:40}}),{start:{line:1,column:8}},'assert( foo [  propName  ] [  \\'key\\' ]   [ keys  (  )  [   \\'name\\'  ] ]  );'));");
 
         inst("assert.deepEqual(foo.propName, foo[key]);",
              "assert.deepEqual(assert._expr(assert._capt(assert._capt(foo,'ident',{start:{line:1,column:17}}).propName,'ident',{start:{line:1,column:21}}),{start:{line:1,column:17}},'assert.deepEqual(foo.propName, foo[key]);'),assert._expr(assert._capt(assert._capt(foo,'ident',{start:{line:1,column:31}})[assert._capt(key,'ident',{start:{line:1,column:35}})],'ident',{start:{line:1,column:34}}),{start:{line:1,column:31}},'assert.deepEqual(foo.propName, foo[key]);'));");
