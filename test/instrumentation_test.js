@@ -117,9 +117,6 @@ describe('instrumentation spec', function () {
 
         inst("assert(ary1.length === ary2.length);",
              "assert(assert._expr(assert._capt(assert._capt(assert._capt(ary1,'ident',{start:{line:1,column:7}}).length,'ident',{start:{line:1,column:12}})===assert._capt(assert._capt(ary2,'ident',{start:{line:1,column:23}}).length,'ident',{start:{line:1,column:28}}),'binary',{start:{line:1,column:19}}),{start:{line:1,column:7}},'assert(ary1.length === ary2.length);'));");
-
-        inst("assert.equal(ary1.length, ary2.length);",
-             "assert.equal(assert._expr(assert._capt(assert._capt(ary1,'ident',{start:{line:1,column:13}}).length,'ident',{start:{line:1,column:18}}),{start:{line:1,column:13}},'assert.equal(ary1.length, ary2.length);'),assert._expr(assert._capt(assert._capt(ary2,'ident',{start:{line:1,column:26}}).length,'ident',{start:{line:1,column:31}}),{start:{line:1,column:26}},'assert.equal(ary1.length, ary2.length);'));");
     });
 
 
@@ -192,6 +189,9 @@ describe('instrumentation spec', function () {
 
         inst("assert( foo [  propName  ] [  'key' ]   [ keys  (  )  [   'name'  ] ]  );",
              "assert(assert._expr(assert._capt(assert._capt(assert._capt(assert._capt(foo,'ident',{start:{line:1,column:8}})[assert._capt(propName,'ident',{start:{line:1,column:15}})],'ident',{start:{line:1,column:12}})['key'],'ident',{start:{line:1,column:27}})[assert._capt(assert._capt(keys(),'funcall',{start:{line:1,column:42}})['name'],'ident',{start:{line:1,column:54}})],'ident',{start:{line:1,column:40}}),{start:{line:1,column:8}},'assert( foo [  propName  ] [  \\'key\\' ]   [ keys  (  )  [   \\'name\\'  ] ]  );'));");
+
+        inst("assert.equal(ary1.length, ary2.length);",
+             "assert.equal(assert._expr(assert._capt(assert._capt(ary1,'ident',{start:{line:1,column:13}}).length,'ident',{start:{line:1,column:18}}),{start:{line:1,column:13}},'assert.equal(ary1.length, ary2.length);'),assert._expr(assert._capt(assert._capt(ary2,'ident',{start:{line:1,column:26}}).length,'ident',{start:{line:1,column:31}}),{start:{line:1,column:26}},'assert.equal(ary1.length, ary2.length);'));");
 
         inst("assert.deepEqual(foo.propName, foo[key]);",
              "assert.deepEqual(assert._expr(assert._capt(assert._capt(foo,'ident',{start:{line:1,column:17}}).propName,'ident',{start:{line:1,column:21}}),{start:{line:1,column:17}},'assert.deepEqual(foo.propName, foo[key]);'),assert._expr(assert._capt(assert._capt(foo,'ident',{start:{line:1,column:31}})[assert._capt(key,'ident',{start:{line:1,column:35}})],'ident',{start:{line:1,column:34}}),{start:{line:1,column:31}},'assert.deepEqual(foo.propName, foo[key]);'));");
