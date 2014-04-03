@@ -208,6 +208,12 @@ describe('instrumentation spec', function () {
         inst("assert(isFalsy(positiveInt));",
              "assert(assert._expr(assert._capt(isFalsy(assert._capt(positiveInt,'ident',{start:{line:1,column:15}})),'funcall',{start:{line:1,column:7}}),{start:{line:1,column:7}},'assert(isFalsy(positiveInt));'));");
 
+        inst("assert(foo[propName]());",
+             "assert(assert._expr(assert._capt(assert._capt(foo,'ident',{start:{line:1,column:7}})[assert._capt(propName,'ident',{start:{line:1,column:11}})](),'funcall',{start:{line:1,column:10}}),{start:{line:1,column:7}},'assert(foo[propName]());'));");
+
+        inst("assert(foo[hoge[fuga[piyo]]]());",
+             "assert(assert._expr(assert._capt(assert._capt(foo,'ident',{start:{line:1,column:7}})[assert._capt(assert._capt(hoge,'ident',{start:{line:1,column:11}})[assert._capt(assert._capt(fuga,'ident',{start:{line:1,column:16}})[assert._capt(piyo,'ident',{start:{line:1,column:21}})],'ident',{start:{line:1,column:20}})],'ident',{start:{line:1,column:15}})](),'funcall',{start:{line:1,column:10}}),{start:{line:1,column:7}},'assert(foo[hoge[fuga[piyo]]]());'));");
+
         inst("assert(sum(one, two, three) === seven);",
              "assert(assert._expr(assert._capt(assert._capt(sum(assert._capt(one,'ident',{start:{line:1,column:11}}),assert._capt(two,'ident',{start:{line:1,column:16}}),assert._capt(three,'ident',{start:{line:1,column:21}})),'funcall',{start:{line:1,column:7}})===assert._capt(seven,'ident',{start:{line:1,column:32}}),'binary',{start:{line:1,column:28}}),{start:{line:1,column:7}},'assert(sum(one, two, three) === seven);'));");
 
