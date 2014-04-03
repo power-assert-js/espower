@@ -6,6 +6,7 @@
         "**/.*",
         "Gruntfile.js",
         "expr.js",
+        "esp.js",
         "node_modules",
         "package.json",
         "coverage",
