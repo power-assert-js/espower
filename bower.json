@@ -6,6 +6,7 @@
         "**/.*",
         "Gruntfile.js",
         "expr.js",
+        "esp.js",
         "node_modules",
         "package.json",
         "coverage",
@@ -16,7 +17,7 @@
     },
     "devDependencies": {
         "esprima": "~1.0.4",
-        "escodegen": "~1.3.0",
+        "escodegen": "1.3.0",
         "mocha": "~1.18.2",
         "requirejs": "~2.1.11",
         "assert": "Jxck/assert"
