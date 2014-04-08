@@ -48,7 +48,7 @@ describe('espower.defaultOptions()', function () {
 
 describe('instrumentation tests for options', function () {
     function instrument (jsCode, options) {
-        var jsAST = esprima.parse(jsCode, {tolerant: true, loc: true, range: true, tokens: true});;
+        var jsAST = esprima.parse(jsCode, {tolerant: true, loc: true, tokens: true});;
         var espoweredAST = espower(jsAST, options);
         var instrumentedCode = escodegen.generate(espoweredAST, {format: {compact: true}});
         return instrumentedCode;
@@ -85,11 +85,11 @@ describe('instrumentation tests for options', function () {
     describe('source option and path option.', function () {
         it('path: null', function () {
             var instrumentedCode = instrument('assert(falsyStr);', {source: 'assert(falsyStr);'});
-            assert.equal(instrumentedCode, "assert(assert._expr(assert._capt(falsyStr,'ident',{start:{line:1,column:7}}),{start:{line:1,column:7}},'assert(falsyStr);'));");
+            assert.equal(instrumentedCode, "assert(assert._expr(assert._capt(falsyStr,''),{tree:{'type':'Identifier','name':'falsyStr','loc':{'start':{'line':1,'column':7},'end':{'line':1,'column':15}}},tokens:[{'type':'Identifier','value':'falsyStr','loc':{'start':{'line':1,'column':7},'end':{'line':1,'column':15}}}],content:'assert(falsyStr);'}));");
         });
         it('with source and path', function () {
             var instrumentedCode = instrument('assert(falsyStr);', {source: 'assert(falsyStr);', path: '/path/to/baz_test.js'});
-            assert.equal(instrumentedCode, "assert(assert._expr(assert._capt(falsyStr,'ident',{start:{line:1,column:7}}),{start:{line:1,column:7},path:'/path/to/baz_test.js'},'assert(falsyStr);'));");
+            assert.equal(instrumentedCode, "assert(assert._expr(assert._capt(falsyStr,''),{tree:{'type':'Identifier','name':'falsyStr','loc':{'start':{'line':1,'column':7},'end':{'line':1,'column':15}}},tokens:[{'type':'Identifier','value':'falsyStr','loc':{'start':{'line':1,'column':7},'end':{'line':1,'column':15}}}],content:'assert(falsyStr);',filepath:'/path/to/baz_test.js'}));");
         });
     });
 
@@ -97,11 +97,11 @@ describe('instrumentation tests for options', function () {
     describe('powerAssertVariableName option.', function () {
         it('default is "assert"', function () {
             var instrumentedCode = instrument('assert(falsyStr);', {source: 'assert(falsyStr);'});
-            assert.equal(instrumentedCode, "assert(assert._expr(assert._capt(falsyStr,'ident',{start:{line:1,column:7}}),{start:{line:1,column:7}},'assert(falsyStr);'));");
+            assert.equal(instrumentedCode, "assert(assert._expr(assert._capt(falsyStr,''),{tree:{'type':'Identifier','name':'falsyStr','loc':{'start':{'line':1,'column':7},'end':{'line':1,'column':15}}},tokens:[{'type':'Identifier','value':'falsyStr','loc':{'start':{'line':1,'column':7},'end':{'line':1,'column':15}}}],content:'assert(falsyStr);'}));");
         });
         it('powerAssertVariableName: "test"', function () {
             var instrumentedCode = instrument('test.ok(falsyStr);', {source: 'test.ok(falsyStr);', powerAssertVariableName: 'test'});
-            assert.equal(instrumentedCode, "test.ok(test._expr(test._capt(falsyStr,'ident',{start:{line:1,column:8}}),{start:{line:1,column:8}},'test.ok(falsyStr);'));");
+            assert.equal(instrumentedCode, "test.ok(test._expr(test._capt(falsyStr,''),{tree:{'type':'Identifier','name':'falsyStr','loc':{'start':{'line':1,'column':8},'end':{'line':1,'column':16}}},tokens:[{'type':'Identifier','value':'falsyStr','loc':{'start':{'line':1,'column':8},'end':{'line':1,'column':16}}}],content:'test.ok(falsyStr);'}));");
         });
         it('not instrumented if powerAssertVariableName and actual variable name is different.', function () {
             var instrumentedCode = instrument('assert.ok(falsyStr);', {source: 'assert.ok(falsyStr);', powerAssertVariableName: 'test'});
@@ -111,8 +111,10 @@ describe('instrumentation tests for options', function () {
 
 
     describe('lineSeparator option', function () {
-        var lineDetected = "var falsyStr='';assert.ok(assert._expr(assert._capt(falsyStr,'ident',{start:{line:3,column:10}}),{start:{line:3,column:10}},'assert.ok(falsyStr);'));",
-            lineNotDetected = "var falsyStr='';assert.ok(assert._expr(assert._capt(falsyStr,'ident',{start:{line:3,column:10}}),{start:{line:3,column:10}}));";
+        var lineDetected = "var falsyStr='';assert.ok(assert._expr(assert._capt(falsyStr,''),{tree:{'type':'Identifier','name':'falsyStr','loc':{'start':{'line':3,'column':10},'end':{'line':3,'column':18}}},tokens:[{'type':'Identifier','value':'falsyStr','loc':{'start':{'line':3,'column':10},'end':{'line':3,'column':18}}}],content:'assert.ok(falsyStr);'}));",
+
+            lineNotDetected = "var falsyStr='';assert.ok(assert._expr(assert._capt(falsyStr,''),{tree:{'type':'Identifier','name':'falsyStr','loc':{'start':{'line':3,'column':10},'end':{'line':3,'column':18}}},tokens:[{'type':'Identifier','value':'falsyStr','loc':{'start':{'line':3,'column':10},'end':{'line':3,'column':18}}}]}));";
+
         function lineSeparatorTest (name, lineSeparatorInCode, options, expected) {
             it(name, function () {
                 var sourceLines = [
@@ -148,7 +150,7 @@ describe('instrumentation tests for options', function () {
             }
             when('option: default', {},                   lineDetected);
             when('option: LF',   {lineSeparator: '\n'},   lineDetected);
-            when('option: CR',   {lineSeparator: '\r'},   "var falsyStr='';assert.ok(assert._expr(assert._capt(falsyStr,'ident',{start:{line:3,column:10}}),{start:{line:3,column:10}},'\\nassert.ok(falsyStr);'));");
+            when('option: CR',   {lineSeparator: '\r'},   "var falsyStr='';assert.ok(assert._expr(assert._capt(falsyStr,''),{tree:{'type':'Identifier','name':'falsyStr','loc':{'start':{'line':3,'column':10},'end':{'line':3,'column':18}}},tokens:[{'type':'Identifier','value':'falsyStr','loc':{'start':{'line':3,'column':10},'end':{'line':3,'column':18}}}],content:'\\nassert.ok(falsyStr);'}));");
             when('option: CRLF', {lineSeparator: '\r\n'}, lineDetected);
         });
     });
