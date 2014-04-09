@@ -45,7 +45,7 @@
     "grunt-contrib-watch": "~0.6.1",
     "grunt-mocha": "~0.4.10",
     "grunt-mocha-test": "~0.10.0",
-    "load-grunt-tasks": "~0.3.0",
+    "jit-grunt": "^0.4.1",
     "mocha-lcov-reporter": "0.0.1"
   },
   "licenses": [
