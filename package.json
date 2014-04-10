@@ -3,6 +3,7 @@
   "description": "Power Assert feature instrumentor based on the Mozilla JavaScript AST",
   "version": "0.4.1",
   "keywords": [
+    "power-assert",
     "test",
     "assert",
     "testing",
