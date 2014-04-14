@@ -1,9 +1,9 @@
 espower
 ================================
 
-[![Build Status](https://travis-ci.org/twada/espower.png?branch=master)](https://travis-ci.org/twada/espower)
-[![NPM version](https://badge.fury.io/js/espower.png)](http://badge.fury.io/js/espower)
-[![Dependency Status](https://gemnasium.com/twada/espower.png)](https://gemnasium.com/twada/espower)
+[![Build Status](https://travis-ci.org/twada/espower.svg?branch=master)](https://travis-ci.org/twada/espower)
+[![NPM version](https://badge.fury.io/js/espower.svg)](http://badge.fury.io/js/espower)
+[![Dependency Status](https://gemnasium.com/twada/espower.svg)](https://gemnasium.com/twada/espower)
 [![Coverage Status](https://coveralls.io/repos/twada/espower/badge.png?branch=master)](https://coveralls.io/r/twada/espower?branch=master)
 [![Built with Grunt](https://cdn.gruntjs.com/builtwith.png)](http://gruntjs.com/)
 
