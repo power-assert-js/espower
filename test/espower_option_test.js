@@ -110,7 +110,7 @@ describe('instrumentation tests for options', function () {
     });
 
 
-    describe('lineSeparator option', function () {
+    describe('lineSeparator', function () {
         var lineDetected = "var falsyStr='';assert.ok(assert._expr(assert._capt(falsyStr,''),{content:'assert.ok(falsyStr)'}));";
 
         function lineSeparatorTest (name, lineSeparatorInCode, options, expected) {
@@ -129,27 +129,18 @@ describe('instrumentation tests for options', function () {
                 lineSeparatorTest(name, '\n', opt, expected);
             }
             when('option: default', {},                   lineDetected);
-            when('option: LF',   {lineSeparator: '\n'},   lineDetected);
-            when('option: CR',   {lineSeparator: '\r'},   lineDetected);
-            when('option: CRLF', {lineSeparator: '\r\n'}, lineDetected);
         });
         context('code: CR', function () {
             function when (name, opt, expected) {
                 lineSeparatorTest(name, '\r', opt, expected);
             }
             when('option: default', {},                   lineDetected);
-            when('option: LF',   {lineSeparator: '\n'},   lineDetected);
-            when('option: CR',   {lineSeparator: '\r'},   lineDetected);
-            when('option: CRLF', {lineSeparator: '\r\n'}, lineDetected);
         });
         context('code: CRLF', function () {
             function when (name, opt, expected) {
                 lineSeparatorTest(name, '\r\n', opt, expected);
             }
             when('option: default', {},                   lineDetected);
-            when('option: LF',   {lineSeparator: '\n'},   lineDetected);
-            when('option: CR',   {lineSeparator: '\r'},   lineDetected);
-            when('option: CRLF', {lineSeparator: '\r\n'}, lineDetected);
         });
     });
 });
@@ -186,10 +177,6 @@ describe('option prerequisites', function () {
     optionPrerequisitesTest('powerAssertVariableName option is undefined',
                             {source: 'assert(falsyStr);', powerAssertVariableName: undefined},
                             'options.powerAssertVariableName should be specified.');
-
-    optionPrerequisitesTest('lineSeparator option is undefined',
-                            {source: 'assert(falsyStr);', lineSeparator: undefined},
-                            'options.lineSeparator should be specified.');
 
     optionPrerequisitesTest('targetMethods option is undefined',
                             {source: 'assert(falsyStr);', targetMethods: undefined},

@@ -41,22 +41,22 @@ describe('instrumentation spec', function () {
     }
 
     function inst (jsCode, expected) {
-        // describe('with loc, range, tokens', function () {
-        //     var options = {tolerant: true, loc: true, range: true, tokens: true};
-        //     testWithEsprimaOptions(jsCode, expected, options);
-        // });
-        // describe('with loc, range', function () {
-        //     var options = {tolerant: true, loc: true, range: true};
-        //     testWithEsprimaOptions(jsCode, expected, options);
-        // });
+        describe('with loc, range, tokens', function () {
+            var options = {tolerant: true, loc: true, range: true, tokens: true};
+            testWithEsprimaOptions(jsCode, expected, options);
+        });
+        describe('with loc, range', function () {
+            var options = {tolerant: true, loc: true, range: true};
+            testWithEsprimaOptions(jsCode, expected, options);
+        });
         describe('with loc, tokens', function () {
             var options = {tolerant: true, loc: true, tokens: true, raw: true};
             testWithEsprimaOptions(jsCode, expected, options);
         });
-        // describe('with loc', function () {
-        //     var options = {tolerant: true, loc: true};
-        //     testWithEsprimaOptions(jsCode, expected, options);
-        // });
+        describe('with loc', function () {
+            var options = {tolerant: true, loc: true};
+            testWithEsprimaOptions(jsCode, expected, options);
+        });
     }
 
 
