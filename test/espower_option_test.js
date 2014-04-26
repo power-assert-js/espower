@@ -162,14 +162,6 @@ describe('option prerequisites', function () {
         });
     }
 
-    optionPrerequisitesTest('source option is undefined',
-                            {destructive: false, powerAssertVariableName: 'assert'},
-                            'Target source code content should be specified by options.source.');
-
-    optionPrerequisitesTest('source option is empty',
-                            {source: '', destructive: false, powerAssertVariableName: 'assert'},
-                            'Target source code content should be specified by options.source.');
-
     optionPrerequisitesTest('destructive option is undefined',
                             {source: 'assert(falsyStr);', destructive: undefined},
                             'options.destructive should be specified.');
