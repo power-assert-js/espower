@@ -88,6 +88,9 @@ describe('instrumentation spec', function () {
         inst("assert.equal(str, anotherStr);",
              "assert.equal(assert._expr(assert._capt(str,''),{content:'assert.equal(str, anotherStr)',filepath:'/path/to/some_test.js'}),assert._expr(assert._capt(anotherStr,''),{content:'assert.equal(str, anotherStr)',filepath:'/path/to/some_test.js'}));");
 
+        inst("assert.equal(\nstr,\nanotherStr\n);",
+             "assert.equal(assert._expr(assert._capt(str,''),{content:'assert.equal(str, anotherStr)',filepath:'/path/to/some_test.js'}),assert._expr(assert._capt(anotherStr,''),{content:'assert.equal(str, anotherStr)',filepath:'/path/to/some_test.js'}));");
+
         inst("assert.equal(str, anotherStr, messageStr);",
              "assert.equal(assert._expr(assert._capt(str,''),{content:'assert.equal(str, anotherStr, messageStr)',filepath:'/path/to/some_test.js'}),assert._expr(assert._capt(anotherStr,''),{content:'assert.equal(str, anotherStr, messageStr)',filepath:'/path/to/some_test.js'}),messageStr);");
     });
@@ -101,6 +104,9 @@ describe('instrumentation spec', function () {
              "assert(assert._expr(assert._capt(assert._capt(fuga,'left')!==4,''),{content:'assert(fuga !== 4)',filepath:'/path/to/some_test.js'}));");
 
         inst("assert(fuga === piyo);",
+             "assert(assert._expr(assert._capt(assert._capt(fuga,'left')===assert._capt(piyo,'right'),''),{content:'assert(fuga === piyo)',filepath:'/path/to/some_test.js'}));");
+
+        inst("assert(fuga\n ===\n piyo);",
              "assert(assert._expr(assert._capt(assert._capt(fuga,'left')===assert._capt(piyo,'right'),''),{content:'assert(fuga === piyo)',filepath:'/path/to/some_test.js'}));");
 
         inst("assert(fuga   ===   piyo);",
