@@ -48,7 +48,7 @@ describe('espower.defaultOptions()', function () {
 
 describe('instrumentation tests for options', function () {
     function instrument (jsCode, options) {
-        var jsAST = esprima.parse(jsCode, {tolerant: true, loc: true, tokens: true});;
+        var jsAST = esprima.parse(jsCode, {tolerant: true, loc: true, tokens: true, raw: true});
         var espoweredAST = espower(jsAST, options);
         var instrumentedCode = escodegen.generate(espoweredAST, {format: {compact: true}});
         return instrumentedCode;
@@ -58,7 +58,7 @@ describe('instrumentation tests for options', function () {
     describe('destructive option', function () {
         function destructiveOptionTest (testName, option, callback) {
             it(testName, function () {
-                var tree = esprima.parse('assert(falsyStr);', {tolerant: true, loc: true, range: true, tokens: true}),
+                var tree = esprima.parse('assert(falsyStr);', {tolerant: true, loc: true, range: true, tokens: true, raw: true}),
                     saved = espower.deepCopy(tree),
                     result = espower(tree, option);
                 callback(assert, saved, tree, result);
@@ -148,7 +148,7 @@ describe('instrumentation tests for options', function () {
 
 describe('option prerequisites', function () {
     beforeEach(function () {
-        this.tree = esprima.parse('assert(falsyStr);', {tolerant: true, loc: true, range: true, tokens: true});
+        this.tree = esprima.parse('assert(falsyStr);', {tolerant: true, loc: true, range: true, tokens: true, raw: true});
     });
     function optionPrerequisitesTest (name, options, expected) {
         it(name, function () {
@@ -187,7 +187,7 @@ describe('option prerequisites', function () {
 describe('AST prerequisites. Error should be thrown if location is missing.', function () {
     beforeEach(function () {
         this.jsCode = 'assert(falsyStr);';
-        this.tree = esprima.parse(this.jsCode, {tolerant: true, loc: false, tokens: true});
+        this.tree = esprima.parse(this.jsCode, {tolerant: true, loc: false, tokens: true, raw: true});
     });
     it('error message when path option is not specified', function () {
         try {
@@ -213,7 +213,7 @@ describe('AST prerequisites. Error should be thrown if location is missing.', fu
 describe('location information', function () {
     it('preserve location of instrumented nodes.', function () {
         var jsCode = 'assert((three * (seven * ten)) === three);',
-            tree = esprima.parse(jsCode, {tolerant: true, loc: true, range: true, tokens: true}),
+            tree = esprima.parse(jsCode, {tolerant: true, loc: true, range: true, tokens: true, raw: true}),
             saved = espower.deepCopy(tree),
             result = espower(tree, {destructive: false, source: jsCode, path: '/path/to/baz_test.js'});
         estraverse.traverse(result, function (node) {

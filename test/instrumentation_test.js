@@ -42,19 +42,19 @@ describe('instrumentation spec', function () {
 
     function inst (jsCode, expected) {
         describe('with loc, range, tokens', function () {
-            var options = {tolerant: true, loc: true, range: true, tokens: true};
+            var options = {tolerant: true, loc: true, range: true, tokens: true, raw: true};
             testWithEsprimaOptions(jsCode, expected, options);
         });
         describe('with loc, range', function () {
-            var options = {tolerant: true, loc: true, range: true};
+            var options = {tolerant: true, loc: true, range: true, raw: true};
             testWithEsprimaOptions(jsCode, expected, options);
         });
         describe('with loc, tokens', function () {
-            var options = {tolerant: true, loc: true, tokens: true};
+            var options = {tolerant: true, loc: true, tokens: true, raw: true};
             testWithEsprimaOptions(jsCode, expected, options);
         });
         describe('with loc', function () {
-            var options = {tolerant: true, loc: true};
+            var options = {tolerant: true, loc: true, raw: true};
             testWithEsprimaOptions(jsCode, expected, options);
         });
     }
@@ -326,6 +326,16 @@ describe('instrumentation spec', function () {
         inst("assert(baz === (function (a, b) { return a + b; })(foo, bar));",
              "assert(assert._expr(assert._capt(assert._capt(baz,'arguments/0/left')===assert._capt(function(a,b){return a+b;}(assert._capt(foo,'arguments/0/right/arguments/0'),assert._capt(bar,'arguments/0/right/arguments/1')),'arguments/0/right'),'arguments/0'),{content:'assert(baz === function (a, b) {return a + b;}(foo, bar))',filepath:'/path/to/some_test.js'}));");
     });
+
+
+    describe('multibyte string literal', function () {
+        inst("assert(fuga !== 'ふが');",
+             "assert(assert._expr(assert._capt(assert._capt(fuga,'arguments/0/left')!=='\\u3075\\u304C','arguments/0'),{content:'assert(fuga !== \\'\\u3075\\u304C\\')',filepath:'/path/to/some_test.js'}));");
+
+        inst("assert('ほげ' !== 'ふが');",
+             "assert(assert._expr(assert._capt('\\u307B\\u3052'!=='\\u3075\\u304C','arguments/0'),{content:'assert(\\'\\u307B\\u3052\\' !== \\'\\u3075\\u304C\\')',filepath:'/path/to/some_test.js'}));");
+    });
+
 });
 
 }));
