@@ -60,6 +60,15 @@ describe('instrumentation spec', function () {
     }
 
 
+    describe('Non target', function () {
+        inst("assert.hoge(falsyStr);",
+             "assert.hoge(falsyStr);");
+
+        inst("hoge(falsyStr);",
+             "hoge(falsyStr);");
+    });
+
+
     describe('Literal', function () {
         inst("assert(false);",
              "assert(false);");
@@ -76,6 +85,14 @@ describe('instrumentation spec', function () {
         inst("assert(false, messageStr);",
              "assert(false,messageStr);");
     });
+
+
+
+    describe('multiline, multiassert', function () {
+        inst("assert.equal(\nstr,\nanotherStr\n);\n\nassert.equal(\nstr,\nyetAnotherStr\n);",
+             "assert.equal(assert._expr(assert._capt(str,'arguments/0'),{content:'assert.equal(str, anotherStr)',filepath:'/path/to/some_test.js',line:1}),assert._expr(assert._capt(anotherStr,'arguments/1'),{content:'assert.equal(str, anotherStr)',filepath:'/path/to/some_test.js',line:1}));assert.equal(assert._expr(assert._capt(str,'arguments/0'),{content:'assert.equal(str, yetAnotherStr)',filepath:'/path/to/some_test.js',line:6}),assert._expr(assert._capt(yetAnotherStr,'arguments/1'),{content:'assert.equal(str, yetAnotherStr)',filepath:'/path/to/some_test.js',line:6}));");
+    });
+
 
 
     describe('Identifier', function () {
@@ -298,7 +315,6 @@ describe('instrumentation spec', function () {
 
 
     describe('ObjectExpression', function () {
-
         inst("assert({foo: bar, hoge: fuga});",
              "assert(assert._expr({foo:assert._capt(bar,'arguments/0/properties/0/value'),hoge:assert._capt(fuga,'arguments/0/properties/1/value')},{content:'assert({foo: bar,hoge: fuga})',filepath:'/path/to/some_test.js',line:1}));");
 
@@ -313,6 +329,9 @@ describe('instrumentation spec', function () {
     describe('NewExpression', function () {
         inst("assert(new Date());",
              "assert(assert._expr(assert._capt(new Date(),'arguments/0'),{content:'assert(new Date())',filepath:'/path/to/some_test.js',line:1}));");
+
+        inst("assert(new foo.bar.Baz());",
+             "assert(assert._expr(assert._capt(new(assert._capt(assert._capt(foo,'arguments/0/callee/object/object').bar,'arguments/0/callee/object')).Baz(),'arguments/0'),{content:'assert(new foo.bar.Baz())',filepath:'/path/to/some_test.js',line:1}));");
 
         inst("assert(!(new Array(foo, bar, baz)));",
              "assert(assert._expr(assert._capt(!assert._capt(new Array(assert._capt(foo,'arguments/0/argument/arguments/0'),assert._capt(bar,'arguments/0/argument/arguments/1'),assert._capt(baz,'arguments/0/argument/arguments/2')),'arguments/0/argument'),'arguments/0'),{content:'assert(!new Array(foo, bar, baz))',filepath:'/path/to/some_test.js',line:1}));");
