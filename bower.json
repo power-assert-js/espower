@@ -18,8 +18,8 @@
     "estraverse": "~1.5.0"
   },
   "devDependencies": {
-    "mocha": "~1.18.2",
-    "requirejs": "~2.1.11",
+    "mocha": "~1.20.0",
+    "requirejs": "~2.1.13",
     "assert": "Jxck/assert"
   },
   "resolutions": {
