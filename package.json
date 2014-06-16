@@ -17,6 +17,14 @@
     "url": "http://github.com/twada"
   },
   "main": "./lib/espower",
+  "files": [
+    "Gruntfile.js",
+    "MIT-LICENSE.txt",
+    "README.md",
+    "lib",
+    "package.json",
+    "test"
+  ],
   "directories": {
     "lib": "./lib"
   },
