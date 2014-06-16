@@ -1,17 +1,35 @@
 {
   "name": "espower",
-  "version": "0.7.0",
+  "description": "Power Assert feature instrumentor based on the Mozilla JavaScript AST",
   "main": "lib/espower.js",
   "ignore": [
     "**/.*",
     "Gruntfile.js",
-    "expr.js",
     "esp.js",
-    "node_modules",
     "package.json",
     "coverage",
     "test"
   ],
+  "keywords": [
+    "power-assert",
+    "test",
+    "assert",
+    "testing",
+    "ecmascript",
+    "ast"
+  ],
+  "authors": [
+    {
+      "name": "Takuto Wada",
+      "email": "takuto.wada@gmail.com",
+      "homepage": "https://github.com/twada"
+    }
+  ],
+  "homepage": "https://github.com/twada/espower",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/twada/espower.git"
+  },
   "dependencies": {
     "esprima": "~1.2.0",
     "escodegen": "1.3.0",
