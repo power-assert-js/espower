@@ -2,6 +2,7 @@
   "name": "espower",
   "description": "Power Assert feature instrumentor based on the Mozilla JavaScript AST",
   "main": "lib/espower.js",
+  "license": "MIT-LICENSE.txt",
   "ignore": [
     "**/.*",
     "Gruntfile.js",
