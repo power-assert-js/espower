@@ -22,7 +22,11 @@
     <script type="text/javascript" src="./instrumentation_test.js"></script>
     <script type="text/javascript">
       mocha.checkLeaks();
-      mocha.run();
+      if (window.mochaPhantomJS) {
+        mochaPhantomJS.run();
+      } else {
+        mocha.run();
+      }
     </script>
   </body>
 </html>
