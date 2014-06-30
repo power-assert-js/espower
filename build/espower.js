@@ -1,9 +1,43 @@
 !function(e){if("object"==typeof exports&&"undefined"!=typeof module)module.exports=e();else if("function"==typeof define&&define.amd)define([],e);else{var f;"undefined"!=typeof window?f=window:"undefined"!=typeof global?f=global:"undefined"!=typeof self&&(f=self),f.espower=e()}}(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);throw new Error("Cannot find module '"+o+"'")}var f=n[o]={exports:{}};t[o][0].call(f.exports,function(e){var n=t[o][1][e];return s(n?n:e)},f,f.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(_dereq_,module,exports){
 /**
+ * espower - Power Assert feature instrumentor based on the Mozilla JavaScript AST.
+ *
+ * https://github.com/twada/espower
+ *
+ * Copyright (c) 2013-2014 Takuto Wada
+ * Licensed under the MIT license.
+ *   https://github.com/twada/espower/blob/master/MIT-LICENSE.txt
+ */
+'use strict';
+
+var defaultOptions = _dereq_('./lib/default-options'),
+    Instrumentor = _dereq_('./lib/instrumentor'),
+    deepCopy = _dereq_('./lib/ast-deepcopy'),
+    extend = _dereq_('node.extend');
+
+/**
+ * Instrument power assert feature into code. Mozilla JS AST in, Mozilla JS AST out.
+ * @param ast JavaScript Mozilla JS AST to instrument (directly modified if destructive option is truthy)
+ * @param options Instrumentation options.
+ * @return instrumented AST
+ */
+function espower (ast, options) {
+    var instrumentor = new Instrumentor(extend(defaultOptions(), (options || {})));
+    return instrumentor.instrument(ast);
+}
+
+espower.deepCopy = deepCopy;
+espower.defaultOptions = defaultOptions;
+module.exports = espower;
+
+},{"./lib/ast-deepcopy":2,"./lib/default-options":3,"./lib/instrumentor":4,"node.extend":23}],2:[function(_dereq_,module,exports){
+/**
  * Copyright (C) 2012 Yusuke Suzuki (twitter: @Constellation) and other contributors.
  * Released under the BSD license.
  * https://github.com/Constellation/esmangle/blob/master/LICENSE.BSD
  */
+'use strict';
+
 var isArray = Array.isArray || function isArray (array) {
     return Object.prototype.toString.call(array) === '[object Array]';
 };
@@ -35,438 +69,415 @@ function deepCopy (obj) {
 
 module.exports = deepCopy;
 
-},{}],2:[function(_dereq_,module,exports){
-/**
- * espower.js - Power Assert feature instrumentor based on the Mozilla JavaScript AST.
- *
- * https://github.com/twada/espower
- *
- * Copyright (c) 2013-2014 Takuto Wada
- * Licensed under the MIT license.
- *   https://github.com/twada/espower/blob/master/MIT-LICENSE.txt
- */
+},{}],3:[function(_dereq_,module,exports){
+'use strict';
+
+module.exports = function defaultOptions () {
+    return {
+        destructive: false,
+        powerAssertVariableName: 'assert',
+        escodegenOptions: {
+            format: {
+                indent: {
+                    style: ''
+                },
+                newline: ''
+            },
+            verbatim: 'x-verbatim-espower'
+        },
+        targetMethods: {
+            oneArg: [
+                'ok'
+            ],
+            twoArgs: [
+                'equal',
+                'notEqual',
+                'strictEqual',
+                'notStrictEqual',
+                'deepEqual',
+                'notDeepEqual'
+            ]
+        }
+    };
+};
+
+},{}],4:[function(_dereq_,module,exports){
 'use strict';
 
 var estraverse = _dereq_('estraverse'),
     escodegen = _dereq_('escodegen'),
     deepCopy = _dereq_('./ast-deepcopy'),
     typeName = _dereq_('type-name'),
-    extend = _dereq_('node.extend');
+    extend = _dereq_('node.extend'),
+    syntax = estraverse.Syntax,
+    supportedNodeTypes = [
+        syntax.Identifier,
+        syntax.MemberExpression,
+        syntax.CallExpression,
+        syntax.UnaryExpression,
+        syntax.BinaryExpression,
+        syntax.LogicalExpression,
+        syntax.AssignmentExpression,
+        syntax.ObjectExpression,
+        syntax.NewExpression,
+        syntax.ArrayExpression,
+        syntax.ConditionalExpression,
+        syntax.UpdateExpression,
+        syntax.Property
+    ];
 
-    // see: https://github.com/Constellation/escodegen/issues/115
-    if (typeof define === 'function' && define.amd) {
-        escodegen = window.escodegen;
-    }
+// see: https://github.com/Constellation/escodegen/issues/115
+if (typeof define === 'function' && define.amd) {
+    escodegen = window.escodegen;
+}
 
-    var syntax = estraverse.Syntax,
-        supportedNodeTypes = [
-            syntax.Identifier,
-            syntax.MemberExpression,
-            syntax.CallExpression,
-            syntax.UnaryExpression,
-            syntax.BinaryExpression,
-            syntax.LogicalExpression,
-            syntax.AssignmentExpression,
-            syntax.ObjectExpression,
-            syntax.NewExpression,
-            syntax.ArrayExpression,
-            syntax.ConditionalExpression,
-            syntax.UpdateExpression,
-            syntax.Property
-        ];
+function Instrumentor (options) {
+    ensureOptionPrerequisites(options);
+    this.options = options;
+}
 
+Instrumentor.prototype.instrument = function (ast) {
+    ensureAstPrerequisites(ast, this.options);
+    var that = this,
+        assertionPath,
+        argumentPath,
+        canonicalCode,
+        lineNum,
+        argumentModified = false,
+        skipping = false,
+        result = (this.options.destructive) ? ast : deepCopy(ast);
 
-    function defaultOptions () {
-        return {
-            destructive: false,
-            powerAssertVariableName: 'assert',
-            escodegenOptions: {
-                format: {
-                    indent: {
-                        style: ''
-                    },
-                    newline: ''
-                },
-                verbatim: 'x-verbatim-espower'
-            },
-            targetMethods: {
-                oneArg: [
-                    'ok'
-                ],
-                twoArgs: [
-                    'equal',
-                    'notEqual',
-                    'strictEqual',
-                    'notStrictEqual',
-                    'deepEqual',
-                    'notDeepEqual'
-                ]
-            }
-        };
-    }
+    estraverse.replace(result, {
+        enter: function (currentNode, parentNode) {
+            var controller = this,
+                path = controller.path(),
+                currentPath = path ? path[path.length - 1] : null;
+            //console.log('enter currentNode:' + currentNode.type + ' parentNode: ' + parentNode.type + ' path: ' + path);
 
-
-    /**
-     * Instrument power assert feature into code. Mozilla JS AST in, Mozilla JS AST out.
-     * @param ast JavaScript Mozilla JS AST to instrument (directly modified if destructive option is truthy)
-     * @param options Instrumentation options.
-     * @return instrumented AST
-     */
-    function espower (ast, options) {
-        var instrumentor = new Instrumentor(extend(defaultOptions(), (options || {})));
-        return instrumentor.instrument(ast);
-    }
-
-
-    function Instrumentor (options) {
-        ensureOptionPrerequisites(options);
-        this.options = options;
-    }
-
-    Instrumentor.prototype.instrument = function (ast) {
-        ensureAstPrerequisites(ast, this.options);
-        var that = this,
-            assertionPath,
-            argumentPath,
-            canonicalCode,
-            lineNum,
-            argumentModified = false,
-            skipping = false,
-            result = (this.options.destructive) ? ast : deepCopy(ast);
-
-        estraverse.replace(result, {
-            enter: function (currentNode, parentNode) {
-                var controller = this,
-                    path = controller.path(),
-                    currentPath = path ? path[path.length - 1] : null;
-                //console.log('enter currentNode:' + currentNode.type + ' parentNode: ' + parentNode.type + ' path: ' + path);
-
-                if (argumentPath) {
-                    if ((!isSupportedNodeType(currentNode)) ||
-                        (isLeftHandSideOfAssignment(parentNode, currentPath)) ||
-                        (isObjectLiteralKey(parentNode, currentPath)) ||
-                        (isUpdateExpression(parentNode)) ||
-                        (isCallExpressionWithNonComputedMemberExpression(currentNode, parentNode, currentPath)) ||
-                        (isTypeOfOrDeleteUnaryExpression(currentNode, parentNode, currentPath))) {
-                        skipping = true;
-                        return estraverse.VisitorOption.Skip;
-                    }
-                } else {
-                    if (!parentNode || parentNode.type !== syntax.CallExpression || !isSupportedNodeType(currentNode)) {
-                        return undefined;
-                    }
-                    if (that.isCalleeOfTargetAssertion(currentNode)) {
-                        // entering target assertion
-                        lineNum = parentNode.loc.start.line;
-                        canonicalCode = generateCanonicalCode(parentNode, that.options.escodegenOptions);
-                        assertionPath = path.slice(0, -1);
-                        return undefined;
-                    }
-                    if (that.isTargetAssertionArgument(parentNode, currentNode)) {
-                        // entering target argument
-                        argumentPath = path;
-                        return undefined;
-                    }
+            if (argumentPath) {
+                if ((!isSupportedNodeType(currentNode)) ||
+                    (isLeftHandSideOfAssignment(parentNode, currentPath)) ||
+                    (isObjectLiteralKey(parentNode, currentPath)) ||
+                    (isUpdateExpression(parentNode)) ||
+                    (isCallExpressionWithNonComputedMemberExpression(currentNode, parentNode, currentPath)) ||
+                    (isTypeOfOrDeleteUnaryExpression(currentNode, parentNode, currentPath))) {
+                    skipping = true;
+                    return estraverse.VisitorOption.Skip;
                 }
+            } else {
+                if (!parentNode || parentNode.type !== syntax.CallExpression || !isSupportedNodeType(currentNode)) {
+                    return undefined;
+                }
+                if (that.isCalleeOfTargetAssertion(currentNode)) {
+                    // entering target assertion
+                    lineNum = parentNode.loc.start.line;
+                    canonicalCode = generateCanonicalCode(parentNode, that.options.escodegenOptions);
+                    assertionPath = path.slice(0, -1);
+                    return undefined;
+                }
+                if (that.isTargetAssertionArgument(parentNode, currentNode)) {
+                    // entering target argument
+                    argumentPath = path;
+                    return undefined;
+                }
+            }
+            return undefined;
+        },
+
+        leave: function (currentNode, parentNode) {
+            var controller = this,
+                path = controller.path(),
+                resultTree = currentNode,
+                relativeEsPath;
+            //console.log('leave ' + currentNode.type + ' path: ' + path);
+
+            if (skipping) {
+                skipping = false;
                 return undefined;
-            },
-
-            leave: function (currentNode, parentNode) {
-                var controller = this,
-                    path = controller.path(),
-                    resultTree = currentNode,
-                    relativeEsPath;
-                //console.log('leave ' + currentNode.type + ' path: ' + path);
-
-                if (skipping) {
-                    skipping = false;
-                    return undefined;
-                }
-
-                if (isPathIdentical(assertionPath, path)) {
-                    // leaving target assertion
-                    canonicalCode = null;
-                    lineNum = null;
-                    assertionPath = null;
-                    return undefined;
-                }
-
-                if (!argumentPath) {
-                    return undefined;
-                }
-
-                if (isLastPieceOfFunctionCall(parentNode, currentNode)) {
-                    return undefined;
-                }
-
-                relativeEsPath = path.slice(assertionPath.length);
-
-                //console.log('leave ' + currentNode.type + ' path: ' + path + ' ' + currentNode.name);
-                switch(currentNode.type) {
-                case syntax.Identifier:
-                case syntax.MemberExpression:
-                case syntax.CallExpression:
-                case syntax.UnaryExpression:
-                case syntax.BinaryExpression:
-                case syntax.LogicalExpression:
-                case syntax.AssignmentExpression:
-                case syntax.UpdateExpression:
-                case syntax.NewExpression:
-                    resultTree = that.captureNode(currentNode, relativeEsPath);
-                    argumentModified = true;
-                    break;
-                default:
-                    break;
-                }
-
-                if (isPathIdentical(argumentPath, path)) {
-                    // leaving target argument
-                    argumentPath = null;
-                    if (argumentModified) {
-                        argumentModified = false;
-                        return that.captureAssertion(resultTree, canonicalCode, lineNum);
-                    }
-                }
-
-                return resultTree;
             }
-        });
-        return result;
-    };
 
-    Instrumentor.prototype.isCalleeOfTargetAssertion = function (node) {
-        return numberOfTargetArguments(node, this.options) !== 0;
-    };
+            if (isPathIdentical(assertionPath, path)) {
+                // leaving target assertion
+                canonicalCode = null;
+                lineNum = null;
+                assertionPath = null;
+                return undefined;
+            }
 
-    Instrumentor.prototype.isTargetAssertionArgument = function (parentNode, currentNode) {
-        var numTargetArgs, indexOfCurrentArg;
-        numTargetArgs = numberOfTargetArguments(parentNode.callee, this.options);
-        if (numTargetArgs === 0) {
-            return false;
-        }
-        indexOfCurrentArg = parentNode.arguments.indexOf(currentNode);
-        return (indexOfCurrentArg < numTargetArgs);
-    };
+            if (!argumentPath) {
+                return undefined;
+            }
 
-    Instrumentor.prototype.captureAssertion = function (node, canonicalCode, lineNum) {
-        var n = newNodeWithLocationCopyOf(node),
-            props = [];
-        addLiteralTo(props, n, 'content', canonicalCode);
-        addLiteralTo(props, n, 'filepath', this.options.path);
-        addLiteralTo(props, n, 'line', lineNum);
-        return n({
-            type: syntax.CallExpression,
-            callee: n({
-                type: syntax.MemberExpression,
-                computed: false,
-                object: n({
-                    type: syntax.Identifier,
-                    name: this.options.powerAssertVariableName
-                }),
-                property: n({
-                    type: syntax.Identifier,
-                    name: '_expr'
-                })
-            }),
-            arguments: [node].concat(n({
-                type: syntax.ObjectExpression,
-                properties: props
-            }))
-        });
-    };
+            if (isLastPieceOfFunctionCall(parentNode, currentNode)) {
+                return undefined;
+            }
 
-    Instrumentor.prototype.captureNode = function (target, relativeEsPath) {
-        var n = newNodeWithLocationCopyOf(target);
-        return n({
-            type: syntax.CallExpression,
-            callee: n({
-                type: syntax.MemberExpression,
-                computed: false,
-                object: n({
-                    type: syntax.Identifier,
-                    name: this.options.powerAssertVariableName
-                }),
-                property: n({
-                    type: syntax.Identifier,
-                    name: '_capt'
-                })
-            }),
-            arguments: [
-                target,
-                n({
-                    type: syntax.Literal,
-                    value: relativeEsPath.join('/')
-                })
-            ]
-        });
-    };
+            relativeEsPath = path.slice(assertionPath.length);
 
+            //console.log('leave ' + currentNode.type + ' path: ' + path + ' ' + currentNode.name);
+            switch(currentNode.type) {
+            case syntax.Identifier:
+            case syntax.MemberExpression:
+            case syntax.CallExpression:
+            case syntax.UnaryExpression:
+            case syntax.BinaryExpression:
+            case syntax.LogicalExpression:
+            case syntax.AssignmentExpression:
+            case syntax.UpdateExpression:
+            case syntax.NewExpression:
+                resultTree = that.captureNode(currentNode, relativeEsPath);
+                argumentModified = true;
+                break;
+            default:
+                break;
+            }
 
-    function generateCanonicalCode(node, escodegenOptions) {
-        var ast = deepCopy(node);
-        estraverse.replace(ast, {
-            leave: function (currentNode, parentNode) {
-                if (currentNode.type === syntax.Literal && typeof currentNode.raw !== 'undefined') {
-                    currentNode['x-verbatim-espower'] = {
-                        content : currentNode.raw,
-                        precedence : escodegen.Precedence.Primary
-                    };
-                    return currentNode;
-                } else {
-                    return undefined;
+            if (isPathIdentical(argumentPath, path)) {
+                // leaving target argument
+                argumentPath = null;
+                if (argumentModified) {
+                    argumentModified = false;
+                    return that.captureAssertion(resultTree, canonicalCode, lineNum);
                 }
             }
-        });
-        return escodegen.generate(ast, escodegenOptions);
-    }
 
-    function addLiteralTo(props, createNode, name, data) {
-        if (data) {
-            addToProps(props, createNode, name, createNode({
-                type: syntax.Literal,
-                value: data
-            }));
+            return resultTree;
         }
-    }
+    });
+    return result;
+};
 
-    function addToProps(props, createNode, name, value) {
-        props.push(createNode({
-            type: syntax.Property,
-            key: createNode({
+Instrumentor.prototype.isCalleeOfTargetAssertion = function (node) {
+    return numberOfTargetArguments(node, this.options) !== 0;
+};
+
+Instrumentor.prototype.isTargetAssertionArgument = function (parentNode, currentNode) {
+    var numTargetArgs, indexOfCurrentArg;
+    numTargetArgs = numberOfTargetArguments(parentNode.callee, this.options);
+    if (numTargetArgs === 0) {
+        return false;
+    }
+    indexOfCurrentArg = parentNode.arguments.indexOf(currentNode);
+    return (indexOfCurrentArg < numTargetArgs);
+};
+
+Instrumentor.prototype.captureAssertion = function (node, canonicalCode, lineNum) {
+    var n = newNodeWithLocationCopyOf(node),
+        props = [];
+    addLiteralTo(props, n, 'content', canonicalCode);
+    addLiteralTo(props, n, 'filepath', this.options.path);
+    addLiteralTo(props, n, 'line', lineNum);
+    return n({
+        type: syntax.CallExpression,
+        callee: n({
+            type: syntax.MemberExpression,
+            computed: false,
+            object: n({
                 type: syntax.Identifier,
-                name: name
+                name: this.options.powerAssertVariableName
             }),
-            value: value,
-            kind: 'init'
+            property: n({
+                type: syntax.Identifier,
+                name: '_expr'
+            })
+        }),
+        arguments: [node].concat(n({
+            type: syntax.ObjectExpression,
+            properties: props
+        }))
+    });
+};
+
+Instrumentor.prototype.captureNode = function (target, relativeEsPath) {
+    var n = newNodeWithLocationCopyOf(target);
+    return n({
+        type: syntax.CallExpression,
+        callee: n({
+            type: syntax.MemberExpression,
+            computed: false,
+            object: n({
+                type: syntax.Identifier,
+                name: this.options.powerAssertVariableName
+            }),
+            property: n({
+                type: syntax.Identifier,
+                name: '_capt'
+            })
+        }),
+        arguments: [
+            target,
+            n({
+                type: syntax.Literal,
+                value: relativeEsPath.join('/')
+            })
+        ]
+    });
+};
+
+
+function generateCanonicalCode(node, escodegenOptions) {
+    var ast = deepCopy(node);
+    estraverse.replace(ast, {
+        leave: function (currentNode, parentNode) {
+            if (currentNode.type === syntax.Literal && typeof currentNode.raw !== 'undefined') {
+                currentNode['x-verbatim-espower'] = {
+                    content : currentNode.raw,
+                    precedence : escodegen.Precedence.Primary
+                };
+                return currentNode;
+            } else {
+                return undefined;
+            }
+        }
+    });
+    return escodegen.generate(ast, escodegenOptions);
+}
+
+function addLiteralTo(props, createNode, name, data) {
+    if (data) {
+        addToProps(props, createNode, name, createNode({
+            type: syntax.Literal,
+            value: data
         }));
     }
+}
 
-    function isLastPieceOfFunctionCall(parentNode, currentNode) {
-        return (parentNode.type === syntax.CallExpression || parentNode.type === syntax.NewExpression) &&
-            parentNode.callee === currentNode;
+function addToProps(props, createNode, name, value) {
+    props.push(createNode({
+        type: syntax.Property,
+        key: createNode({
+            type: syntax.Identifier,
+            name: name
+        }),
+        value: value,
+        kind: 'init'
+    }));
+}
+
+function isLastPieceOfFunctionCall(parentNode, currentNode) {
+    return (parentNode.type === syntax.CallExpression || parentNode.type === syntax.NewExpression) &&
+        parentNode.callee === currentNode;
+}
+
+function isLeftHandSideOfAssignment(parentNode, currentPath) {
+    // Do not instrument left due to 'Invalid left-hand side in assignment'
+    return parentNode.type === syntax.AssignmentExpression && currentPath === 'left';
+}
+
+function isObjectLiteralKey(parentNode, currentPath) {
+    // Do not instrument Object literal key
+    return parentNode.type === syntax.Property && parentNode.kind === 'init' && currentPath === 'key';
+}
+
+function isUpdateExpression(parentNode) {
+    // Just wrap UpdateExpression, not digging in.
+    return parentNode.type === syntax.UpdateExpression;
+}
+
+function isCallExpressionWithNonComputedMemberExpression(currentNode, parentNode, currentPath) {
+    // Do not instrument non-computed property of MemberExpression within CallExpression.
+    return currentNode.type === syntax.Identifier && parentNode.type === syntax.MemberExpression && !parentNode.computed && currentPath === 'property';
+}
+
+function isTypeOfOrDeleteUnaryExpression(currentNode, parentNode, currentPath) {
+    // 'typeof Identifier' or 'delete Identifier' is not instrumented
+    return currentNode.type === syntax.Identifier && parentNode.type === syntax.UnaryExpression && (parentNode.operator === 'typeof' || parentNode.operator === 'delete') && currentPath === 'argument';
+}
+
+function isPathIdentical(path1, path2) {
+    if (!path1 || !path2) {
+        return false;
     }
+    return path1.join('/') === path2.join('/');
+}
 
-    function isLeftHandSideOfAssignment(parentNode, currentPath) {
-        // Do not instrument left due to 'Invalid left-hand side in assignment'
-        return parentNode.type === syntax.AssignmentExpression && currentPath === 'left';
-    }
-
-    function isObjectLiteralKey(parentNode, currentPath) {
-        // Do not instrument Object literal key
-        return parentNode.type === syntax.Property && parentNode.kind === 'init' && currentPath === 'key';
-    }
-
-    function isUpdateExpression(parentNode) {
-        // Just wrap UpdateExpression, not digging in.
-        return parentNode.type === syntax.UpdateExpression;
-    }
-
-    function isCallExpressionWithNonComputedMemberExpression(currentNode, parentNode, currentPath) {
-        // Do not instrument non-computed property of MemberExpression within CallExpression.
-        return currentNode.type === syntax.Identifier && parentNode.type === syntax.MemberExpression && !parentNode.computed && currentPath === 'property';
-    }
-
-    function isTypeOfOrDeleteUnaryExpression(currentNode, parentNode, currentPath) {
-        // 'typeof Identifier' or 'delete Identifier' is not instrumented
-        return currentNode.type === syntax.Identifier && parentNode.type === syntax.UnaryExpression && (parentNode.operator === 'typeof' || parentNode.operator === 'delete') && currentPath === 'argument';
-    }
-
-    function isPathIdentical(path1, path2) {
-        if (!path1 || !path2) {
-            return false;
+function newNodeWithLocationCopyOf (original) {
+    return function (newNode) {
+        if (typeof original.loc !== 'undefined') {
+            newNode.loc = deepCopy(original.loc);
         }
-        return path1.join('/') === path2.join('/');
-    }
-
-    function newNodeWithLocationCopyOf (original) {
-        return function (newNode) {
-            if (typeof original.loc !== 'undefined') {
-                newNode.loc = deepCopy(original.loc);
-            }
-            if (typeof original.range !== 'undefined') {
-                newNode.range = deepCopy(original.range);
-            }
-            return newNode;
-        };
-    }
-
-    function detectTargetMemberExpression (callee, objName, propName) {
-        if (callee.type !== syntax.MemberExpression || callee.computed !== false) {
-            return false;
+        if (typeof original.range !== 'undefined') {
+            newNode.range = deepCopy(original.range);
         }
-        var obj = callee.object,
-            prop = callee.property;
-        return ((obj.type === syntax.Identifier && obj.name === objName) && (prop.type === syntax.Identifier && prop.name === propName));
-    }
+        return newNode;
+    };
+}
 
-    function numberOfTargetArguments (callee, options) {
-        if (isSingleArgumentAssert(callee, options)) {
-            return 1;
+function detectTargetMemberExpression (callee, objName, propName) {
+    if (callee.type !== syntax.MemberExpression || callee.computed !== false) {
+        return false;
+    }
+    var obj = callee.object,
+        prop = callee.property;
+    return ((obj.type === syntax.Identifier && obj.name === objName) && (prop.type === syntax.Identifier && prop.name === propName));
+}
+
+function numberOfTargetArguments (callee, options) {
+    if (isSingleArgumentAssert(callee, options)) {
+        return 1;
+    }
+    if (isTwoArgumentsAssert(callee, options)) {
+        return 2;
+    }
+    return 0;
+}
+
+function isSingleArgumentAssert (callee, options) {
+    return isAssertFunctionCall(callee, options) || isAssertMethodCall(callee, options);
+}
+
+function isTwoArgumentsAssert (callee, options) {
+    return options.targetMethods.twoArgs.some(function (name) {
+        return detectTargetMemberExpression(callee, options.powerAssertVariableName, name);
+    });
+}
+
+function isAssertMethodCall (callee, options) {
+    return options.targetMethods.oneArg.some(function (name) {
+        return detectTargetMemberExpression(callee, options.powerAssertVariableName, name);
+    });
+}
+
+function isAssertFunctionCall (callee, options) {
+    return (callee.type === syntax.Identifier && callee.name === options.powerAssertVariableName);
+}
+
+function isSupportedNodeType (node) {
+    return supportedNodeTypes.indexOf(node.type) !== -1;
+}
+
+function ensureAstPrerequisites (ast, options) {
+    var errorMessage;
+    if (typeof ast.loc === 'undefined') {
+        errorMessage = 'JavaScript AST should contain location information.';
+        if (options.path) {
+            errorMessage += ' path: ' + options.path;
         }
-        if (isTwoArgumentsAssert(callee, options)) {
-            return 2;
-        }
-        return 0;
+        throw new Error(errorMessage);
     }
+}
 
-    function isSingleArgumentAssert (callee, options) {
-        return isAssertFunctionCall(callee, options) || isAssertMethodCall(callee, options);
+function ensureOptionPrerequisites (options) {
+    if (typeName(options.destructive) !== 'boolean') {
+        throw new Error('options.destructive should be a boolean value.');
     }
-
-    function isTwoArgumentsAssert (callee, options) {
-        return options.targetMethods.twoArgs.some(function (name) {
-            return detectTargetMemberExpression(callee, options.powerAssertVariableName, name);
-        });
+    if (typeName(options.powerAssertVariableName) !== 'string' || options.powerAssertVariableName === '') {
+        throw new Error('options.powerAssertVariableName should be a non-empty string.');
     }
-
-    function isAssertMethodCall (callee, options) {
-        return options.targetMethods.oneArg.some(function (name) {
-            return detectTargetMemberExpression(callee, options.powerAssertVariableName, name);
-        });
+    if (typeName(options.targetMethods) !== 'Object') {
+        throw new Error('options.targetMethods should be an object.');
     }
-
-    function isAssertFunctionCall (callee, options) {
-        return (callee.type === syntax.Identifier && callee.name === options.powerAssertVariableName);
+    if (typeName(options.targetMethods.oneArg) !== 'Array') {
+        throw new Error('options.targetMethods.oneArg should be an array.');
     }
-
-    function isSupportedNodeType (node) {
-        return supportedNodeTypes.indexOf(node.type) !== -1;
+    if (typeName(options.targetMethods.twoArgs) !== 'Array') {
+        throw new Error('options.targetMethods.twoArgs should be an array.');
     }
+}
 
-    function ensureAstPrerequisites (ast, options) {
-        var errorMessage;
-        if (typeof ast.loc === 'undefined') {
-            errorMessage = 'JavaScript AST should contain location information.';
-            if (options.path) {
-                errorMessage += ' path: ' + options.path;
-            }
-            throw new Error(errorMessage);
-        }
-    }
+module.exports = Instrumentor;
 
-    function ensureOptionPrerequisites (options) {
-        if (typeName(options.destructive) !== 'boolean') {
-            throw new Error('options.destructive should be a boolean value.');
-        }
-        if (typeName(options.powerAssertVariableName) !== 'string' || options.powerAssertVariableName === '') {
-            throw new Error('options.powerAssertVariableName should be a non-empty string.');
-        }
-        if (typeName(options.targetMethods) !== 'Object') {
-            throw new Error('options.targetMethods should be an object.');
-        }
-        if (typeName(options.targetMethods.oneArg) !== 'Array') {
-            throw new Error('options.targetMethods.oneArg should be an array.');
-        }
-        if (typeName(options.targetMethods.twoArgs) !== 'Array') {
-            throw new Error('options.targetMethods.twoArgs should be an array.');
-        }
-    }
-
-espower.deepCopy = deepCopy;
-espower.defaultOptions = defaultOptions;
-module.exports = espower;
-
-},{"./ast-deepcopy":1,"escodegen":5,"estraverse":20,"node.extend":21,"type-name":24}],3:[function(_dereq_,module,exports){
+},{"./ast-deepcopy":2,"escodegen":7,"estraverse":22,"node.extend":23,"type-name":26}],5:[function(_dereq_,module,exports){
 (function (process){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -694,7 +705,7 @@ var substr = 'ab'.substr(-1) === 'b'
 ;
 
 }).call(this,_dereq_("FWaASH"))
-},{"FWaASH":4}],4:[function(_dereq_,module,exports){
+},{"FWaASH":6}],6:[function(_dereq_,module,exports){
 // shim for using process in browser
 
 var process = module.exports = {};
@@ -759,7 +770,7 @@ process.chdir = function (dir) {
     throw new Error('process.chdir is not supported');
 };
 
-},{}],5:[function(_dereq_,module,exports){
+},{}],7:[function(_dereq_,module,exports){
 (function (global){
 /*
   Copyright (C) 2012-2013 Yusuke Suzuki <utatane.tea@gmail.com>
@@ -3046,7 +3057,7 @@ process.chdir = function (dir) {
 /* vim: set sw=4 ts=4 et tw=80 : */
 
 }).call(this,typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./package.json":19,"estraverse":20,"esutils":8,"source-map":9}],6:[function(_dereq_,module,exports){
+},{"./package.json":21,"estraverse":22,"esutils":10,"source-map":11}],8:[function(_dereq_,module,exports){
 /*
   Copyright (C) 2013 Yusuke Suzuki <utatane.tea@gmail.com>
 
@@ -3138,7 +3149,7 @@ process.chdir = function (dir) {
 }());
 /* vim: set sw=4 ts=4 et tw=80 : */
 
-},{}],7:[function(_dereq_,module,exports){
+},{}],9:[function(_dereq_,module,exports){
 /*
   Copyright (C) 2013 Yusuke Suzuki <utatane.tea@gmail.com>
 
@@ -3257,7 +3268,7 @@ process.chdir = function (dir) {
 }());
 /* vim: set sw=4 ts=4 et tw=80 : */
 
-},{"./code":6}],8:[function(_dereq_,module,exports){
+},{"./code":8}],10:[function(_dereq_,module,exports){
 /*
   Copyright (C) 2013 Yusuke Suzuki <utatane.tea@gmail.com>
 
@@ -3291,7 +3302,7 @@ process.chdir = function (dir) {
 }());
 /* vim: set sw=4 ts=4 et tw=80 : */
 
-},{"./code":6,"./keyword":7}],9:[function(_dereq_,module,exports){
+},{"./code":8,"./keyword":9}],11:[function(_dereq_,module,exports){
 /*
  * Copyright 2009-2011 Mozilla Foundation and contributors
  * Licensed under the New BSD license. See LICENSE.txt or:
@@ -3301,7 +3312,7 @@ exports.SourceMapGenerator = _dereq_('./source-map/source-map-generator').Source
 exports.SourceMapConsumer = _dereq_('./source-map/source-map-consumer').SourceMapConsumer;
 exports.SourceNode = _dereq_('./source-map/source-node').SourceNode;
 
-},{"./source-map/source-map-consumer":14,"./source-map/source-map-generator":15,"./source-map/source-node":16}],10:[function(_dereq_,module,exports){
+},{"./source-map/source-map-consumer":16,"./source-map/source-map-generator":17,"./source-map/source-node":18}],12:[function(_dereq_,module,exports){
 /* -*- Mode: js; js-indent-level: 2; -*- */
 /*
  * Copyright 2011 Mozilla Foundation and contributors
@@ -3400,7 +3411,7 @@ define(function (_dereq_, exports, module) {
 
 });
 
-},{"./util":17,"amdefine":18}],11:[function(_dereq_,module,exports){
+},{"./util":19,"amdefine":20}],13:[function(_dereq_,module,exports){
 /* -*- Mode: js; js-indent-level: 2; -*- */
 /*
  * Copyright 2011 Mozilla Foundation and contributors
@@ -3546,7 +3557,7 @@ define(function (_dereq_, exports, module) {
 
 });
 
-},{"./base64":12,"amdefine":18}],12:[function(_dereq_,module,exports){
+},{"./base64":14,"amdefine":20}],14:[function(_dereq_,module,exports){
 /* -*- Mode: js; js-indent-level: 2; -*- */
 /*
  * Copyright 2011 Mozilla Foundation and contributors
@@ -3590,7 +3601,7 @@ define(function (_dereq_, exports, module) {
 
 });
 
-},{"amdefine":18}],13:[function(_dereq_,module,exports){
+},{"amdefine":20}],15:[function(_dereq_,module,exports){
 /* -*- Mode: js; js-indent-level: 2; -*- */
 /*
  * Copyright 2011 Mozilla Foundation and contributors
@@ -3673,7 +3684,7 @@ define(function (_dereq_, exports, module) {
 
 });
 
-},{"amdefine":18}],14:[function(_dereq_,module,exports){
+},{"amdefine":20}],16:[function(_dereq_,module,exports){
 /* -*- Mode: js; js-indent-level: 2; -*- */
 /*
  * Copyright 2011 Mozilla Foundation and contributors
@@ -4153,7 +4164,7 @@ define(function (_dereq_, exports, module) {
 
 });
 
-},{"./array-set":10,"./base64-vlq":11,"./binary-search":13,"./util":17,"amdefine":18}],15:[function(_dereq_,module,exports){
+},{"./array-set":12,"./base64-vlq":13,"./binary-search":15,"./util":19,"amdefine":20}],17:[function(_dereq_,module,exports){
 /* -*- Mode: js; js-indent-level: 2; -*- */
 /*
  * Copyright 2011 Mozilla Foundation and contributors
@@ -4555,7 +4566,7 @@ define(function (_dereq_, exports, module) {
 
 });
 
-},{"./array-set":10,"./base64-vlq":11,"./util":17,"amdefine":18}],16:[function(_dereq_,module,exports){
+},{"./array-set":12,"./base64-vlq":13,"./util":19,"amdefine":20}],18:[function(_dereq_,module,exports){
 /* -*- Mode: js; js-indent-level: 2; -*- */
 /*
  * Copyright 2011 Mozilla Foundation and contributors
@@ -4957,7 +4968,7 @@ define(function (_dereq_, exports, module) {
 
 });
 
-},{"./source-map-generator":15,"./util":17,"amdefine":18}],17:[function(_dereq_,module,exports){
+},{"./source-map-generator":17,"./util":19,"amdefine":20}],19:[function(_dereq_,module,exports){
 /* -*- Mode: js; js-indent-level: 2; -*- */
 /*
  * Copyright 2011 Mozilla Foundation and contributors
@@ -5261,7 +5272,7 @@ define(function (_dereq_, exports, module) {
 
 });
 
-},{"amdefine":18}],18:[function(_dereq_,module,exports){
+},{"amdefine":20}],20:[function(_dereq_,module,exports){
 (function (process,__filename){
 /** vim: et:ts=4:sw=4:sts=4
  * @license amdefine 0.1.0 Copyright (c) 2011, The Dojo Foundation All Rights Reserved.
@@ -5563,8 +5574,8 @@ function amdefine(module, requireFn) {
 
 module.exports = amdefine;
 
-}).call(this,_dereq_("FWaASH"),"/../node_modules/escodegen/node_modules/source-map/node_modules/amdefine/amdefine.js")
-},{"FWaASH":4,"path":3}],19:[function(_dereq_,module,exports){
+}).call(this,_dereq_("FWaASH"),"/node_modules/escodegen/node_modules/source-map/node_modules/amdefine/amdefine.js")
+},{"FWaASH":6,"path":5}],21:[function(_dereq_,module,exports){
 module.exports={
   "name": "escodegen",
   "description": "ECMAScript code generator",
@@ -5636,7 +5647,7 @@ module.exports={
   "_resolved": "https://registry.npmjs.org/escodegen/-/escodegen-1.3.3.tgz"
 }
 
-},{}],20:[function(_dereq_,module,exports){
+},{}],22:[function(_dereq_,module,exports){
 /*
   Copyright (C) 2012-2013 Yusuke Suzuki <utatane.tea@gmail.com>
   Copyright (C) 2012 Ariya Hidayat <ariya.hidayat@gmail.com>
@@ -6326,11 +6337,11 @@ module.exports={
 }));
 /* vim: set sw=4 ts=4 et tw=80 : */
 
-},{}],21:[function(_dereq_,module,exports){
+},{}],23:[function(_dereq_,module,exports){
 module.exports = _dereq_('./lib/extend');
 
 
-},{"./lib/extend":22}],22:[function(_dereq_,module,exports){
+},{"./lib/extend":24}],24:[function(_dereq_,module,exports){
 /*!
  * node.extend
  * Copyright 2011, John Resig
@@ -6414,7 +6425,7 @@ extend.version = '1.0.8';
 module.exports = extend;
 
 
-},{"is":23}],23:[function(_dereq_,module,exports){
+},{"is":25}],25:[function(_dereq_,module,exports){
 
 /**!
  * is
@@ -7128,7 +7139,7 @@ is.string = function (value) {
 };
 
 
-},{}],24:[function(_dereq_,module,exports){
+},{}],26:[function(_dereq_,module,exports){
 /**
  * type-name - Just a reasonable typeof
  * 
@@ -7168,6 +7179,6 @@ function typeName (val) {
 
 module.exports = typeName;
 
-},{}]},{},[2])
-(2)
+},{}]},{},[1])
+(1)
 });

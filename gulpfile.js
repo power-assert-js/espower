@@ -10,7 +10,7 @@ var gulp = require('gulp'),
     config = {
         bundle: {
             standalone: 'espower',
-            srcFile: './lib/espower.js',
+            srcFile: './index.js',
             destDir: './build',
             destName: 'espower.js'
         },

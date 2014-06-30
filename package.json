@@ -16,11 +16,12 @@
     "email": "takuto.wada@gmail.com",
     "url": "http://github.com/twada"
   },
-  "main": "./lib/espower",
+  "main": "./index.js",
   "files": [
     "gulpfile.js",
     "MIT-LICENSE.txt",
     "README.md",
+    "index.js",
     "lib",
     "package.json",
     "test"
