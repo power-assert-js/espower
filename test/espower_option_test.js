@@ -1,23 +1,11 @@
 (function (root, factory) {
     'use strict';
-
-    var dependencies = [
-        '../lib/espower',
-        'esprima',
-        'escodegen',
-        'estraverse',
-        'assert'
-    ];
-
     if (typeof define === 'function' && define.amd) {
-        define(dependencies, factory);
+        define(['espower', 'esprima', 'escodegen', 'estraverse', 'assert'], factory);
     } else if (typeof exports === 'object') {
-        factory.apply(root, dependencies.map(function (path) { return require(path); }));
+        factory(require('..'), require('esprima'), require('escodegen'), require('estraverse'), require('assert'));
     } else {
-        factory.apply(root, dependencies.map(function (path) {
-            var tokens = path.split('/');
-            return root[tokens[tokens.length - 1]];
-        }));
+        factory(root.espower, root.esprima, root.escodegen, root.estraverse, root.assert);
     }
 }(this, function (
     espower,
