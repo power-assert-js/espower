@@ -1,5 +1,42 @@
 !function(e){if("object"==typeof exports&&"undefined"!=typeof module)module.exports=e();else if("function"==typeof define&&define.amd)define([],e);else{var f;"undefined"!=typeof window?f=window:"undefined"!=typeof global?f=global:"undefined"!=typeof self&&(f=self),f.espower=e()}}(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);throw new Error("Cannot find module '"+o+"'")}var f=n[o]={exports:{}};t[o][0].call(f.exports,function(e){var n=t[o][1][e];return s(n?n:e)},f,f.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(_dereq_,module,exports){
 /**
+ * Copyright (C) 2012 Yusuke Suzuki (twitter: @Constellation) and other contributors.
+ * Released under the BSD license.
+ * https://github.com/Constellation/esmangle/blob/master/LICENSE.BSD
+ */
+var isArray = Array.isArray || function isArray (array) {
+    return Object.prototype.toString.call(array) === '[object Array]';
+};
+
+function deepCopyInternal (obj, result) {
+    var key, val;
+    for (key in obj) {
+        if (key.lastIndexOf('__', 0) === 0) {
+            continue;
+        }
+        if (obj.hasOwnProperty(key)) {
+            val = obj[key];
+            if (typeof val === 'object' && val !== null) {
+                if (val instanceof RegExp) {
+                    val = new RegExp(val);
+                } else {
+                    val = deepCopyInternal(val, isArray(val) ? [] : {});
+                }
+            }
+            result[key] = val;
+        }
+    }
+    return result;
+}
+
+function deepCopy (obj) {
+    return deepCopyInternal(obj, isArray(obj) ? [] : {});
+}
+
+module.exports = deepCopy;
+
+},{}],2:[function(_dereq_,module,exports){
+/**
  * espower.js - Power Assert feature instrumentor based on the Mozilla JavaScript AST.
  *
  * https://github.com/twada/espower
@@ -7,16 +44,12 @@
  * Copyright (c) 2013-2014 Takuto Wada
  * Licensed under the MIT license.
  *   https://github.com/twada/espower/blob/master/MIT-LICENSE.txt
- *
- * A part of deepCopy function is:
- *   Copyright (C) 2012 Yusuke Suzuki (twitter: @Constellation) and other contributors.
- *   Released under the BSD license.
- *   https://github.com/Constellation/esmangle/blob/master/LICENSE.BSD
  */
 'use strict';
 
 var estraverse = _dereq_('estraverse'),
     escodegen = _dereq_('escodegen'),
+    deepCopy = _dereq_('./ast-deepcopy'),
     typeName = _dereq_('type-name'),
     extend = _dereq_('node.extend');
 
@@ -26,7 +59,6 @@ var estraverse = _dereq_('estraverse'),
     }
 
     var syntax = estraverse.Syntax,
-        deepCopy,
         supportedNodeTypes = [
             syntax.Identifier,
             syntax.MemberExpression,
@@ -430,46 +462,11 @@ var estraverse = _dereq_('estraverse'),
         }
     }
 
-
-    // borrowed from esmangle
-    deepCopy = (function () {
-        var deepCopyInternal,
-            isArray = Array.isArray;
-        if (!isArray) {
-            isArray = function isArray(array) {
-                return Object.prototype.toString.call(array) === '[object Array]';
-            };
-        }
-        deepCopyInternal = function (obj, result) {
-            var key, val;
-            for (key in obj) {
-                if (key.lastIndexOf('__', 0) === 0) {
-                    continue;
-                }
-                if (obj.hasOwnProperty(key)) {
-                    val = obj[key];
-                    if (typeof val === 'object' && val !== null) {
-                        if (val instanceof RegExp) {
-                            val = new RegExp(val);
-                        } else {
-                            val = deepCopyInternal(val, isArray(val) ? [] : {});
-                        }
-                    }
-                    result[key] = val;
-                }
-            }
-            return result;
-        };
-        return function (obj) {
-            return deepCopyInternal(obj, isArray(obj) ? [] : {});
-        };
-    })();
-
 espower.deepCopy = deepCopy;
 espower.defaultOptions = defaultOptions;
 module.exports = espower;
 
-},{"escodegen":4,"estraverse":19,"node.extend":20,"type-name":23}],2:[function(_dereq_,module,exports){
+},{"./ast-deepcopy":1,"escodegen":5,"estraverse":20,"node.extend":21,"type-name":24}],3:[function(_dereq_,module,exports){
 (function (process){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -697,7 +694,7 @@ var substr = 'ab'.substr(-1) === 'b'
 ;
 
 }).call(this,_dereq_("FWaASH"))
-},{"FWaASH":3}],3:[function(_dereq_,module,exports){
+},{"FWaASH":4}],4:[function(_dereq_,module,exports){
 // shim for using process in browser
 
 var process = module.exports = {};
@@ -762,7 +759,7 @@ process.chdir = function (dir) {
     throw new Error('process.chdir is not supported');
 };
 
-},{}],4:[function(_dereq_,module,exports){
+},{}],5:[function(_dereq_,module,exports){
 (function (global){
 /*
   Copyright (C) 2012-2013 Yusuke Suzuki <utatane.tea@gmail.com>
@@ -3049,7 +3046,7 @@ process.chdir = function (dir) {
 /* vim: set sw=4 ts=4 et tw=80 : */
 
 }).call(this,typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./package.json":18,"estraverse":19,"esutils":7,"source-map":8}],5:[function(_dereq_,module,exports){
+},{"./package.json":19,"estraverse":20,"esutils":8,"source-map":9}],6:[function(_dereq_,module,exports){
 /*
   Copyright (C) 2013 Yusuke Suzuki <utatane.tea@gmail.com>
 
@@ -3141,7 +3138,7 @@ process.chdir = function (dir) {
 }());
 /* vim: set sw=4 ts=4 et tw=80 : */
 
-},{}],6:[function(_dereq_,module,exports){
+},{}],7:[function(_dereq_,module,exports){
 /*
   Copyright (C) 2013 Yusuke Suzuki <utatane.tea@gmail.com>
 
@@ -3260,7 +3257,7 @@ process.chdir = function (dir) {
 }());
 /* vim: set sw=4 ts=4 et tw=80 : */
 
-},{"./code":5}],7:[function(_dereq_,module,exports){
+},{"./code":6}],8:[function(_dereq_,module,exports){
 /*
   Copyright (C) 2013 Yusuke Suzuki <utatane.tea@gmail.com>
 
@@ -3294,7 +3291,7 @@ process.chdir = function (dir) {
 }());
 /* vim: set sw=4 ts=4 et tw=80 : */
 
-},{"./code":5,"./keyword":6}],8:[function(_dereq_,module,exports){
+},{"./code":6,"./keyword":7}],9:[function(_dereq_,module,exports){
 /*
  * Copyright 2009-2011 Mozilla Foundation and contributors
  * Licensed under the New BSD license. See LICENSE.txt or:
@@ -3304,7 +3301,7 @@ exports.SourceMapGenerator = _dereq_('./source-map/source-map-generator').Source
 exports.SourceMapConsumer = _dereq_('./source-map/source-map-consumer').SourceMapConsumer;
 exports.SourceNode = _dereq_('./source-map/source-node').SourceNode;
 
-},{"./source-map/source-map-consumer":13,"./source-map/source-map-generator":14,"./source-map/source-node":15}],9:[function(_dereq_,module,exports){
+},{"./source-map/source-map-consumer":14,"./source-map/source-map-generator":15,"./source-map/source-node":16}],10:[function(_dereq_,module,exports){
 /* -*- Mode: js; js-indent-level: 2; -*- */
 /*
  * Copyright 2011 Mozilla Foundation and contributors
@@ -3403,7 +3400,7 @@ define(function (_dereq_, exports, module) {
 
 });
 
-},{"./util":16,"amdefine":17}],10:[function(_dereq_,module,exports){
+},{"./util":17,"amdefine":18}],11:[function(_dereq_,module,exports){
 /* -*- Mode: js; js-indent-level: 2; -*- */
 /*
  * Copyright 2011 Mozilla Foundation and contributors
@@ -3549,7 +3546,7 @@ define(function (_dereq_, exports, module) {
 
 });
 
-},{"./base64":11,"amdefine":17}],11:[function(_dereq_,module,exports){
+},{"./base64":12,"amdefine":18}],12:[function(_dereq_,module,exports){
 /* -*- Mode: js; js-indent-level: 2; -*- */
 /*
  * Copyright 2011 Mozilla Foundation and contributors
@@ -3593,7 +3590,7 @@ define(function (_dereq_, exports, module) {
 
 });
 
-},{"amdefine":17}],12:[function(_dereq_,module,exports){
+},{"amdefine":18}],13:[function(_dereq_,module,exports){
 /* -*- Mode: js; js-indent-level: 2; -*- */
 /*
  * Copyright 2011 Mozilla Foundation and contributors
@@ -3676,7 +3673,7 @@ define(function (_dereq_, exports, module) {
 
 });
 
-},{"amdefine":17}],13:[function(_dereq_,module,exports){
+},{"amdefine":18}],14:[function(_dereq_,module,exports){
 /* -*- Mode: js; js-indent-level: 2; -*- */
 /*
  * Copyright 2011 Mozilla Foundation and contributors
@@ -4156,7 +4153,7 @@ define(function (_dereq_, exports, module) {
 
 });
 
-},{"./array-set":9,"./base64-vlq":10,"./binary-search":12,"./util":16,"amdefine":17}],14:[function(_dereq_,module,exports){
+},{"./array-set":10,"./base64-vlq":11,"./binary-search":13,"./util":17,"amdefine":18}],15:[function(_dereq_,module,exports){
 /* -*- Mode: js; js-indent-level: 2; -*- */
 /*
  * Copyright 2011 Mozilla Foundation and contributors
@@ -4558,7 +4555,7 @@ define(function (_dereq_, exports, module) {
 
 });
 
-},{"./array-set":9,"./base64-vlq":10,"./util":16,"amdefine":17}],15:[function(_dereq_,module,exports){
+},{"./array-set":10,"./base64-vlq":11,"./util":17,"amdefine":18}],16:[function(_dereq_,module,exports){
 /* -*- Mode: js; js-indent-level: 2; -*- */
 /*
  * Copyright 2011 Mozilla Foundation and contributors
@@ -4960,7 +4957,7 @@ define(function (_dereq_, exports, module) {
 
 });
 
-},{"./source-map-generator":14,"./util":16,"amdefine":17}],16:[function(_dereq_,module,exports){
+},{"./source-map-generator":15,"./util":17,"amdefine":18}],17:[function(_dereq_,module,exports){
 /* -*- Mode: js; js-indent-level: 2; -*- */
 /*
  * Copyright 2011 Mozilla Foundation and contributors
@@ -5264,7 +5261,7 @@ define(function (_dereq_, exports, module) {
 
 });
 
-},{"amdefine":17}],17:[function(_dereq_,module,exports){
+},{"amdefine":18}],18:[function(_dereq_,module,exports){
 (function (process,__filename){
 /** vim: et:ts=4:sw=4:sts=4
  * @license amdefine 0.1.0 Copyright (c) 2011, The Dojo Foundation All Rights Reserved.
@@ -5567,7 +5564,7 @@ function amdefine(module, requireFn) {
 module.exports = amdefine;
 
 }).call(this,_dereq_("FWaASH"),"/../node_modules/escodegen/node_modules/source-map/node_modules/amdefine/amdefine.js")
-},{"FWaASH":3,"path":2}],18:[function(_dereq_,module,exports){
+},{"FWaASH":4,"path":3}],19:[function(_dereq_,module,exports){
 module.exports={
   "name": "escodegen",
   "description": "ECMAScript code generator",
@@ -5639,7 +5636,7 @@ module.exports={
   "_resolved": "https://registry.npmjs.org/escodegen/-/escodegen-1.3.3.tgz"
 }
 
-},{}],19:[function(_dereq_,module,exports){
+},{}],20:[function(_dereq_,module,exports){
 /*
   Copyright (C) 2012-2013 Yusuke Suzuki <utatane.tea@gmail.com>
   Copyright (C) 2012 Ariya Hidayat <ariya.hidayat@gmail.com>
@@ -6329,11 +6326,11 @@ module.exports={
 }));
 /* vim: set sw=4 ts=4 et tw=80 : */
 
-},{}],20:[function(_dereq_,module,exports){
+},{}],21:[function(_dereq_,module,exports){
 module.exports = _dereq_('./lib/extend');
 
 
-},{"./lib/extend":21}],21:[function(_dereq_,module,exports){
+},{"./lib/extend":22}],22:[function(_dereq_,module,exports){
 /*!
  * node.extend
  * Copyright 2011, John Resig
@@ -6417,7 +6414,7 @@ extend.version = '1.0.8';
 module.exports = extend;
 
 
-},{"is":22}],22:[function(_dereq_,module,exports){
+},{"is":23}],23:[function(_dereq_,module,exports){
 
 /**!
  * is
@@ -7131,7 +7128,7 @@ is.string = function (value) {
 };
 
 
-},{}],23:[function(_dereq_,module,exports){
+},{}],24:[function(_dereq_,module,exports){
 /**
  * type-name - Just a reasonable typeof
  * 
@@ -7171,6 +7168,6 @@ function typeName (val) {
 
 module.exports = typeName;
 
-},{}]},{},[1])
-(1)
+},{}]},{},[2])
+(2)
 });
