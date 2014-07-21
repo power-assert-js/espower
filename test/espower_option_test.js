@@ -1,23 +1,11 @@
 (function (root, factory) {
     'use strict';
-
-    var dependencies = [
-        '../lib/espower',
-        'esprima',
-        'escodegen',
-        'estraverse',
-        'assert'
-    ];
-
     if (typeof define === 'function' && define.amd) {
-        define(dependencies, factory);
+        define(['espower', 'esprima', 'escodegen', 'estraverse', 'assert'], factory);
     } else if (typeof exports === 'object') {
-        factory.apply(root, dependencies.map(function (path) { return require(path); }));
+        factory(require('..'), require('esprima'), require('escodegen'), require('estraverse'), require('assert'));
     } else {
-        factory.apply(root, dependencies.map(function (path) {
-            var tokens = path.split('/');
-            return root[tokens[tokens.length - 1]];
-        }));
+        factory(root.espower, root.esprima, root.escodegen, root.estraverse, root.assert);
     }
 }(this, function (
     espower,
@@ -156,31 +144,35 @@ describe('option prerequisites', function () {
                 espower(this.tree, options);
                 assert.ok(false, 'Error should be thrown');
             } catch (e) {
-                assert.equal(e.name, 'Error');
                 assert.equal(e.message, expected);
+                assert.equal(e.name, 'Error');
             }
         });
     }
 
-    optionPrerequisitesTest('destructive option is undefined',
-                            {source: 'assert(falsyStr);', destructive: undefined},
-                            'options.destructive should be specified.');
+    optionPrerequisitesTest('destructive option shoud be a boolean',
+                            {source: 'assert(falsyStr);', destructive: 1},
+                            'options.destructive should be a boolean value.');
 
-    optionPrerequisitesTest('powerAssertVariableName option is undefined',
-                            {source: 'assert(falsyStr);', powerAssertVariableName: undefined},
-                            'options.powerAssertVariableName should be specified.');
+    optionPrerequisitesTest('powerAssertVariableName option should be a string',
+                            {source: 'assert(falsyStr);', powerAssertVariableName: true},
+                            'options.powerAssertVariableName should be a non-empty string.');
 
-    optionPrerequisitesTest('targetMethods option is undefined',
-                            {source: 'assert(falsyStr);', targetMethods: undefined},
-                            'options.targetMethods should be specified.');
+    optionPrerequisitesTest('powerAssertVariableName option should be a non-empty string',
+                            {source: 'assert(falsyStr);', powerAssertVariableName: ''},
+                            'options.powerAssertVariableName should be a non-empty string.');
 
-    optionPrerequisitesTest('targetMethods.oneArg option is undefined',
+    optionPrerequisitesTest('targetMethods option should be an object',
+                            {source: 'assert(falsyStr);', targetMethods: 3},
+                            'options.targetMethods should be an object.');
+
+    optionPrerequisitesTest('targetMethods.oneArg option should be an array',
                             {source: 'assert(falsyStr);', targetMethods: { twoArgs: ['equal'] }},
-                            'options.targetMethods.oneArg should be specified.');
+                            'options.targetMethods.oneArg should be an array.');
 
-    optionPrerequisitesTest('targetMethods.twoArgs option is undefined',
+    optionPrerequisitesTest('targetMethods.twoArgs option should be an array',
                             {source: 'assert(falsyStr);', targetMethods: { oneArg: ['ok'] }},
-                            'options.targetMethods.twoArgs should be specified.');
+                            'options.targetMethods.twoArgs should be an array.');
 });
 
 

@@ -13,7 +13,7 @@
     <script type="text/javascript" src="../bower_components/esprima/esprima.js"></script>
     <script type="text/javascript" src="../bower_components/estraverse/estraverse.js"></script>
     <script type="text/javascript" src="../bower_components/escodegen/escodegen.browser.js"></script>
-    <script type="text/javascript" src="../lib/espower.js"></script>
+    <script type="text/javascript" src="../build/espower.js"></script>
     <script type="text/javascript" src="../bower_components/mocha/mocha.js"></script>
     <script type="text/javascript">
       mocha.setup('bdd');
@@ -22,7 +22,11 @@
     <script type="text/javascript" src="./instrumentation_test.js"></script>
     <script type="text/javascript">
       mocha.checkLeaks();
-      mocha.run();
+      if (window.mochaPhantomJS) {
+        mochaPhantomJS.run();
+      } else {
+        mocha.run();
+      }
     </script>
   </body>
 </html>

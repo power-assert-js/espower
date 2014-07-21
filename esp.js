@@ -1,4 +1,4 @@
-var espower = require('./lib/espower'),
+var espower = require('./index'),
     esprima = require('esprima'),
     escodegen = require('escodegen'),
     jsCode = process.argv[2],
