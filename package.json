@@ -48,8 +48,8 @@
   "devDependencies": {
     "blanket": "~1.1.6",
     "browserify": "~4.2.1",
+    "del": "~0.1.1",
     "gulp": "~3.8.6",
-    "gulp-clean": "~0.3.1",
     "gulp-connect": "~2.0.6",
     "gulp-mocha": "~0.5.1",
     "gulp-mocha-phantomjs": "~0.3.0",

@@ -3,7 +3,7 @@ var gulp = require('gulp'),
     mocha = require('gulp-mocha'),
     mochaPhantomJS = require('gulp-mocha-phantomjs'),
     connect = require('gulp-connect'),
-    clean = require('gulp-clean'),
+    del = require('del'),
     source = require('vinyl-source-stream'),
     through = require('through2'),
     browserify = require('browserify'),
@@ -94,16 +94,12 @@ gulp.task('watch', function () {
     runMochaSimply();
 });
 
-gulp.task('clean_bundle', function () {
-    return gulp
-        .src(config.bundle.destDir, {read: false})
-        .pipe(clean());
+gulp.task('clean_bundle', function (done) {
+    del([config.bundle.destDir], done);
 });
 
-gulp.task('clean_coverage', function () {
-    return gulp
-        .src(config.coverage.filename, {read: false})
-        .pipe(clean());
+gulp.task('clean_coverage', function (done) {
+    del([config.coverage.filename], done);
 });
 
 gulp.task('bundle', ['clean_bundle'], function() {
