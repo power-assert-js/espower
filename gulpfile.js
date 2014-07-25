@@ -7,6 +7,8 @@ var gulp = require('gulp'),
     source = require('vinyl-source-stream'),
     through = require('through2'),
     browserify = require('browserify'),
+    streamify = require('gulp-streamify'),
+    derequire = require('derequire'),
     config = {
         bundle: {
             standalone: 'espower',
@@ -102,10 +104,21 @@ gulp.task('clean_coverage', function (done) {
     del([config.coverage.filename], done);
 });
 
+var dereqBundle = through.obj(function (file, encoding, callback) {
+    if (file.isNull()) {
+        this.push(file);
+    } else if (file.isBuffer()) {
+        file.contents = new Buffer(derequire(file.contents.toString('utf8')));
+        this.push(file);
+    }
+    callback();
+});
+
 gulp.task('bundle', ['clean_bundle'], function() {
     var bundleStream = browserify({entries: config.bundle.srcFile, standalone: config.bundle.standalone}).bundle();
     return bundleStream
         .pipe(source(config.bundle.destName))
+        .pipe(streamify(dereqBundle))
         .pipe(gulp.dest(config.bundle.destDir));
 });
 
