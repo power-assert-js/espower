@@ -1,4 +1,4 @@
-!function(e){if("object"==typeof exports&&"undefined"!=typeof module)module.exports=e();else if("function"==typeof define&&define.amd)define([],e);else{var f;"undefined"!=typeof window?f=window:"undefined"!=typeof global?f=global:"undefined"!=typeof self&&(f=self),f.espower=e()}}(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);throw new Error("Cannot find module '"+o+"'")}var f=n[o]={exports:{}};t[o][0].call(f.exports,function(e){var n=t[o][1][e];return s(n?n:e)},f,f.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(_dereq_,module,exports){
+!function(e){if("object"==typeof exports&&"undefined"!=typeof module)module.exports=e();else if("function"==typeof define&&define.amd)define([],e);else{var f;"undefined"!=typeof window?f=window:"undefined"!=typeof global?f=global:"undefined"!=typeof self&&(f=self),f.espower=e()}}(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 /**
  * espower - Power Assert feature instrumentor based on the Mozilla JavaScript AST.
  *
@@ -10,10 +10,10 @@
  */
 'use strict';
 
-var defaultOptions = _dereq_('./lib/default-options'),
-    Instrumentor = _dereq_('./lib/instrumentor'),
-    deepCopy = _dereq_('./lib/ast-deepcopy'),
-    extend = _dereq_('node.extend');
+var defaultOptions = require('./lib/default-options'),
+    Instrumentor = require('./lib/instrumentor'),
+    deepCopy = require('./lib/ast-deepcopy'),
+    extend = require('node.extend');
 
 /**
  * Instrument power assert feature into code. Mozilla JS AST in, Mozilla JS AST out.
@@ -30,7 +30,7 @@ espower.deepCopy = deepCopy;
 espower.defaultOptions = defaultOptions;
 module.exports = espower;
 
-},{"./lib/ast-deepcopy":2,"./lib/default-options":3,"./lib/instrumentor":4,"node.extend":23}],2:[function(_dereq_,module,exports){
+},{"./lib/ast-deepcopy":2,"./lib/default-options":3,"./lib/instrumentor":4,"node.extend":23}],2:[function(require,module,exports){
 /**
  * Copyright (C) 2012 Yusuke Suzuki (twitter: @Constellation) and other contributors.
  * Released under the BSD license.
@@ -69,7 +69,7 @@ function deepCopy (obj) {
 
 module.exports = deepCopy;
 
-},{}],3:[function(_dereq_,module,exports){
+},{}],3:[function(require,module,exports){
 'use strict';
 
 module.exports = function defaultOptions () {
@@ -101,14 +101,14 @@ module.exports = function defaultOptions () {
     };
 };
 
-},{}],4:[function(_dereq_,module,exports){
+},{}],4:[function(require,module,exports){
 'use strict';
 
-var estraverse = _dereq_('estraverse'),
-    escodegen = _dereq_('escodegen'),
-    deepCopy = _dereq_('./ast-deepcopy'),
-    typeName = _dereq_('type-name'),
-    extend = _dereq_('node.extend'),
+var estraverse = require('estraverse'),
+    escodegen = require('escodegen'),
+    deepCopy = require('./ast-deepcopy'),
+    typeName = require('type-name'),
+    extend = require('node.extend'),
     syntax = estraverse.Syntax,
     supportedNodeTypes = [
         syntax.Identifier,
@@ -477,8 +477,7 @@ function ensureOptionPrerequisites (options) {
 
 module.exports = Instrumentor;
 
-},{"./ast-deepcopy":2,"escodegen":7,"estraverse":22,"node.extend":23,"type-name":26}],5:[function(_dereq_,module,exports){
-(function (process){
+},{"./ast-deepcopy":2,"escodegen":7,"estraverse":22,"node.extend":23,"type-name":26}],5:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -704,8 +703,7 @@ var substr = 'ab'.substr(-1) === 'b'
     }
 ;
 
-}).call(this,_dereq_("FWaASH"))
-},{"FWaASH":6}],6:[function(_dereq_,module,exports){
+},{}],6:[function(require,module,exports){
 // shim for using process in browser
 
 var process = module.exports = {};
@@ -770,7 +768,7 @@ process.chdir = function (dir) {
     throw new Error('process.chdir is not supported');
 };
 
-},{}],7:[function(_dereq_,module,exports){
+},{}],7:[function(require,module,exports){
 (function (global){
 /*
   Copyright (C) 2012-2013 Yusuke Suzuki <utatane.tea@gmail.com>
@@ -835,8 +833,8 @@ process.chdir = function (dir) {
         FORMAT_MINIFY,
         FORMAT_DEFAULTS;
 
-    estraverse = _dereq_('estraverse');
-    esutils = _dereq_('esutils');
+    estraverse = require('estraverse');
+    esutils = require('esutils');
 
     Syntax = {
         AssignmentExpression: 'AssignmentExpression',
@@ -2940,7 +2938,7 @@ process.chdir = function (dir) {
             if (!exports.browser) {
                 // We assume environment is node.js
                 // And prevent from including source-map by browserify
-                SourceNode = _dereq_('source-map').SourceNode;
+                SourceNode = require('source-map').SourceNode;
             } else {
                 SourceNode = global.sourceMap.SourceNode;
             }
@@ -3046,7 +3044,7 @@ process.chdir = function (dir) {
 
     FORMAT_DEFAULTS = getDefaultOptions().format;
 
-    exports.version = _dereq_('./package.json').version;
+    exports.version = require('./package.json').version;
     exports.generate = generate;
     exports.attachComments = estraverse.attachComments;
     exports.Precedence = updateDeeply({}, Precedence);
@@ -3056,8 +3054,8 @@ process.chdir = function (dir) {
 }());
 /* vim: set sw=4 ts=4 et tw=80 : */
 
-}).call(this,typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./package.json":21,"estraverse":22,"esutils":10,"source-map":11}],8:[function(_dereq_,module,exports){
+}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
+},{"./package.json":21,"estraverse":22,"esutils":10,"source-map":11}],8:[function(require,module,exports){
 /*
   Copyright (C) 2013 Yusuke Suzuki <utatane.tea@gmail.com>
 
@@ -3149,7 +3147,7 @@ process.chdir = function (dir) {
 }());
 /* vim: set sw=4 ts=4 et tw=80 : */
 
-},{}],9:[function(_dereq_,module,exports){
+},{}],9:[function(require,module,exports){
 /*
   Copyright (C) 2013 Yusuke Suzuki <utatane.tea@gmail.com>
 
@@ -3177,7 +3175,7 @@ process.chdir = function (dir) {
 (function () {
     'use strict';
 
-    var code = _dereq_('./code');
+    var code = require('./code');
 
     function isStrictModeReservedWordES6(id) {
         switch (id) {
@@ -3268,7 +3266,7 @@ process.chdir = function (dir) {
 }());
 /* vim: set sw=4 ts=4 et tw=80 : */
 
-},{"./code":8}],10:[function(_dereq_,module,exports){
+},{"./code":8}],10:[function(require,module,exports){
 /*
   Copyright (C) 2013 Yusuke Suzuki <utatane.tea@gmail.com>
 
@@ -3297,22 +3295,22 @@ process.chdir = function (dir) {
 (function () {
     'use strict';
 
-    exports.code = _dereq_('./code');
-    exports.keyword = _dereq_('./keyword');
+    exports.code = require('./code');
+    exports.keyword = require('./keyword');
 }());
 /* vim: set sw=4 ts=4 et tw=80 : */
 
-},{"./code":8,"./keyword":9}],11:[function(_dereq_,module,exports){
+},{"./code":8,"./keyword":9}],11:[function(require,module,exports){
 /*
  * Copyright 2009-2011 Mozilla Foundation and contributors
  * Licensed under the New BSD license. See LICENSE.txt or:
  * http://opensource.org/licenses/BSD-3-Clause
  */
-exports.SourceMapGenerator = _dereq_('./source-map/source-map-generator').SourceMapGenerator;
-exports.SourceMapConsumer = _dereq_('./source-map/source-map-consumer').SourceMapConsumer;
-exports.SourceNode = _dereq_('./source-map/source-node').SourceNode;
+exports.SourceMapGenerator = require('./source-map/source-map-generator').SourceMapGenerator;
+exports.SourceMapConsumer = require('./source-map/source-map-consumer').SourceMapConsumer;
+exports.SourceNode = require('./source-map/source-node').SourceNode;
 
-},{"./source-map/source-map-consumer":16,"./source-map/source-map-generator":17,"./source-map/source-node":18}],12:[function(_dereq_,module,exports){
+},{"./source-map/source-map-consumer":16,"./source-map/source-map-generator":17,"./source-map/source-node":18}],12:[function(require,module,exports){
 /* -*- Mode: js; js-indent-level: 2; -*- */
 /*
  * Copyright 2011 Mozilla Foundation and contributors
@@ -3320,11 +3318,11 @@ exports.SourceNode = _dereq_('./source-map/source-node').SourceNode;
  * http://opensource.org/licenses/BSD-3-Clause
  */
 if (typeof define !== 'function') {
-    var define = _dereq_('amdefine')(module, _dereq_);
+    var define = require('amdefine')(module, require);
 }
-define(function (_dereq_, exports, module) {
+define(function (require, exports, module) {
 
-  var util = _dereq_('./util');
+  var util = require('./util');
 
   /**
    * A data structure which is a combination of an array and a set. Adding a new
@@ -3411,7 +3409,7 @@ define(function (_dereq_, exports, module) {
 
 });
 
-},{"./util":19,"amdefine":20}],13:[function(_dereq_,module,exports){
+},{"./util":19,"amdefine":20}],13:[function(require,module,exports){
 /* -*- Mode: js; js-indent-level: 2; -*- */
 /*
  * Copyright 2011 Mozilla Foundation and contributors
@@ -3449,11 +3447,11 @@ define(function (_dereq_, exports, module) {
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 if (typeof define !== 'function') {
-    var define = _dereq_('amdefine')(module, _dereq_);
+    var define = require('amdefine')(module, require);
 }
-define(function (_dereq_, exports, module) {
+define(function (require, exports, module) {
 
-  var base64 = _dereq_('./base64');
+  var base64 = require('./base64');
 
   // A single base 64 digit can contain 6 bits of data. For the base 64 variable
   // length quantities we use in the source map spec, the first bit is the sign,
@@ -3557,7 +3555,7 @@ define(function (_dereq_, exports, module) {
 
 });
 
-},{"./base64":14,"amdefine":20}],14:[function(_dereq_,module,exports){
+},{"./base64":14,"amdefine":20}],14:[function(require,module,exports){
 /* -*- Mode: js; js-indent-level: 2; -*- */
 /*
  * Copyright 2011 Mozilla Foundation and contributors
@@ -3565,9 +3563,9 @@ define(function (_dereq_, exports, module) {
  * http://opensource.org/licenses/BSD-3-Clause
  */
 if (typeof define !== 'function') {
-    var define = _dereq_('amdefine')(module, _dereq_);
+    var define = require('amdefine')(module, require);
 }
-define(function (_dereq_, exports, module) {
+define(function (require, exports, module) {
 
   var charToIntMap = {};
   var intToCharMap = {};
@@ -3601,7 +3599,7 @@ define(function (_dereq_, exports, module) {
 
 });
 
-},{"amdefine":20}],15:[function(_dereq_,module,exports){
+},{"amdefine":20}],15:[function(require,module,exports){
 /* -*- Mode: js; js-indent-level: 2; -*- */
 /*
  * Copyright 2011 Mozilla Foundation and contributors
@@ -3609,9 +3607,9 @@ define(function (_dereq_, exports, module) {
  * http://opensource.org/licenses/BSD-3-Clause
  */
 if (typeof define !== 'function') {
-    var define = _dereq_('amdefine')(module, _dereq_);
+    var define = require('amdefine')(module, require);
 }
-define(function (_dereq_, exports, module) {
+define(function (require, exports, module) {
 
   /**
    * Recursive implementation of binary search.
@@ -3684,7 +3682,7 @@ define(function (_dereq_, exports, module) {
 
 });
 
-},{"amdefine":20}],16:[function(_dereq_,module,exports){
+},{"amdefine":20}],16:[function(require,module,exports){
 /* -*- Mode: js; js-indent-level: 2; -*- */
 /*
  * Copyright 2011 Mozilla Foundation and contributors
@@ -3692,14 +3690,14 @@ define(function (_dereq_, exports, module) {
  * http://opensource.org/licenses/BSD-3-Clause
  */
 if (typeof define !== 'function') {
-    var define = _dereq_('amdefine')(module, _dereq_);
+    var define = require('amdefine')(module, require);
 }
-define(function (_dereq_, exports, module) {
+define(function (require, exports, module) {
 
-  var util = _dereq_('./util');
-  var binarySearch = _dereq_('./binary-search');
-  var ArraySet = _dereq_('./array-set').ArraySet;
-  var base64VLQ = _dereq_('./base64-vlq');
+  var util = require('./util');
+  var binarySearch = require('./binary-search');
+  var ArraySet = require('./array-set').ArraySet;
+  var base64VLQ = require('./base64-vlq');
 
   /**
    * A SourceMapConsumer instance represents a parsed source map which we can
@@ -4164,7 +4162,7 @@ define(function (_dereq_, exports, module) {
 
 });
 
-},{"./array-set":12,"./base64-vlq":13,"./binary-search":15,"./util":19,"amdefine":20}],17:[function(_dereq_,module,exports){
+},{"./array-set":12,"./base64-vlq":13,"./binary-search":15,"./util":19,"amdefine":20}],17:[function(require,module,exports){
 /* -*- Mode: js; js-indent-level: 2; -*- */
 /*
  * Copyright 2011 Mozilla Foundation and contributors
@@ -4172,13 +4170,13 @@ define(function (_dereq_, exports, module) {
  * http://opensource.org/licenses/BSD-3-Clause
  */
 if (typeof define !== 'function') {
-    var define = _dereq_('amdefine')(module, _dereq_);
+    var define = require('amdefine')(module, require);
 }
-define(function (_dereq_, exports, module) {
+define(function (require, exports, module) {
 
-  var base64VLQ = _dereq_('./base64-vlq');
-  var util = _dereq_('./util');
-  var ArraySet = _dereq_('./array-set').ArraySet;
+  var base64VLQ = require('./base64-vlq');
+  var util = require('./util');
+  var ArraySet = require('./array-set').ArraySet;
 
   /**
    * An instance of the SourceMapGenerator represents a source map which is
@@ -4566,7 +4564,7 @@ define(function (_dereq_, exports, module) {
 
 });
 
-},{"./array-set":12,"./base64-vlq":13,"./util":19,"amdefine":20}],18:[function(_dereq_,module,exports){
+},{"./array-set":12,"./base64-vlq":13,"./util":19,"amdefine":20}],18:[function(require,module,exports){
 /* -*- Mode: js; js-indent-level: 2; -*- */
 /*
  * Copyright 2011 Mozilla Foundation and contributors
@@ -4574,12 +4572,12 @@ define(function (_dereq_, exports, module) {
  * http://opensource.org/licenses/BSD-3-Clause
  */
 if (typeof define !== 'function') {
-    var define = _dereq_('amdefine')(module, _dereq_);
+    var define = require('amdefine')(module, require);
 }
-define(function (_dereq_, exports, module) {
+define(function (require, exports, module) {
 
-  var SourceMapGenerator = _dereq_('./source-map-generator').SourceMapGenerator;
-  var util = _dereq_('./util');
+  var SourceMapGenerator = require('./source-map-generator').SourceMapGenerator;
+  var util = require('./util');
 
   // Matches a Windows-style `\r\n` newline or a `\n` newline used by all other
   // operating systems these days (capturing the result).
@@ -4968,7 +4966,7 @@ define(function (_dereq_, exports, module) {
 
 });
 
-},{"./source-map-generator":17,"./util":19,"amdefine":20}],19:[function(_dereq_,module,exports){
+},{"./source-map-generator":17,"./util":19,"amdefine":20}],19:[function(require,module,exports){
 /* -*- Mode: js; js-indent-level: 2; -*- */
 /*
  * Copyright 2011 Mozilla Foundation and contributors
@@ -4976,9 +4974,9 @@ define(function (_dereq_, exports, module) {
  * http://opensource.org/licenses/BSD-3-Clause
  */
 if (typeof define !== 'function') {
-    var define = _dereq_('amdefine')(module, _dereq_);
+    var define = require('amdefine')(module, require);
 }
-define(function (_dereq_, exports, module) {
+define(function (require, exports, module) {
 
   /**
    * This is a helper function for getting values from parameter/options
@@ -5272,7 +5270,7 @@ define(function (_dereq_, exports, module) {
 
 });
 
-},{"amdefine":20}],20:[function(_dereq_,module,exports){
+},{"amdefine":20}],20:[function(require,module,exports){
 (function (process,__filename){
 /** vim: et:ts=4:sw=4:sts=4
  * @license amdefine 0.1.0 Copyright (c) 2011, The Dojo Foundation All Rights Reserved.
@@ -5299,7 +5297,7 @@ function amdefine(module, requireFn) {
     var defineCache = {},
         loaderCache = {},
         alreadyCalled = false,
-        path = _dereq_('path'),
+        path = require('path'),
         makeRequire, stringRequire;
 
     /**
@@ -5574,8 +5572,8 @@ function amdefine(module, requireFn) {
 
 module.exports = amdefine;
 
-}).call(this,_dereq_("FWaASH"),"/node_modules/escodegen/node_modules/source-map/node_modules/amdefine/amdefine.js")
-},{"FWaASH":6,"path":5}],21:[function(_dereq_,module,exports){
+}).call(this,require('_process'),"/node_modules/escodegen/node_modules/source-map/node_modules/amdefine/amdefine.js")
+},{"_process":6,"path":5}],21:[function(require,module,exports){
 module.exports={
   "name": "escodegen",
   "description": "ECMAScript code generator",
@@ -5647,7 +5645,7 @@ module.exports={
   "_resolved": "https://registry.npmjs.org/escodegen/-/escodegen-1.3.3.tgz"
 }
 
-},{}],22:[function(_dereq_,module,exports){
+},{}],22:[function(require,module,exports){
 /*
   Copyright (C) 2012-2013 Yusuke Suzuki <utatane.tea@gmail.com>
   Copyright (C) 2012 Ariya Hidayat <ariya.hidayat@gmail.com>
@@ -5848,6 +5846,7 @@ module.exports={
         ExpressionStatement: ['expression'],
         ForStatement: ['init', 'test', 'update', 'body'],
         ForInStatement: ['left', 'right', 'body'],
+        ForOfStatement: ['left', 'right', 'body'],
         FunctionDeclaration: ['id', 'params', 'defaults', 'rest', 'body'],
         FunctionExpression: ['id', 'params', 'defaults', 'rest', 'body'],
         Identifier: [],
@@ -6326,7 +6325,7 @@ module.exports={
         return tree;
     }
 
-    exports.version = '1.3.3-dev';
+    exports.version = '1.5.1-dev';
     exports.Syntax = Syntax;
     exports.traverse = traverse;
     exports.replace = replace;
@@ -6337,11 +6336,11 @@ module.exports={
 }));
 /* vim: set sw=4 ts=4 et tw=80 : */
 
-},{}],23:[function(_dereq_,module,exports){
-module.exports = _dereq_('./lib/extend');
+},{}],23:[function(require,module,exports){
+module.exports = require('./lib/extend');
 
 
-},{"./lib/extend":24}],24:[function(_dereq_,module,exports){
+},{"./lib/extend":24}],24:[function(require,module,exports){
 /*!
  * node.extend
  * Copyright 2011, John Resig
@@ -6351,7 +6350,7 @@ module.exports = _dereq_('./lib/extend');
  * @fileoverview
  * Port of jQuery.extend that actually works on node.js
  */
-var is = _dereq_('is');
+var is = require('is');
 
 function extend() {
   var target = arguments[0] || {};
@@ -6425,7 +6424,7 @@ extend.version = '1.0.8';
 module.exports = extend;
 
 
-},{"is":25}],25:[function(_dereq_,module,exports){
+},{"is":25}],25:[function(require,module,exports){
 
 /**!
  * is
@@ -7139,7 +7138,7 @@ is.string = function (value) {
 };
 
 
-},{}],26:[function(_dereq_,module,exports){
+},{}],26:[function(require,module,exports){
 /**
  * type-name - Just a reasonable typeof
  * 
@@ -7179,6 +7178,5 @@ function typeName (val) {
 
 module.exports = typeName;
 
-},{}]},{},[1])
-(1)
+},{}]},{},[1])(1)
 });
