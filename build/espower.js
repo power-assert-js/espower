@@ -75,7 +75,6 @@ module.exports = deepCopy;
 module.exports = function defaultOptions () {
     return {
         destructive: false,
-        powerAssertVariableName: 'assert',
         escodegenOptions: {
             format: {
                 indent: {
@@ -140,6 +139,7 @@ Instrumentor.prototype.instrument = function (ast) {
         assertionPath,
         argumentPath,
         canonicalCode,
+        powerAssertVariableName,
         lineNum,
         argumentModified = false,
         skipping = false,
@@ -171,6 +171,7 @@ Instrumentor.prototype.instrument = function (ast) {
                     lineNum = currentNode.loc.start.line;
                     canonicalCode = generateCanonicalCode(currentNode, that.options.escodegenOptions);
                     assertionPath = [].concat(path);
+                    powerAssertVariableName = guessPowerAssertVariableName(currentNode.callee);
                     return undefined;
                 }
                 if (parentNode.type !== syntax.CallExpression || !isSupportedNodeType(currentNode)) {
@@ -216,6 +217,7 @@ Instrumentor.prototype.instrument = function (ast) {
                 canonicalCode = null;
                 lineNum = null;
                 assertionPath = null;
+                powerAssertVariableName = null;
                 return undefined;
             }
 
@@ -240,7 +242,7 @@ Instrumentor.prototype.instrument = function (ast) {
             case syntax.AssignmentExpression:
             case syntax.UpdateExpression:
             case syntax.NewExpression:
-                resultTree = that.captureNode(currentNode, relativeEsPath);
+                resultTree = that.captureNode(currentNode, relativeEsPath, powerAssertVariableName);
                 argumentModified = true;
                 break;
             default:
@@ -252,7 +254,7 @@ Instrumentor.prototype.instrument = function (ast) {
                 argumentPath = null;
                 if (argumentModified) {
                     argumentModified = false;
-                    return that.captureArgument(resultTree, canonicalCode, lineNum);
+                    return that.captureArgument(resultTree, canonicalCode, powerAssertVariableName, lineNum);
                 }
             }
 
@@ -262,7 +264,7 @@ Instrumentor.prototype.instrument = function (ast) {
     return result;
 };
 
-Instrumentor.prototype.captureArgument = function (node, canonicalCode, lineNum) {
+Instrumentor.prototype.captureArgument = function (node, canonicalCode, powerAssertVariableName, lineNum) {
     var n = newNodeWithLocationCopyOf(node),
         props = [];
     addLiteralTo(props, n, 'content', canonicalCode);
@@ -275,7 +277,7 @@ Instrumentor.prototype.captureArgument = function (node, canonicalCode, lineNum)
             computed: false,
             object: n({
                 type: syntax.Identifier,
-                name: this.options.powerAssertVariableName
+                name: powerAssertVariableName
             }),
             property: n({
                 type: syntax.Identifier,
@@ -289,7 +291,7 @@ Instrumentor.prototype.captureArgument = function (node, canonicalCode, lineNum)
     });
 };
 
-Instrumentor.prototype.captureNode = function (target, relativeEsPath) {
+Instrumentor.prototype.captureNode = function (target, relativeEsPath, powerAssertVariableName) {
     var n = newNodeWithLocationCopyOf(target);
     return n({
         type: syntax.CallExpression,
@@ -298,7 +300,7 @@ Instrumentor.prototype.captureNode = function (target, relativeEsPath) {
             computed: false,
             object: n({
                 type: syntax.Identifier,
-                name: this.options.powerAssertVariableName
+                name: powerAssertVariableName
             }),
             property: n({
                 type: syntax.Identifier,
@@ -314,6 +316,17 @@ Instrumentor.prototype.captureNode = function (target, relativeEsPath) {
         ]
     });
 };
+
+
+function guessPowerAssertVariableName (node) {
+    switch(node.type) {
+    case syntax.Identifier:
+        return node.name;
+    case syntax.MemberExpression:
+        return guessPowerAssertVariableName(node.object);
+    }
+    return null;
+}
 
 
 function generateCanonicalCode(node, escodegenOptions) {
@@ -422,9 +435,6 @@ function ensureAstPrerequisites (ast, options) {
 function ensureOptionPrerequisites (options) {
     if (typeName(options.destructive) !== 'boolean') {
         throw new Error('options.destructive should be a boolean value.');
-    }
-    if (typeName(options.powerAssertVariableName) !== 'string' || options.powerAssertVariableName === '') {
-        throw new Error('options.powerAssertVariableName should be a non-empty string.');
     }
     if (typeName(options.patterns) !== 'Array') {
         throw new Error('options.patterns should be an array.');

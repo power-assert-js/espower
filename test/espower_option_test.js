@@ -28,9 +28,6 @@ describe('espower.defaultOptions()', function () {
     it('destructive: false', function () {
         assert.equal(this.options.destructive, false);
     });
-    it('powerAssertVariableName: "assert"', function () {
-        assert.equal(this.options.powerAssertVariableName, 'assert');
-    });
 });
 
 
@@ -78,22 +75,6 @@ describe('instrumentation tests for options', function () {
         it('with source and path', function () {
             var instrumentedCode = instrument('assert(falsyStr);', {source: 'assert(falsyStr);', path: '/path/to/baz_test.js'});
             assert.equal(instrumentedCode, "assert(assert._expr(assert._capt(falsyStr,'arguments/0'),{content:'assert(falsyStr)',filepath:'/path/to/baz_test.js',line:1}));");
-        });
-    });
-
-
-    describe('powerAssertVariableName option.', function () {
-        it('default is "assert"', function () {
-            var instrumentedCode = instrument('assert(falsyStr);', {source: 'assert(falsyStr);', patterns: ['assert(value)']});
-            assert.equal(instrumentedCode, "assert(assert._expr(assert._capt(falsyStr,'arguments/0'),{content:'assert(falsyStr)',line:1}));");
-        });
-        it('powerAssertVariableName: "test"', function () {
-            var instrumentedCode = instrument('test.ok(falsyStr);', {source: 'test.ok(falsyStr);', powerAssertVariableName: 'test', patterns: ['test.ok(value)']});
-            assert.equal(instrumentedCode, "test.ok(test._expr(test._capt(falsyStr,'arguments/0'),{content:'test.ok(falsyStr)',line:1}));");
-        });
-        it('not instrumented if powerAssertVariableName and actual variable name is different.', function () {
-            var instrumentedCode = instrument('assert.ok(falsyStr);', {source: 'assert.ok(falsyStr);', powerAssertVariableName: 'test', patterns: ['test.ok(value)']});
-            assert.equal(instrumentedCode, "assert.ok(falsyStr);");
         });
     });
 
@@ -154,14 +135,6 @@ describe('option prerequisites', function () {
                             {source: 'assert(falsyStr);', destructive: 1},
                             'options.destructive should be a boolean value.');
 
-    optionPrerequisitesTest('powerAssertVariableName option should be a string',
-                            {source: 'assert(falsyStr);', powerAssertVariableName: true},
-                            'options.powerAssertVariableName should be a non-empty string.');
-
-    optionPrerequisitesTest('powerAssertVariableName option should be a non-empty string',
-                            {source: 'assert(falsyStr);', powerAssertVariableName: ''},
-                            'options.powerAssertVariableName should be a non-empty string.');
-
     optionPrerequisitesTest('patterns option should be an array',
                             {source: 'assert(falsyStr);', patterns: 'hoge'},
                             'options.patterns should be an array.');
@@ -175,7 +148,7 @@ describe('AST prerequisites. Error should be thrown if location is missing.', fu
     });
     it('error message when path option is not specified', function () {
         try {
-            espower(this.tree, {destructive: false, source: this.jsCode, powerAssertVariableName: 'assert'});
+            espower(this.tree, {destructive: false, source: this.jsCode});
             assert.ok(false, 'Error should be thrown');
         } catch (e) {
             assert.equal(e.name, 'Error');
@@ -184,7 +157,7 @@ describe('AST prerequisites. Error should be thrown if location is missing.', fu
     });
     it('error message when path option is specified', function () {
         try {
-            espower(this.tree, {destructive: false, source: this.jsCode, powerAssertVariableName: 'assert', path: '/path/to/baz_test.js'});
+            espower(this.tree, {destructive: false, source: this.jsCode, path: '/path/to/baz_test.js'});
             assert.ok(false, 'Error should be thrown');
         } catch (e) {
             assert.equal(e.name, 'Error');
