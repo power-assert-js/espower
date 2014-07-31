@@ -84,15 +84,15 @@ describe('instrumentation tests for options', function () {
 
     describe('powerAssertVariableName option.', function () {
         it('default is "assert"', function () {
-            var instrumentedCode = instrument('assert(falsyStr);', {source: 'assert(falsyStr);'});
+            var instrumentedCode = instrument('assert(falsyStr);', {source: 'assert(falsyStr);', patterns: ['assert(value)']});
             assert.equal(instrumentedCode, "assert(assert._expr(assert._capt(falsyStr,'arguments/0'),{content:'assert(falsyStr)',line:1}));");
         });
         it('powerAssertVariableName: "test"', function () {
-            var instrumentedCode = instrument('test.ok(falsyStr);', {source: 'test.ok(falsyStr);', powerAssertVariableName: 'test'});
+            var instrumentedCode = instrument('test.ok(falsyStr);', {source: 'test.ok(falsyStr);', powerAssertVariableName: 'test', patterns: ['test.ok(value)']});
             assert.equal(instrumentedCode, "test.ok(test._expr(test._capt(falsyStr,'arguments/0'),{content:'test.ok(falsyStr)',line:1}));");
         });
         it('not instrumented if powerAssertVariableName and actual variable name is different.', function () {
-            var instrumentedCode = instrument('assert.ok(falsyStr);', {source: 'assert.ok(falsyStr);', powerAssertVariableName: 'test'});
+            var instrumentedCode = instrument('assert.ok(falsyStr);', {source: 'assert.ok(falsyStr);', powerAssertVariableName: 'test', patterns: ['test.ok(value)']});
             assert.equal(instrumentedCode, "assert.ok(falsyStr);");
         });
     });
@@ -162,17 +162,9 @@ describe('option prerequisites', function () {
                             {source: 'assert(falsyStr);', powerAssertVariableName: ''},
                             'options.powerAssertVariableName should be a non-empty string.');
 
-    optionPrerequisitesTest('targetMethods option should be an object',
-                            {source: 'assert(falsyStr);', targetMethods: 3},
-                            'options.targetMethods should be an object.');
-
-    optionPrerequisitesTest('targetMethods.oneArg option should be an array',
-                            {source: 'assert(falsyStr);', targetMethods: { twoArgs: ['equal'] }},
-                            'options.targetMethods.oneArg should be an array.');
-
-    optionPrerequisitesTest('targetMethods.twoArgs option should be an array',
-                            {source: 'assert(falsyStr);', targetMethods: { oneArg: ['ok'] }},
-                            'options.targetMethods.twoArgs should be an array.');
+    optionPrerequisitesTest('patterns option should be an array',
+                            {source: 'assert(falsyStr);', patterns: 'hoge'},
+                            'options.patterns should be an array.');
 });
 
 
