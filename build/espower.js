@@ -268,12 +268,7 @@ Instrumentor.prototype.instrument = function (ast) {
 Instrumentor.prototype.captureArgument = function (node, canonicalCode, powerAssertCallee, lineNum) {
     var n = newNodeWithLocationCopyOf(node),
         props = [],
-        newCallee = espurify(powerAssertCallee);
-    estraverse.replace(newCallee, {
-        leave: function (currentNode, parentNode) {
-            return n(currentNode);
-        }
-    });
+        newCallee = updateLocRecursively(espurify(powerAssertCallee), n);
     addLiteralTo(props, n, 'content', canonicalCode);
     addLiteralTo(props, n, 'filepath', this.options.path);
     addLiteralTo(props, n, 'line', lineNum);
@@ -297,12 +292,7 @@ Instrumentor.prototype.captureArgument = function (node, canonicalCode, powerAss
 
 Instrumentor.prototype.captureNode = function (target, relativeEsPath, powerAssertCallee) {
     var n = newNodeWithLocationCopyOf(target),
-        newCallee = espurify(powerAssertCallee);
-    estraverse.replace(newCallee, {
-        leave: function (currentNode, parentNode) {
-            return n(currentNode);
-        }
-    });
+        newCallee = updateLocRecursively(espurify(powerAssertCallee), n);
     return n({
         type: syntax.CallExpression,
         callee: n({
@@ -324,6 +314,14 @@ Instrumentor.prototype.captureNode = function (target, relativeEsPath, powerAsse
     });
 };
 
+function updateLocRecursively (node, n) {
+    estraverse.replace(node, {
+        leave: function (currentNode, parentNode) {
+            return n(currentNode);
+        }
+    });
+    return node;
+}
 
 function guessPowerAssertCalleeFor (node) {
     switch(node.type) {
