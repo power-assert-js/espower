@@ -21,6 +21,14 @@ if (typeof define === 'function' && define.amd) {
 }
 
 
+function instrument (jsCode, options) {
+    var jsAST = esprima.parse(jsCode, {tolerant: true, loc: true, tokens: true, raw: true});
+    var espoweredAST = espower(jsAST, options);
+    var instrumentedCode = escodegen.generate(espoweredAST, {format: {compact: true}});
+    return instrumentedCode;
+}
+
+
 describe('espower.defaultOptions()', function () {
     beforeEach(function () {
         this.options = espower.defaultOptions();
@@ -28,20 +36,10 @@ describe('espower.defaultOptions()', function () {
     it('destructive: false', function () {
         assert.equal(this.options.destructive, false);
     });
-    it('powerAssertVariableName: "assert"', function () {
-        assert.equal(this.options.powerAssertVariableName, 'assert');
-    });
 });
 
 
 describe('instrumentation tests for options', function () {
-    function instrument (jsCode, options) {
-        var jsAST = esprima.parse(jsCode, {tolerant: true, loc: true, tokens: true, raw: true});
-        var espoweredAST = espower(jsAST, options);
-        var instrumentedCode = escodegen.generate(espoweredAST, {format: {compact: true}});
-        return instrumentedCode;
-    }
-
 
     describe('destructive option', function () {
         function destructiveOptionTest (testName, option, callback) {
@@ -70,6 +68,39 @@ describe('instrumentation tests for options', function () {
     });
 
 
+    describe('patterns option.', function () {
+        it('matches function call', function () {
+            var instrumentedCode = instrument('refute(falsyStr);', {
+                source: 'refute(falsyStr);',
+                patterns: [
+                    'refute(value)'
+                ]
+            });
+            assert.equal(instrumentedCode, "refute(refute._expr(refute._capt(falsyStr,'arguments/0'),{content:'refute(falsyStr)',line:1}));");
+        });
+
+        it('matches method call', function () {
+            var instrumentedCode = instrument('refute.equal(foo, bar);', {
+                source: 'refute.equal(foo, bar);',
+                patterns: [
+                    'refute.equal(actual, expected)'
+                ]
+            });
+            assert.equal(instrumentedCode, "refute.equal(refute._expr(refute._capt(foo,'arguments/0'),{content:'refute.equal(foo, bar)',line:1}),refute._expr(refute._capt(bar,'arguments/1'),{content:'refute.equal(foo, bar)',line:1}));");
+        });
+
+        it('deep callee chain', function () {
+            var instrumentedCode = instrument('browser.assert.element(foo);', {
+                source: 'browser.assert.element(foo);',
+                patterns: [
+                    'browser.assert.element(selection, [message])'
+                ]
+            });
+            assert.equal(instrumentedCode, "browser.assert.element(browser.assert._expr(browser.assert._capt(foo,'arguments/0'),{content:'browser.assert.element(foo)',line:1}));");
+        });
+    });
+
+
     describe('source option and path option.', function () {
         it('path: null', function () {
             var instrumentedCode = instrument('assert(falsyStr);', {source: 'assert(falsyStr);'});
@@ -78,57 +109,6 @@ describe('instrumentation tests for options', function () {
         it('with source and path', function () {
             var instrumentedCode = instrument('assert(falsyStr);', {source: 'assert(falsyStr);', path: '/path/to/baz_test.js'});
             assert.equal(instrumentedCode, "assert(assert._expr(assert._capt(falsyStr,'arguments/0'),{content:'assert(falsyStr)',filepath:'/path/to/baz_test.js',line:1}));");
-        });
-    });
-
-
-    describe('powerAssertVariableName option.', function () {
-        it('default is "assert"', function () {
-            var instrumentedCode = instrument('assert(falsyStr);', {source: 'assert(falsyStr);'});
-            assert.equal(instrumentedCode, "assert(assert._expr(assert._capt(falsyStr,'arguments/0'),{content:'assert(falsyStr)',line:1}));");
-        });
-        it('powerAssertVariableName: "test"', function () {
-            var instrumentedCode = instrument('test.ok(falsyStr);', {source: 'test.ok(falsyStr);', powerAssertVariableName: 'test'});
-            assert.equal(instrumentedCode, "test.ok(test._expr(test._capt(falsyStr,'arguments/0'),{content:'test.ok(falsyStr)',line:1}));");
-        });
-        it('not instrumented if powerAssertVariableName and actual variable name is different.', function () {
-            var instrumentedCode = instrument('assert.ok(falsyStr);', {source: 'assert.ok(falsyStr);', powerAssertVariableName: 'test'});
-            assert.equal(instrumentedCode, "assert.ok(falsyStr);");
-        });
-    });
-
-
-    describe('lineSeparator', function () {
-        var lineDetected = "var falsyStr='';assert.ok(assert._expr(assert._capt(falsyStr,'arguments/0'),{content:'assert.ok(falsyStr)',line:3}));";
-
-        function lineSeparatorTest (name, lineSeparatorInCode, options, expected) {
-            it(name, function () {
-                var sourceLines = [
-                    'var falsyStr = "";',
-                    '// comment line',
-                    'assert.ok(falsyStr);'
-                ].join(lineSeparatorInCode);
-                options.source = sourceLines;
-                assert.equal(instrument(sourceLines, options), expected);
-            });
-        }
-        context('code: LF', function () {
-            function when (name, opt, expected) {
-                lineSeparatorTest(name, '\n', opt, expected);
-            }
-            when('option: default', {},                   lineDetected);
-        });
-        context('code: CR', function () {
-            function when (name, opt, expected) {
-                lineSeparatorTest(name, '\r', opt, expected);
-            }
-            when('option: default', {},                   lineDetected);
-        });
-        context('code: CRLF', function () {
-            function when (name, opt, expected) {
-                lineSeparatorTest(name, '\r\n', opt, expected);
-            }
-            when('option: default', {},                   lineDetected);
         });
     });
 });
@@ -154,25 +134,9 @@ describe('option prerequisites', function () {
                             {source: 'assert(falsyStr);', destructive: 1},
                             'options.destructive should be a boolean value.');
 
-    optionPrerequisitesTest('powerAssertVariableName option should be a string',
-                            {source: 'assert(falsyStr);', powerAssertVariableName: true},
-                            'options.powerAssertVariableName should be a non-empty string.');
-
-    optionPrerequisitesTest('powerAssertVariableName option should be a non-empty string',
-                            {source: 'assert(falsyStr);', powerAssertVariableName: ''},
-                            'options.powerAssertVariableName should be a non-empty string.');
-
-    optionPrerequisitesTest('targetMethods option should be an object',
-                            {source: 'assert(falsyStr);', targetMethods: 3},
-                            'options.targetMethods should be an object.');
-
-    optionPrerequisitesTest('targetMethods.oneArg option should be an array',
-                            {source: 'assert(falsyStr);', targetMethods: { twoArgs: ['equal'] }},
-                            'options.targetMethods.oneArg should be an array.');
-
-    optionPrerequisitesTest('targetMethods.twoArgs option should be an array',
-                            {source: 'assert(falsyStr);', targetMethods: { oneArg: ['ok'] }},
-                            'options.targetMethods.twoArgs should be an array.');
+    optionPrerequisitesTest('patterns option should be an array',
+                            {source: 'assert(falsyStr);', patterns: 'hoge'},
+                            'options.patterns should be an array.');
 });
 
 
@@ -183,7 +147,7 @@ describe('AST prerequisites. Error should be thrown if location is missing.', fu
     });
     it('error message when path option is not specified', function () {
         try {
-            espower(this.tree, {destructive: false, source: this.jsCode, powerAssertVariableName: 'assert'});
+            espower(this.tree, {destructive: false, source: this.jsCode});
             assert.ok(false, 'Error should be thrown');
         } catch (e) {
             assert.equal(e.name, 'Error');
@@ -192,7 +156,7 @@ describe('AST prerequisites. Error should be thrown if location is missing.', fu
     });
     it('error message when path option is specified', function () {
         try {
-            espower(this.tree, {destructive: false, source: this.jsCode, powerAssertVariableName: 'assert', path: '/path/to/baz_test.js'});
+            espower(this.tree, {destructive: false, source: this.jsCode, path: '/path/to/baz_test.js'});
             assert.ok(false, 'Error should be thrown');
         } catch (e) {
             assert.equal(e.name, 'Error');
@@ -215,5 +179,40 @@ describe('location information', function () {
         });
     });
 });
+
+
+describe('lineSeparator', function () {
+    var lineDetected = "var falsyStr='';assert.ok(assert._expr(assert._capt(falsyStr,'arguments/0'),{content:'assert.ok(falsyStr)',line:3}));";
+     function lineSeparatorTest (name, lineSeparatorInCode, options, expected) {
+        it(name, function () {
+            var sourceLines = [
+                'var falsyStr = "";',
+                '// comment line',
+                'assert.ok(falsyStr);'
+            ].join(lineSeparatorInCode);
+            options.source = sourceLines;
+            assert.equal(instrument(sourceLines, options), expected);
+        });
+    }
+    context('code: LF', function () {
+        function when (name, opt, expected) {
+            lineSeparatorTest(name, '\n', opt, expected);
+        }
+        when('option: default', {}, lineDetected);
+    });
+    context('code: CR', function () {
+        function when (name, opt, expected) {
+            lineSeparatorTest(name, '\r', opt, expected);
+        }
+        when('option: default', {}, lineDetected);
+    });
+    context('code: CRLF', function () {
+        function when (name, opt, expected) {
+            lineSeparatorTest(name, '\r\n', opt, expected);
+        }
+        when('option: default', {}, lineDetected);
+    });
+});
+
 
 }));
