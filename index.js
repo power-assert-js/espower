@@ -12,7 +12,7 @@
 var defaultOptions = require('./lib/default-options'),
     Instrumentor = require('./lib/instrumentor'),
     deepCopy = require('./lib/ast-deepcopy'),
-    extend = require('node.extend');
+    extend = require('xtend');
 
 /**
  * Instrument power assert feature into code. Mozilla JS AST in, Mozilla JS AST out.
@@ -21,7 +21,7 @@ var defaultOptions = require('./lib/default-options'),
  * @return instrumented AST
  */
 function espower (ast, options) {
-    var instrumentor = new Instrumentor(extend(defaultOptions(), (options || {})));
+    var instrumentor = new Instrumentor(extend(defaultOptions(), options));
     return instrumentor.instrument(ast);
 }
 
