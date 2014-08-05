@@ -226,7 +226,7 @@ Instrumentor.prototype.instrument = function (ast) {
                 return undefined;
             }
 
-            if (isLastPieceOfFunctionCall(parentNode, currentNode)) {
+            if (isCalleeOfParent(currentNode, parentNode)) {
                 return undefined;
             }
 
@@ -372,7 +372,7 @@ function addToProps(props, createNode, name, value) {
     }));
 }
 
-function isLastPieceOfFunctionCall(parentNode, currentNode) {
+function isCalleeOfParent(currentNode, parentNode) {
     return (parentNode.type === syntax.CallExpression || parentNode.type === syntax.NewExpression) &&
         parentNode.callee === currentNode;
 }
@@ -784,18 +784,27 @@ Matcher.prototype.test = function (currentNode) {
 };
 
 Matcher.prototype.matchArgument = function (currentNode, parentNode) {
-    var indexOfCurrentArg;
+    var indexOfCurrentArg, argNode;
     if (isCalleeOfParent(currentNode, parentNode)) {
         return null;
     }
     if (this.test(parentNode)) {
         indexOfCurrentArg = parentNode.arguments.indexOf(currentNode);
-        return argMatchResult(this.signatureAst.arguments[indexOfCurrentArg]);
+        argNode = this.signatureAst.arguments[indexOfCurrentArg];
+        return toArgumentSigniture(argNode);
     }
     return null;
 };
 
-function argMatchResult (argSignatureNode) {
+Matcher.prototype.calleeAst = function () {
+    return espurify(this.signatureAst.callee);
+};
+
+Matcher.prototype.argumentSignitures = function () {
+    return this.signatureAst.arguments.map(toArgumentSigniture);
+};
+
+function toArgumentSigniture (argSignatureNode) {
     switch(argSignatureNode.type) {
     case syntax.Identifier:
         return {
