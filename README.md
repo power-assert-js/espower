@@ -120,7 +120,7 @@ console.log(escodegen.generate(modifiedAst));
 
 Output:
 
-```
+```javascript
 var assert = require('power-assert'), truthy = 'true', falsy = 'false';
 assert(assert._expr(assert._capt(falsy, 'arguments/0'), {
     content: 'assert(falsy)',
