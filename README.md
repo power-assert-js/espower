@@ -60,6 +60,84 @@ Default value:
 Target patterns for power assert feature instrumentation. If callee name (for example, `assert.equal`) matches exactly and number of arguments is satisfied, then the assertion will be modified. Detection is done by [escallmatch](http://github.com/twada/escallmatch). Any arguments enclosed in bracket (for example, `[message]`) means optional parameters. Without bracket means mandatory parameters.
 
 
+#### (optional) options.path
+
+Type: `string`
+Default value: `undefined`
+
+Filepath of `originalAst`. If passed, espower stores filepath information for reporting. This property is optional.
+
+
+### var options = espower.defaultOptions();
+
+Returns default options object for `espower` function. In other words, returns
+
+```javascript
+{
+    destructive: false,
+    patterns: [
+        'assert(value, [message])',
+        'assert.ok(value, [message])',
+        'assert.equal(actual, expected, [message])',
+        'assert.notEqual(actual, expected, [message])',
+        'assert.strictEqual(actual, expected, [message])',
+        'assert.notStrictEqual(actual, expected, [message])',
+        'assert.deepEqual(actual, expected, [message])',
+        'assert.notDeepEqual(actual, expected, [message])'
+    ]
+}
+```
+
+
+EXAMPLE
+---------------------------------------
+
+For given test file `example_test.js` below,
+
+```javascript
+var assert = require('power-assert'),
+    truthy = 'true',
+    falsy = 'false';
+assert(falsy);
+assert.equal(truthy, falsy);
+```
+
+Apply `espower` then generate modified code to console,
+
+```javascript
+var espower = require('espower'),
+    esprima = require('esprima'),
+    escodegen = require('escodegen'),
+    fs = require('fs'),
+    path = require('path');
+
+var filepath = path.join(__dirname, 'example_test.js');
+var jsAst = esprima.parse(fs.readFileSync(filepath), {tolerant: true, loc: true, tokens: true});
+var modifiedAst = espower(jsAst, {path: filepath});
+
+console.log(escodegen.generate(modifiedAst));
+```
+
+Output:
+
+```
+var assert = require('power-assert'), truthy = 'true', falsy = 'false';
+assert(assert._expr(assert._capt(falsy, 'arguments/0'), {
+    content: 'assert(falsy)',
+    filepath: '/path/to/example_test.js',
+    line: 4
+}));
+assert.equal(assert._expr(assert._capt(truthy, 'arguments/0'), {
+    content: 'assert.equal(truthy, falsy)',
+    filepath: '/path/to/example_test.js',
+    line: 5
+}), assert._expr(assert._capt(falsy, 'arguments/1'), {
+    content: 'assert.equal(truthy, falsy)',
+    filepath: '/path/to/example_test.js',
+    line: 5
+}));
+```
+
 
 INSTALL
 ---------------------------------------
