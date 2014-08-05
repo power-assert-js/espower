@@ -1,9 +1,9 @@
 var espower = require('./index'),
     esprima = require('esprima'),
-    escodegen = require('escodegen'),
-    jsCode = process.argv[2],
-    options = {tolerant: true, loc: true, tokens: true},
-    jsAST = esprima.parse(jsCode, options),
-    espoweredAST = espower(jsAST, {source: jsCode});
+    escodegen = require('escodegen');
 
-console.log(escodegen.generate(espoweredAST, {format: {compact: true}}));
+var jsCode = process.argv[2];
+var jsAst = esprima.parse(jsCode, {tolerant: true, loc: true, tokens: true});
+var modifiedAst = espower(jsAst);
+
+console.log(escodegen.generate(modifiedAst));
