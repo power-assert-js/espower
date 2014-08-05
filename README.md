@@ -36,12 +36,14 @@ Instruments power assert feature into originalAst. [Mozilla JavaScript AST](http
 Type: `boolean`
 Default value: `false`
 
-Modify `originalAst` destructively or not. If `false`, espower clones `originalAst` deeply, so `originalAst` will be unchanged.
+Modify `originalAst` destructively or not.
+
+If `false`, espower clones `originalAst` deeply, so `originalAst` will be unchanged.
 
 
 #### options.patterns
 
-Type: `Array`
+Type: `Array` of `string`
 Default value: 
 
 ```javascript
@@ -57,7 +59,10 @@ Default value:
 ]
 ```
 
-Target patterns for power assert feature instrumentation. If callee name (for example, `assert.equal`) matches exactly and number of arguments is satisfied, then the assertion will be modified. Detection is done by [escallmatch](http://github.com/twada/escallmatch). Any arguments enclosed in bracket (for example, `[message]`) means optional parameters. Without bracket means mandatory parameters.
+Target patterns for power assert feature instrumentation.
+
+If callee name (for example, `assert.equal`) matches exactly and number of arguments is satisfied, then the assertion will be modified.
+Detection is done by [escallmatch](http://github.com/twada/escallmatch). Any arguments enclosed in bracket (for example, `[message]`) means optional parameters. Without bracket means mandatory parameters.
 
 
 #### (optional) options.path
