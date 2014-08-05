@@ -75,15 +75,6 @@ module.exports = deepCopy;
 module.exports = function defaultOptions () {
     return {
         destructive: false,
-        escodegenOptions: {
-            format: {
-                indent: {
-                    style: ''
-                },
-                newline: ''
-            },
-            verbatim: 'x-verbatim-espower'
-        },
         patterns: [
             'assert(value, [message])',
             'assert.ok(value, [message])',
@@ -121,7 +112,16 @@ var estraverse = _dereq_('estraverse'),
         syntax.ConditionalExpression,
         syntax.UpdateExpression,
         syntax.Property
-    ];
+    ],
+    canonicalCodeOptions = {
+        format: {
+            indent: {
+                style: ''
+            },
+            newline: ''
+        },
+        verbatim: 'x-verbatim-espower'
+    };
 
 // see: https://github.com/Constellation/escodegen/issues/115
 if (typeof define === 'function' && define.amd) {
@@ -170,7 +170,7 @@ Instrumentor.prototype.instrument = function (ast) {
                 if (that.matchers.some(function (matcher) { return matcher.test(currentNode); })) {
                     // entering target assertion
                     lineNum = currentNode.loc.start.line;
-                    canonicalCode = generateCanonicalCode(currentNode, that.options.escodegenOptions);
+                    canonicalCode = generateCanonicalCode(currentNode);
                     assertionPath = [].concat(path);
                     powerAssertCallee = guessPowerAssertCalleeFor(currentNode.callee);
                     return undefined;
@@ -333,7 +333,7 @@ function guessPowerAssertCalleeFor (node) {
     return null;
 }
 
-function generateCanonicalCode(node, escodegenOptions) {
+function generateCanonicalCode(node) {
     var ast = deepCopy(node);
     estraverse.replace(ast, {
         leave: function (currentNode, parentNode) {
@@ -348,7 +348,7 @@ function generateCanonicalCode(node, escodegenOptions) {
             }
         }
     });
-    return escodegen.generate(ast, escodegenOptions);
+    return escodegen.generate(ast, canonicalCodeOptions);
 }
 
 function addLiteralTo(props, createNode, name, data) {
