@@ -51,7 +51,7 @@
     "browserify": "~5.9.1",
     "del": "~0.1.1",
     "esprima": "~1.2.2",
-    "gulp": "~3.8.6",
+    "gulp": "~3.8.7",
     "gulp-derequire": "~0.3.0",
     "gulp-mocha": "~0.5.2",
     "gulp-mocha-phantomjs": "~0.3.0",
