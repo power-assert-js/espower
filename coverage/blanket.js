@@ -1,3 +1,6 @@
 require('blanket')({
-    pattern: '/espower/lib/'
+    pattern: [
+        '/espower/index.js',
+        '/espower/lib/'
+    ]
 });
