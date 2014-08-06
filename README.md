@@ -14,10 +14,10 @@ Power Assert feature instrumentor based on the Mozilla JavaScript AST.
 
 DESCRIPTION
 ---------------------------------------
-`espower` is a core module of [power-assert](http://github.com/twada/power-assert) family. Instruments power assert feature into originalAst. [Mozilla JavaScript AST](https://developer.mozilla.org/en-US/docs/SpiderMonkey/Parser_API) in, Mozilla JavaScript AST out.
+`espower` is a core module of [power-assert](http://github.com/twada/power-assert) family. 
 
 
-`espower` manipulates assertion expression (JavaScript Code) represented as [Mozilla JavaScript AST](https://developer.mozilla.org/en-US/docs/SpiderMonkey/Parser_API), to instrument power-assert feature into the code.
+`espower` detects and manipulates assertion expression (JavaScript Code) in original AST represented as [Mozilla JavaScript AST](https://developer.mozilla.org/en-US/docs/SpiderMonkey/Parser_API), to instrument power-assert feature into returned new AST object. [Mozilla JavaScript AST](https://developer.mozilla.org/en-US/docs/SpiderMonkey/Parser_API) in, Mozilla JavaScript AST out.
 
 
 Please note that `espower` is a beta version product. Pull-requests, issue reports and patches are always welcomed. See [power-assert](http://github.com/twada/power-assert) project for more documentation.
@@ -33,6 +33,7 @@ API
 | `object`    |
 
 `espower` function manipulates `originalAst` then returns `modifiedAst` that is also an AST node object defined in [Mozilla JavaScript AST spec](https://developer.mozilla.org/en-US/docs/SpiderMonkey/Parser_API).
+If `destructive` option is falsy, `originalAst` will be unchanged. If `destructive` option is truthy, `originalAst` will be manipulated directly and returned `modifiedAst` will be the same instance of `originalAst`.
 
 
 #### originalAst
@@ -61,7 +62,7 @@ Configuration options. If not passed, default options will be used.
 
 Modify `originalAst` destructively or not.
 
-If `false`, espower clones `originalAst` deeply, so `originalAst` will be unchanged.
+If `false`, espower clones `originalAst` deeply, so `originalAst` will be unchanged. If `true`, `originalAst` will be manipulated directly and returned `modifiedAst` will be the same instance of `originalAst`.
 
 
 #### options.patterns
