@@ -30,18 +30,30 @@ API
 
 Instruments power assert feature into originalAst. [Mozilla JavaScript AST](https://developer.mozilla.org/en-US/docs/SpiderMonkey/Parser_API) in, Mozilla JavaScript AST out.
 
+
+#### originalAst
+
+| type     | default value |
+|:---------|:--------------|
+| `object` | N/A           |
+
+`originalAst` should be an AST node object defined in [Mozilla JavaScript AST spec](https://developer.mozilla.org/en-US/docs/SpiderMonkey/Parser_API).
+
+
 #### options
 
-Type: `object`
-Default value: (return value of `espower.defaultOptions()`)
+| type     | default value |
+|:---------|:--------------|
+| `object` | (return value of `espower.defaultOptions()`) |
 
 Configuration options. If not passed, default options will be used.
 
 
 #### options.destructive
 
-Type: `boolean`
-Default value: `false`
+| type      | default value |
+|:----------|:--------------|
+| `boolean` | `false`       |
 
 Modify `originalAst` destructively or not.
 
@@ -50,8 +62,9 @@ If `false`, espower clones `originalAst` deeply, so `originalAst` will be unchan
 
 #### options.patterns
 
-Type: `Array` of `string`
-Default value: 
+| type                | default value       |
+|:--------------------|:--------------------|
+| `Array` of `string` | objects shown below |
 
 ```javascript
 [
@@ -74,8 +87,9 @@ Detection is done by [escallmatch](http://github.com/twada/escallmatch). Any arg
 
 #### (optional) options.path
 
-Type: `string`
-Default value: `undefined`
+| type     | default value |
+|:---------|:--------------|
+| `string` | N/A           |
 
 Filepath of `originalAst`. If passed, espower stores filepath information for reporting. This property is optional.
 
