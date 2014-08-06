@@ -158,14 +158,14 @@ INSTALL
 
 Install
 
-    $ npm install --save espower
+    $ npm install --save-dev espower
 
 
 ### via bower
 
 Install
 
-    $ bower install --save espower
+    $ bower install --save-dev espower
 
 Then load (`espower` function is exported)
 
