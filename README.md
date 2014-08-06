@@ -26,9 +26,16 @@ Please note that `espower` is a beta version product. Pull-requests, issue repor
 API
 ---------------------------------------
 
-### var modifiedAst = espower(originalAst, options)
+### var modifiedAst = espower(originalAst, [options])
 
 Instruments power assert feature into originalAst. [Mozilla JavaScript AST](https://developer.mozilla.org/en-US/docs/SpiderMonkey/Parser_API) in, Mozilla JavaScript AST out.
+
+#### options
+
+Type: `object`
+Default value: (return value of `espower.defaultOptions()`)
+
+Configuration options. If not passed, default options will be used.
 
 
 #### options.destructive
