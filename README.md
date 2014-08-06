@@ -31,6 +31,15 @@ API
 Instruments power assert feature into originalAst. [Mozilla JavaScript AST](https://developer.mozilla.org/en-US/docs/SpiderMonkey/Parser_API) in, Mozilla JavaScript AST out.
 
 
+#### modifiedAst
+
+| type     | default value |
+|:---------|:--------------|
+| `object` | N/A           |
+
+`espower` function manipulates `originalAst` then returns `modifiedAst` that is also an AST node object defined in [Mozilla JavaScript AST spec](https://developer.mozilla.org/en-US/docs/SpiderMonkey/Parser_API).
+
+
 #### originalAst
 
 | type     | default value |
