@@ -769,12 +769,13 @@ function createMatcher (signatureStr) {
 
 function Matcher (signatureAst) {
     this.signatureAst = signatureAst;
+    this.signatureCalleeDepth = astDepth(signatureAst.callee);
     this.numMaxArgs = this.signatureAst.arguments.length;
     this.numMinArgs = this.signatureAst.arguments.filter(identifiers).length;
 }
 
 Matcher.prototype.test = function (currentNode) {
-    var calleeMatched = isCalleeMatched(this.signatureAst, currentNode),
+    var calleeMatched = isCalleeMatched(this.signatureAst, this.signatureCalleeDepth, currentNode),
         numArgs;
     if (calleeMatched) {
         numArgs = currentNode.arguments.length;
@@ -791,7 +792,7 @@ Matcher.prototype.matchArgument = function (currentNode, parentNode) {
     if (this.test(parentNode)) {
         indexOfCurrentArg = parentNode.arguments.indexOf(currentNode);
         argNode = this.signatureAst.arguments[indexOfCurrentArg];
-        return toArgumentSigniture(argNode);
+        return toArgumentSignature(argNode);
     }
     return null;
 };
@@ -800,11 +801,11 @@ Matcher.prototype.calleeAst = function () {
     return espurify(this.signatureAst.callee);
 };
 
-Matcher.prototype.argumentSignitures = function () {
-    return this.signatureAst.arguments.map(toArgumentSigniture);
+Matcher.prototype.argumentSignatures = function () {
+    return this.signatureAst.arguments.map(toArgumentSignature);
 };
 
-function toArgumentSigniture (argSignatureNode) {
+function toArgumentSignature (argSignatureNode) {
     switch(argSignatureNode.type) {
     case syntax.Identifier:
         return {
@@ -821,14 +822,31 @@ function toArgumentSigniture (argSignatureNode) {
     }
 }
 
-function isCalleeMatched(callExp1, callExp2) {
-    if (!isCallExpression(callExp1) || !isCallExpression(callExp2)) {
+function isCalleeMatched(callSignature, signatureCalleeDepth, node) {
+    if (!isCallExpression(node)) {
         return false;
     }
-    if (astDepth(callExp1.callee) !== astDepth(callExp2.callee)) {
+    if (!isSameAstDepth(node.callee, signatureCalleeDepth)) {
         return false;
     }
-    return deepEqual(espurify(callExp1.callee), espurify(callExp2.callee));
+    return deepEqual(espurify(callSignature.callee), espurify(node.callee));
+}
+
+function isSameAstDepth (ast, depth) {
+    var currentDepth = 0;
+    estraverse.traverse(ast, {
+        enter: function (currentNode, parentNode) {
+            var path = this.path(),
+                pathDepth = path ? path.length : 0;
+            if (currentDepth < pathDepth) {
+                currentDepth = pathDepth;
+            }
+            if (depth < currentDepth) {
+                this.break();
+            }
+        }
+    });
+    return (depth === currentDepth);
 }
 
 function astDepth (ast) {
@@ -836,9 +854,9 @@ function astDepth (ast) {
     estraverse.traverse(ast, {
         enter: function (currentNode, parentNode) {
             var path = this.path(),
-                currentDepth = path ? path.length : 0;
-            if (maxDepth < currentDepth) {
-                maxDepth = currentDepth;
+                pathDepth = path ? path.length : 0;
+            if (maxDepth < pathDepth) {
+                maxDepth = pathDepth;
             }
         }
     });
