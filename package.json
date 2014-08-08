@@ -39,7 +39,7 @@
     "coveralls": "gulp coverage && cat ./coverage.lcov | coveralls"
   },
   "dependencies": {
-    "escallmatch": "~0.2.0",
+    "escallmatch": "~0.3.0",
     "escodegen": "~1.3.3",
     "espurify": "~0.1.3",
     "estraverse": "~1.5.1",
