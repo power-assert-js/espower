@@ -131,7 +131,7 @@ if (typeof define === 'function' && define.amd) {
 function Instrumentor (options) {
     ensureOptionPrerequisites(options);
     this.options = options;
-    this.matchers = options.patterns.map(function (pt) { return escallmatch(pt); });
+    this.matchers = options.patterns.map(escallmatch);
 }
 
 Instrumentor.prototype.instrument = function (ast) {
