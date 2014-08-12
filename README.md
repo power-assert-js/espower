@@ -23,6 +23,11 @@ DESCRIPTION
 Please note that `espower` is a beta version product. Pull-requests, issue reports and patches are always welcomed. See [power-assert](http://github.com/twada/power-assert) project for more documentation.
 
 
+CHANGELOG
+---------------------------------------
+See [CHANGELOG](https://github.com/twada/espower/blob/master/CHANGELOG.md)
+
+
 API
 ---------------------------------------
 
