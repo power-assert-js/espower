@@ -5,6 +5,7 @@ espower
 [![NPM version](https://badge.fury.io/js/espower.svg)](http://badge.fury.io/js/espower)
 [![Dependency Status](https://gemnasium.com/twada/espower.svg)](https://gemnasium.com/twada/espower)
 [![Coverage Status](https://coveralls.io/repos/twada/espower/badge.png?branch=master)](https://coveralls.io/r/twada/espower?branch=master)
+[![Code Climate](https://codeclimate.com/github/twada/espower/badges/gpa.svg)](https://codeclimate.com/github/twada/espower)
 [![License](http://img.shields.io/badge/license-MIT-brightgreen.svg)](https://github.com/twada/espower/blob/master/MIT-LICENSE.txt)
 [![Built with Gulp](http://img.shields.io/badge/built_with-gulp-brightgreen.svg)](http://gulpjs.com/)
 
