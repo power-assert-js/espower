@@ -1,23 +1,27 @@
 (function (root, factory) {
     'use strict';
     if (typeof define === 'function' && define.amd) {
-        define(['espower', 'esprima', 'escodegen', 'estraverse', 'assert'], factory);
+        define(['espower', 'esprima', 'escodegen', 'estraverse', 'source-map', 'assert'], factory);
     } else if (typeof exports === 'object') {
-        factory(require('..'), require('esprima'), require('escodegen'), require('estraverse'), require('assert'));
+        factory(require('..'), require('esprima'), require('escodegen'), require('estraverse'), require('source-map'), require('assert'));
     } else {
-        factory(root.espower, root.esprima, root.escodegen, root.estraverse, root.assert);
+        factory(root.espower, root.esprima, root.escodegen, root.estraverse, root.sourceMap, root.assert);
     }
 }(this, function (
     espower,
     esprima,
     escodegen,
     estraverse,
+    sourceMap,
     assert
 ) {
 
-// see: https://github.com/Constellation/escodegen/issues/115
 if (typeof define === 'function' && define.amd) {
+    // see: https://github.com/Constellation/escodegen/issues/115
     escodegen = window.escodegen;
+    // TypeError: 'undefined' is not an object (evaluating 'global.sourceMap.SourceNode')
+    // at generate (bower_components/escodegen/escodegen.browser.js:1845)
+    window.sourceMap = sourceMap;
 }
 
 
