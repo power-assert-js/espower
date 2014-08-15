@@ -227,4 +227,38 @@ describe('lineSeparator', function () {
 });
 
 
+describe('SourceMap support', function () {
+
+    it('adjust line number', function () {
+        var originalPath = '/path/to/raw/original_test.js';
+        var originalCode = 'var str = "foo";\nvar anotherStr = "bar"\n\nassert.equal(\nstr,\nanotherStr\n);';
+        // console.log(originalCode);
+
+        var compactResult = escodegen.generate(esprima.parse(originalCode, {tolerant: true, loc: true, source: originalPath}), {
+            format: {
+                compact: true
+            },
+            sourceMap: true,
+            sourceMapWithCode: true
+        });
+
+        var compactCode = compactResult.code;
+        // console.log(compactCode);
+        var sourceMap = compactResult.map.toString();
+        // console.log(sourceMap);
+
+        var espoweredAST = espower(esprima.parse(compactCode, {tolerant: true, loc: true}), {
+            patterns: [
+                'assert.equal(actual, expected, [message])'
+            ],
+            sourceMap: sourceMap
+        });
+
+        var espoweredCode = escodegen.generate(espoweredAST, {format: {compact: true}});
+
+        assert.equal(espoweredCode, "var str='foo';var anotherStr='bar';assert.equal(assert._expr(assert._capt(str,'arguments/0'),{content:'assert.equal(str, anotherStr)',line:4}),assert._expr(assert._capt(anotherStr,'arguments/1'),{content:'assert.equal(str, anotherStr)',line:4}));");
+    });
+});
+
+
 }));
