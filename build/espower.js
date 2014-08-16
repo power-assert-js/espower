@@ -183,10 +183,18 @@ Instrumentor.prototype.instrument = function (ast) {
                             line: currentNode.loc.start.line,
                             column: currentNode.loc.start.column
                         });
-                        if (pos && pos.line) {
+                        if (pos) {
                             // console.log(JSON.stringify(pos, null, 2));
-                            filepath = pos.source;
-                            lineNum = pos.line;
+                            if (pos.source) {
+                                filepath = pos.source;
+                            } else {
+                                filepath = that.options.path;
+                            }
+                            if (pos.line) {
+                                lineNum = pos.line;
+                            } else {
+                                lineNum = currentNode.loc.start.line;
+                            }
                         } else {
                             filepath = that.options.path;
                             lineNum = currentNode.loc.start.line;
