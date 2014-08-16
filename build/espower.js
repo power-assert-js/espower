@@ -146,6 +146,7 @@ Instrumentor.prototype.instrument = function (ast) {
         argumentPath,
         canonicalCode,
         powerAssertCallee,
+        filepath,
         lineNum,
         argumentModified = false,
         skipping = false,
@@ -184,11 +185,14 @@ Instrumentor.prototype.instrument = function (ast) {
                         });
                         if (pos && pos.line) {
                             // console.log(JSON.stringify(pos, null, 2));
+                            filepath = pos.source;
                             lineNum = pos.line;
                         } else {
+                            filepath = that.options.path;
                             lineNum = currentNode.loc.start.line;
                         }
                     } else {
+                        filepath = that.options.path;
                         lineNum = currentNode.loc.start.line;
                     }
                     return undefined;
@@ -235,6 +239,7 @@ Instrumentor.prototype.instrument = function (ast) {
                 // leaving target assertion
                 canonicalCode = null;
                 lineNum = null;
+                filepath = null;
                 assertionPath = null;
                 powerAssertCallee = null;
                 return undefined;
@@ -273,7 +278,7 @@ Instrumentor.prototype.instrument = function (ast) {
                 argumentPath = null;
                 if (argumentModified) {
                     argumentModified = false;
-                    return that.captureArgument(resultTree, canonicalCode, powerAssertCallee, lineNum);
+                    return that.captureArgument(resultTree, canonicalCode, powerAssertCallee, filepath, lineNum);
                 }
             }
 
@@ -283,12 +288,12 @@ Instrumentor.prototype.instrument = function (ast) {
     return result;
 };
 
-Instrumentor.prototype.captureArgument = function (node, canonicalCode, powerAssertCallee, lineNum) {
+Instrumentor.prototype.captureArgument = function (node, canonicalCode, powerAssertCallee, filepath, lineNum) {
     var n = newNodeWithLocationCopyOf(node),
         props = [],
         newCallee = updateLocRecursively(espurify(powerAssertCallee), n);
     addLiteralTo(props, n, 'content', canonicalCode);
-    addLiteralTo(props, n, 'filepath', this.options.path);
+    addLiteralTo(props, n, 'filepath', filepath);
     addLiteralTo(props, n, 'line', lineNum);
     return n({
         type: syntax.CallExpression,

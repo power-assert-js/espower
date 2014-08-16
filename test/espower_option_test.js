@@ -260,7 +260,7 @@ describe('SourceMap support', function () {
 
         var espoweredCode = escodegen.generate(espoweredAST, {format: {compact: true}});
 
-        assert.equal(espoweredCode, "var str='foo';var anotherStr='bar';assert.equal(assert._expr(assert._capt(str,'arguments/0'),{content:'assert.equal(str, anotherStr)',line:4}),assert._expr(assert._capt(anotherStr,'arguments/1'),{content:'assert.equal(str, anotherStr)',line:4}));");
+        assert.equal(espoweredCode, "var str='foo';var anotherStr='bar';assert.equal(assert._expr(assert._capt(str,'arguments/0'),{content:'assert.equal(str, anotherStr)',filepath:'/path/to/raw/original_test.js',line:4}),assert._expr(assert._capt(anotherStr,'arguments/1'),{content:'assert.equal(str, anotherStr)',filepath:'/path/to/raw/original_test.js',line:4}));");
     });
 });
 
