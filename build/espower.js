@@ -59,6 +59,7 @@ function AssertionVisitor (matcher, path, sourceMapConsumer, options) {
     this.path = path;
     this.options = options;
     this.espath = path.join('/');
+    this.argumentModified = false;
 }
 
 AssertionVisitor.prototype.enter = function (currentNode, parentNode) {
@@ -74,20 +75,17 @@ AssertionVisitor.prototype.enter = function (currentNode, parentNode) {
             // console.log(JSON.stringify(pos, null, 2));
             if (pos.source) {
                 this.filepath = pos.source;
-            } else {
-                this.filepath = this.options.path;
             }
             if (pos.line) {
                 this.lineNum = pos.line;
-            } else {
-                this.lineNum = currentNode.loc.start.line;
             }
-        } else {
-            this.filepath = this.options.path;
-            this.lineNum = currentNode.loc.start.line;
         }
-    } else {
+    }
+
+    if (!this.filepath) {
         this.filepath = this.options.path;
+    }
+    if (!this.lineNum) {
         this.lineNum = currentNode.loc.start.line;
     }
 };
@@ -106,9 +104,21 @@ AssertionVisitor.prototype.enterArgument = function (currentNode, parentNode, pa
     return undefined;
 };
 
-AssertionVisitor.prototype.leaveArgument = function (path) {
-    if (isPathIdentical(this.argumentPath, path)) {
-        this.argumentPath = null;
+AssertionVisitor.prototype.isLeavingAssertion = function (nodePath) {
+    return isPathIdentical(this.path, nodePath);
+};
+
+AssertionVisitor.prototype.isLeavingArgument = function (nodePath) {
+    return isPathIdentical(this.argumentPath, nodePath);
+};
+
+AssertionVisitor.prototype.leaveArgument = function (resultTree, path) {
+    this.argumentPath = null;
+    if (this.argumentModified) {
+        this.argumentModified = false;
+        return this.captureArgument(resultTree);
+    } else {
+        return resultTree;
     }
 };
 
@@ -141,8 +151,10 @@ AssertionVisitor.prototype.captureArgument = function (node) {
     });
 };
 
-AssertionVisitor.prototype.captureNode = function (target, relativeEsPath) {
+AssertionVisitor.prototype.captureNode = function (target, path) {
+    this.argumentModified = true;
     var n = newNodeWithLocationCopyOf(target),
+        relativeEsPath = path.slice(this.path.length),
         newCallee = updateLocRecursively(espurify(this.powerAssertCallee), n);
     return n({
         type: syntax.CallExpression,
@@ -342,7 +354,6 @@ Instrumentor.prototype.instrument = function (ast) {
     ensureAstPrerequisites(ast, this.options);
     var that = this,
         assertionVisitor,
-        argumentModified = false,
         skipping = false,
         result = (this.options.destructive) ? ast : deepCopy(ast);
 
@@ -382,9 +393,7 @@ Instrumentor.prototype.instrument = function (ast) {
         leave: function (currentNode, parentNode) {
             var controller = this,
                 path = controller.path(),
-                espath = path ? path.join('/') : '',
-                resultTree = currentNode,
-                relativeEsPath;
+                resultTree = currentNode;
             //console.log('leave ' + currentNode.type + ' path: ' + path);
 
             if (!assertionVisitor) {
@@ -396,8 +405,7 @@ Instrumentor.prototype.instrument = function (ast) {
                 return undefined;
             }
 
-            if (isPathIdentical(assertionVisitor.path, path)) {
-                // leaving target assertion
+            if (assertionVisitor.isLeavingAssertion(path)) {
                 assertionVisitor = null;
                 return undefined;
             }
@@ -410,8 +418,6 @@ Instrumentor.prototype.instrument = function (ast) {
                 return undefined;
             }
 
-            relativeEsPath = path.slice(assertionVisitor.path.length);
-
             //console.log('leave ' + currentNode.type + ' path: ' + path + ' ' + currentNode.name);
             switch(currentNode.type) {
             case syntax.Identifier:
@@ -423,20 +429,14 @@ Instrumentor.prototype.instrument = function (ast) {
             case syntax.AssignmentExpression:
             case syntax.UpdateExpression:
             case syntax.NewExpression:
-                resultTree = assertionVisitor.captureNode(currentNode, relativeEsPath);
-                argumentModified = true;
+                resultTree = assertionVisitor.captureNode(currentNode, path);
                 break;
             default:
                 break;
             }
 
-            if (isPathIdentical(assertionVisitor.argumentPath, path)) {
-                // leaving target argument
-                assertionVisitor.leaveArgument(path);
-                if (argumentModified) {
-                    argumentModified = false;
-                    return assertionVisitor.captureArgument(resultTree);
-                }
+            if (assertionVisitor.isLeavingArgument(path)) {
+                return assertionVisitor.leaveArgument(resultTree, path);
             }
 
             return resultTree;
@@ -444,13 +444,6 @@ Instrumentor.prototype.instrument = function (ast) {
     });
     return result;
 };
-
-function isPathIdentical(path1, path2) {
-    if (!path1 || !path2) {
-        return false;
-    }
-    return path1.join('/') === path2.join('/');
-}
 
 function isCalleeOfParent(currentNode, parentNode) {
     return (parentNode.type === syntax.CallExpression || parentNode.type === syntax.NewExpression) &&
