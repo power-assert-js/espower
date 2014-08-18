@@ -374,21 +374,8 @@ Instrumentor.prototype.instrument = function (ast) {
                 return undefined;
             }
 
-            //console.log('leave ' + currentNode.type + ' path: ' + path + ' ' + currentNode.name);
-            switch(currentNode.type) {
-            case syntax.Identifier:
-            case syntax.MemberExpression:
-            case syntax.CallExpression:
-            case syntax.UnaryExpression:
-            case syntax.BinaryExpression:
-            case syntax.LogicalExpression:
-            case syntax.AssignmentExpression:
-            case syntax.UpdateExpression:
-            case syntax.NewExpression:
+            if (toBeCaptured(currentNode)) {
                 resultTree = assertionVisitor.captureNode(currentNode, path);
-                break;
-            default:
-                break;
             }
 
             if (assertionVisitor.isLeavingArgument(path)) {
@@ -404,6 +391,23 @@ Instrumentor.prototype.instrument = function (ast) {
 function isCalleeOfParent(currentNode, parentNode) {
     return (parentNode.type === syntax.CallExpression || parentNode.type === syntax.NewExpression) &&
         parentNode.callee === currentNode;
+}
+
+function toBeCaptured (currentNode) {
+    switch(currentNode.type) {
+    case syntax.Identifier:
+    case syntax.MemberExpression:
+    case syntax.CallExpression:
+    case syntax.UnaryExpression:
+    case syntax.BinaryExpression:
+    case syntax.LogicalExpression:
+    case syntax.AssignmentExpression:
+    case syntax.UpdateExpression:
+    case syntax.NewExpression:
+        return true;
+    default:
+        return false;
+    }
 }
 
 function toBeSkipped (currentNode, parentNode, currentPath) {
