@@ -839,14 +839,23 @@ Matcher.prototype.test = function (currentNode) {
 };
 
 Matcher.prototype.matchArgument = function (currentNode, parentNode) {
-    var indexOfCurrentArg, argNode;
     if (isCalleeOfParent(currentNode, parentNode)) {
         return null;
     }
     if (this.test(parentNode)) {
-        indexOfCurrentArg = parentNode.arguments.indexOf(currentNode);
-        argNode = this.signatureAst.arguments[indexOfCurrentArg];
-        return toArgumentSignature(argNode);
+        var indexOfCurrentArg = parentNode.arguments.indexOf(currentNode);
+        var numOptional = parentNode.arguments.length - this.numMinArgs;
+        var matchedSignatures = this.argumentSignatures().reduce(function (accum, argSig) {
+            if (argSig.kind === 'mandatory') {
+                accum.push(argSig);
+            }
+            if (argSig.kind === 'optional' && 0 < numOptional) {
+                numOptional -= 1;
+                accum.push(argSig);
+            }
+            return accum;
+        }, []);
+        return matchedSignatures[indexOfCurrentArg];
     }
     return null;
 };
