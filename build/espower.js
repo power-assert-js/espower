@@ -55,10 +55,10 @@ if (typeof define === 'function' && define.amd) {
 
 function AssertionVisitor (matcher, path, sourceMapConsumer, options) {
     this.matcher = matcher;
+    this.path = [].concat(path);
     this.sourceMapConsumer = sourceMapConsumer;
-    this.path = path;
     this.options = options;
-    this.espath = path.join('/');
+    this.argumentPath = null;
     this.argumentModified = false;
 }
 
@@ -104,7 +104,7 @@ AssertionVisitor.prototype.enterArgument = function (currentNode, parentNode, pa
     return undefined;
 };
 
-AssertionVisitor.prototype.leaveArgument = function (resultTree, path) {
+AssertionVisitor.prototype.leaveArgument = function (resultTree) {
     this.argumentPath = null;
     if (this.argumentModified) {
         this.argumentModified = false;
@@ -305,13 +305,12 @@ function Instrumentor (options) {
     ensureOptionPrerequisites(options);
     this.options = options;
     this.matchers = options.patterns.map(escallmatch);
-}
-
-Instrumentor.prototype.instrument = function (ast) {
     if (this.options.sourceMap) {
         this.sourceMapConsumer = new SourceMapConsumer(this.options.sourceMap);
     }
+}
 
+Instrumentor.prototype.instrument = function (ast) {
     ensureAstPrerequisites(ast, this.options);
     var that = this,
         assertionVisitor,
@@ -323,65 +322,52 @@ Instrumentor.prototype.instrument = function (ast) {
             var controller = this,
                 path = controller.path(),
                 currentPath = path ? path[path.length - 1] : null;
-            //console.log('enter currentNode:' + currentNode.type + ' parentNode: ' + parentNode.type + ' path: ' + path);
             if (assertionVisitor) {
                 if (assertionVisitor.isCapturingArgument()) {
                     if (toBeSkipped(currentNode, parentNode, currentPath)) {
                         skipping = true;
-                        return estraverse.VisitorOption.Skip;
+                        return controller.skip();
                     }
                 } else {
-                    return assertionVisitor.enterArgument(currentNode, parentNode, [].concat(path));
+                    return assertionVisitor.enterArgument(currentNode, parentNode, path);
                 }
             } else {
                 var candidates = that.matchers.filter(function (matcher) { return matcher.test(currentNode); });
                 if (candidates.length === 1) {
                     // entering target assertion
-                    var visitor = new AssertionVisitor(candidates[0], [].concat(path), that.sourceMapConsumer, that.options);
-                    visitor.enter(currentNode, parentNode);
-                    assertionVisitor = visitor;
+                    assertionVisitor = new AssertionVisitor(candidates[0], path, that.sourceMapConsumer, that.options);
+                    assertionVisitor.enter(currentNode, parentNode);
                     return undefined;
                 }
             }
             return undefined;
         },
-
         leave: function (currentNode, parentNode) {
-            var controller = this,
-                path = controller.path(),
+            var path = this.path(),
                 resultTree = currentNode;
-            //console.log('leave ' + currentNode.type + ' path: ' + path);
-
             if (!assertionVisitor) {
                 return undefined;
             }
-
             if (skipping) {
                 skipping = false;
                 return undefined;
             }
-
             if (assertionVisitor.isLeavingAssertion(path)) {
                 assertionVisitor = null;
                 return undefined;
             }
-
             if (!assertionVisitor.isCapturingArgument()) {
                 return undefined;
             }
-
             if (isCalleeOfParent(currentNode, parentNode)) {
                 return undefined;
             }
-
             if (toBeCaptured(currentNode)) {
                 resultTree = assertionVisitor.captureNode(currentNode, path);
             }
-
             if (assertionVisitor.isLeavingArgument(path)) {
-                return assertionVisitor.leaveArgument(resultTree, path);
+                return assertionVisitor.leaveArgument(resultTree);
             }
-
             return resultTree;
         }
     });
