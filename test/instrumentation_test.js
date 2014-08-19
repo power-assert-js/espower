@@ -73,8 +73,10 @@ describe('instrumentation spec', function () {
 
         inst("assert(false, messageStr);",
              "assert(false,messageStr);");
-    });
 
+        inst("assert.equal(foo, 'bar', 'msg');",
+             "assert.equal(assert._expr(assert._capt(foo,'arguments/0'),{content:'assert.equal(foo, \\'bar\\', \\'msg\\')',filepath:'/path/to/some_test.js',line:1}),'bar','msg');");
+    });
 
 
     describe('multiline, multiassert', function () {
