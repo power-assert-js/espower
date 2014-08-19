@@ -55,10 +55,10 @@ if (typeof define === 'function' && define.amd) {
 
 function AssertionVisitor (matcher, path, sourceMapConsumer, options) {
     this.matcher = matcher;
-    this.path = [].concat(path);
+    this.assertionPath = [].concat(path);
     this.sourceMapConsumer = sourceMapConsumer;
     this.options = options;
-    this.argumentPath = null;
+    this.currentArgumentPath = null;
     this.argumentModified = false;
 }
 
@@ -98,14 +98,14 @@ AssertionVisitor.prototype.enterArgument = function (currentNode, parentNode, pa
             return undefined;
         }
         // entering target argument
-        this.argumentPath = [].concat(path);
+        this.currentArgumentPath = [].concat(path);
         return undefined;
     }
     return undefined;
 };
 
 AssertionVisitor.prototype.leaveArgument = function (resultTree) {
-    this.argumentPath = null;
+    this.currentArgumentPath = null;
     if (this.argumentModified) {
         this.argumentModified = false;
         return this.captureArgument(resultTree);
@@ -115,15 +115,15 @@ AssertionVisitor.prototype.leaveArgument = function (resultTree) {
 };
 
 AssertionVisitor.prototype.isCapturingArgument = function () {
-    return !!this.argumentPath;
+    return !!this.currentArgumentPath;
 };
 
 AssertionVisitor.prototype.isLeavingAssertion = function (nodePath) {
-    return isPathIdentical(this.path, nodePath);
+    return isPathIdentical(this.assertionPath, nodePath);
 };
 
 AssertionVisitor.prototype.isLeavingArgument = function (nodePath) {
-    return isPathIdentical(this.argumentPath, nodePath);
+    return isPathIdentical(this.currentArgumentPath, nodePath);
 };
 
 AssertionVisitor.prototype.captureArgument = function (node) {
@@ -154,7 +154,7 @@ AssertionVisitor.prototype.captureArgument = function (node) {
 AssertionVisitor.prototype.captureNode = function (target, path) {
     this.argumentModified = true;
     var n = newNodeWithLocationCopyOf(target),
-        relativeEsPath = path.slice(this.path.length),
+        relativeEsPath = path.slice(this.assertionPath.length),
         newCallee = updateLocRecursively(espurify(this.powerAssertCallee), n);
     return n({
         type: syntax.CallExpression,
