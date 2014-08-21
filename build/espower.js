@@ -1836,6 +1836,7 @@ exports.write = function(buffer, value, offset, isLE, mLen, nBytes) {
 };
 
 },{}],8:[function(_dereq_,module,exports){
+(function (process){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -2061,7 +2062,8 @@ var substr = 'ab'.substr(-1) === 'b'
     }
 ;
 
-},{}],9:[function(_dereq_,module,exports){
+}).call(this,_dereq_('_process'))
+},{"_process":9}],9:[function(_dereq_,module,exports){
 // shim for using process in browser
 
 var process = module.exports = {};
