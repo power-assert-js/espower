@@ -4,6 +4,7 @@ var gulp = require('gulp'),
     mochaPhantomJS = require('gulp-mocha-phantomjs'),
     webserver = require('gulp-webserver'),
     del = require('del'),
+    path = require('path'),
     source = require('vinyl-source-stream'),
     through = require('through2'),
     browserify = require('browserify'),
@@ -14,6 +15,12 @@ var gulp = require('gulp'),
             srcFile: './index.js',
             destDir: './build',
             destName: 'espower.js'
+        },
+        source_map_bundle: {
+            standalone: 'sourceMap',
+            srcFile: './node_modules/source-map/lib/source-map.js',
+            destDir: './build',
+            destName: 'source-map.js'
         },
         coverage: {
             filename: 'coverage.lcov'
@@ -96,11 +103,7 @@ gulp.task('watch', function () {
 });
 
 gulp.task('clean_bundle', function (done) {
-    del([config.bundle.destDir], done);
-});
-
-gulp.task('clean_coverage', function (done) {
-    del([config.coverage.filename], done);
+    del([path.join(config.bundle.destDir, config.bundle.destName)], done);
 });
 
 gulp.task('bundle', ['clean_bundle'], function() {
@@ -111,26 +114,42 @@ gulp.task('bundle', ['clean_bundle'], function() {
         .pipe(gulp.dest(config.bundle.destDir));
 });
 
+gulp.task('clean_source_map_bundle', function (done) {
+    del([path.join(config.source_map_bundle.destDir, config.source_map_bundle.destName)], done);
+});
+
+gulp.task('source_map_bundle', ['clean_source_map_bundle'], function() {
+    var bundleStream = browserify({entries: config.source_map_bundle.srcFile, standalone: config.source_map_bundle.standalone}).bundle();
+    return bundleStream
+        .pipe(source(config.source_map_bundle.destName))
+        .pipe(derequire())
+        .pipe(gulp.dest(config.source_map_bundle.destDir));
+});
+
 gulp.task('unit', function () {
     return runMochaSimply();
+});
+
+gulp.task('clean_coverage', function (done) {
+    del([config.coverage.filename], done);
 });
 
 gulp.task('coverage', ['clean_coverage'], function () {
     return runMochaWithBlanket();
 });
 
-gulp.task('test_amd', ['bundle'], function () {
+gulp.task('test_amd', ['bundle', 'source_map_bundle'], function () {
     return gulp
         .src(config.test.amd)
         .pipe(mochaPhantomJS({reporter: 'dot'}));
 });
 
-gulp.task('test_browser', ['bundle'], function () {
+gulp.task('test_browser', ['bundle', 'source_map_bundle'], function () {
     return gulp
         .src(config.test.browser)
         .pipe(mochaPhantomJS({reporter: 'dot'}));
 });
 
-gulp.task('clean', ['clean_coverage', 'clean_bundle']);
+gulp.task('clean', ['clean_coverage', 'clean_bundle', 'clean_source_map_bundle']);
 
 gulp.task('test', ['unit','test_browser','test_amd']);

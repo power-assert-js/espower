@@ -105,6 +105,15 @@ Detection is done by [escallmatch](http://github.com/twada/escallmatch). Any arg
 Filepath of `originalAst`. If passed, espower stores filepath information for reporting. This property is optional.
 
 
+#### (optional) options.sourceMap
+
+| type                | default value |
+|:--------------------|:--------------|
+| `object` or `string`| N/A           |
+
+A raw (either as a string which can be JSON.parse'd, or an object) [SourceMap](https://github.com/mozilla/source-map/) associated with `originalAst`. This property is optional. If given, espower uses `options.sourceMap` to adjust information in the power-assert output.
+
+
 ### var options = espower.defaultOptions();
 
 Returns default options object for `espower` function. In other words, returns

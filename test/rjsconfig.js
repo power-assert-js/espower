@@ -5,6 +5,7 @@ var require = {
         escodegen: '../bower_components/escodegen/escodegen.browser',
         esprima: '../bower_components/esprima/esprima',
         estraverse: '../bower_components/estraverse/estraverse',
+        "source-map": '../build/source-map',
         mocha: '../bower_components/mocha/mocha',
         requirejs: '../bower_components/requirejs/require'
     },

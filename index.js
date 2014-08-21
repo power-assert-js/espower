@@ -11,7 +11,7 @@
 
 var defaultOptions = require('./lib/default-options'),
     Instrumentor = require('./lib/instrumentor'),
-    deepCopy = require('./lib/ast-deepcopy'),
+    clone = require('clone'),
     extend = require('xtend');
 
 /**
@@ -25,6 +25,6 @@ function espower (ast, options) {
     return instrumentor.instrument(ast);
 }
 
-espower.deepCopy = deepCopy;
+espower.deepCopy = clone;
 espower.defaultOptions = defaultOptions;
 module.exports = espower;
