@@ -2,42 +2,13 @@
   "name": "espower",
   "description": "Power Assert feature instrumentor based on the Mozilla JavaScript AST",
   "version": "0.8.0",
-  "keywords": [
-    "power-assert",
-    "test",
-    "assert",
-    "testing",
-    "ecmascript",
-    "ast"
-  ],
-  "homepage": "http://github.com/twada/espower",
   "author": {
     "name": "Takuto Wada",
     "email": "takuto.wada@gmail.com",
     "url": "http://github.com/twada"
   },
-  "main": "./index.js",
-  "files": [
-    "CHANGELOG.md",
-    "MIT-LICENSE.txt",
-    "README.md",
-    "gulpfile.js",
-    "index.js",
-    "lib",
-    "package.json",
-    "test"
-  ],
-  "directories": {
-    "lib": "./lib"
-  },
-  "repository": {
-    "type": "git",
-    "url": "http://github.com/twada/espower.git"
-  },
-  "scripts": {
-    "bower": "bower install --config.interactive=false",
-    "test": "gulp test",
-    "coveralls": "gulp coverage && cat ./coverage.lcov | coveralls"
+  "bugs": {
+    "url": "http://github.com/twada/espower/issues"
   },
   "dependencies": {
     "clone": "~0.1.18",
@@ -65,13 +36,40 @@
     "through2": "~1.0.0",
     "vinyl-source-stream": "~0.1.1"
   },
-  "licenses": [
-    {
-      "type": "MIT",
-      "url": "https://github.com/twada/espower/blob/master/MIT-LICENSE.txt"
-    }
+  "directories": {
+    "lib": "./lib"
+  },
+  "files": [
+    "CHANGELOG.md",
+    "MIT-LICENSE.txt",
+    "README.md",
+    "gulpfile.js",
+    "index.js",
+    "lib",
+    "package.json",
+    "test"
   ],
-  "bugs": {
-    "url": "http://github.com/twada/espower/issues"
+  "homepage": "http://github.com/twada/espower",
+  "keywords": [
+    "power-assert",
+    "test",
+    "assert",
+    "testing",
+    "ecmascript",
+    "ast"
+  ],
+  "license": {
+    "type": "MIT",
+    "url": "https://github.com/twada/espower/blob/master/MIT-LICENSE.txt"
+  },
+  "main": "./index.js",
+  "repository": {
+    "type": "git",
+    "url": "http://github.com/twada/espower.git"
+  },
+  "scripts": {
+    "bower": "bower install --config.interactive=false",
+    "test": "gulp test",
+    "coveralls": "gulp coverage && cat ./coverage.lcov | coveralls"
   }
 }
