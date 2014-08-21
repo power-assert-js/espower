@@ -1,3 +1,13 @@
+## 0.9.0 (2014-08-21)
+
+
+#### Features
+
+* **espower:**
+  * adjust filepath in power-assert output if sourceMap option is given ([f919d59d](https://github.com/twada/espower/commit/f919d59d6eea764881e0266f562724b7142f7695))
+  * adjust line number in power-assert output if sourceMap option is given ([8c035d89](https://github.com/twada/espower/commit/8c035d89ae88c8554cb8ca0b6bd0f7d6fe2008b0))
+
+
 ## 0.8.0 (2014-08-12)
 
 
