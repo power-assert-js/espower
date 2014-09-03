@@ -22,18 +22,18 @@
   },
   "devDependencies": {
     "blanket": "~1.1.6",
-    "browserify": "~5.10.0",
+    "browserify": "~5.11.0",
     "del": "~0.1.2",
     "esprima": "~1.2.2",
     "gulp": "~3.8.7",
-    "gulp-derequire": "~0.3.1",
+    "gulp-derequire": "~1.0.0",
     "gulp-mocha": "~1.0.0",
-    "gulp-mocha-phantomjs": "~0.3.0",
+    "gulp-mocha-phantomjs": "~0.5.0",
     "gulp-util": "~3.0.0",
     "gulp-webserver": "~0.6.0",
     "mocha": "~1.21.4",
     "mocha-lcov-reporter": "~0.0.1",
-    "through2": "~1.0.0",
+    "through2": "~1.1.1",
     "vinyl-source-stream": "~0.1.1"
   },
   "directories": {
