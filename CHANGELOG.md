@@ -1,3 +1,11 @@
+### 0.9.1 (2014-09-15)
+
+
+#### Bug Fixes
+
+* **espower:** decide to be skipped first, then enter node ([9d0a778a](https://github.com/twada/espower/commit/9d0a778a1ae97bb5c522cbfc7b1b65250118f2ea))
+
+
 ## 0.9.0 (2014-08-21)
 
 
