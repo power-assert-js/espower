@@ -72,6 +72,7 @@
   },
   "scripts": {
     "bower": "bower install --config.interactive=false",
+    "build": "gulp bundle",
     "lint": "gulp lint",
     "test": "gulp test",
     "coveralls": "gulp coverage && cat ./coverage.lcov | coveralls"
