@@ -1,3 +1,13 @@
+## [0.10.0](https://github.com/twada/espower/releases/tag/v0.10.0) (2014-11-11)
+
+
+* **espower:**
+  * update escodegen ([22b002e3](https://github.com/twada/espower/commit/22b002e3c8c99679f5b97ae104ed66d685a0ea59))
+  * update estraverse ([ecb6c07d](https://github.com/twada/espower/commit/ecb6c07dec5fd3c9cbf2da4e82667d0077ef3909))
+  * update espurify ([9a75c16f](https://github.com/twada/espower/commit/9a75c16ff91f952b26a373df4e96bdcc6e09cfd8))
+  * update escallmatch ([dbf424b1](https://github.com/twada/espower/commit/dbf424b1d3236dd2ac9e4076aef1ecee3867e228))
+
+
 ### 0.9.1 (2014-09-15)
 
 
