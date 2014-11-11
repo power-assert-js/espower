@@ -94,7 +94,7 @@ function runMochaSimply() {
         .on('error', gutil.log);
 }
 
-gulp.task('webserver', function() {
+gulp.task('serve', function() {
     gulp.src(__dirname)
         .pipe(webserver({
             port: 9001,
