@@ -12,7 +12,7 @@
   },
   "dependencies": {
     "clone": "~0.1.18",
-    "escallmatch": "~1.0.0",
+    "escallmatch": "~1.0.1",
     "escodegen": "~1.4.1",
     "espurify": "~1.0.0",
     "estraverse": "~1.7.0",
