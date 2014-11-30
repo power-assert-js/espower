@@ -27,6 +27,7 @@
     "esprima": "~1.2.2",
     "gulp": "~3.8.9",
     "gulp-derequire": "~2.0.0",
+    "gulp-dereserve": "~0.2.0",
     "gulp-jshint": "~1.9.0",
     "gulp-mocha": "~1.1.1",
     "gulp-mocha-phantomjs": "~0.5.1",

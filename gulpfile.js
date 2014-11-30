@@ -10,6 +10,7 @@ var gulp = require('gulp'),
     source = require('vinyl-source-stream'),
     through = require('through2'),
     browserify = require('browserify'),
+    dereserve = require('gulp-dereserve'),
     derequire = require('gulp-derequire'),
     config = {
         jshint: {
@@ -115,6 +116,7 @@ gulp.task('bundle', ['clean_bundle'], function() {
     var bundleStream = browserify({entries: config.bundle.srcFile, standalone: config.bundle.standalone}).bundle();
     return bundleStream
         .pipe(source(config.bundle.destName))
+        .pipe(dereserve())
         .pipe(derequire())
         .pipe(gulp.dest(config.bundle.destDir));
 });
