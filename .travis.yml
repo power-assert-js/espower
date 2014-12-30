@@ -1,4 +1,5 @@
 language: node_js
+sudo: false
 node_js:
   - "0.10"
   - "0.11"
@@ -7,8 +8,8 @@ before_install:
   - "npm install -g bower"
   - "npm install -g coveralls"
 before_script:
-  - "npm run-script bower"
+  - "npm run bower"
 script:
   - "npm test"
 after_success:
-  - "npm run-script coveralls"
+  - "npm run coveralls"
