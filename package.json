@@ -11,11 +11,11 @@
     "url": "http://github.com/twada/espower/issues"
   },
   "dependencies": {
-    "clone": "~0.1.18",
+    "clone": "~0.2.0",
     "escallmatch": "~1.0.1",
     "escodegen": "~1.4.1",
     "espurify": "~1.0.0",
-    "estraverse": "~1.7.0",
+    "estraverse": "~1.9.1",
     "source-map": "~0.1.40",
     "type-name": "~1.0.0",
     "xtend": "~4.0.0"
