@@ -35,7 +35,7 @@
     "esprima": "~1.2.2",
     "escodegen": "1.4.1",
     "estraverse": "~1.9.0",
-    "mocha": "~2.0.1",
+    "mocha": "~2.1.0",
     "requirejs": "~2.1.15",
     "assert": "Jxck/assert"
   },
