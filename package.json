@@ -12,7 +12,8 @@
   },
   "dependencies": {
     "clone": "~0.2.0",
-    "escallmatch": "~1.0.1",
+    "deep-equal": "~1.0.0",
+    "escallmatch": "~1.1.0",
     "escodegen": "~1.4.1",
     "espurify": "~1.0.0",
     "estraverse": "~1.9.1",

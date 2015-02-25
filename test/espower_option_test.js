@@ -182,6 +182,42 @@ describe('AST prerequisites. Error should be thrown if location is missing.', fu
 });
 
 
+describe('AST prerequisites. Error should be thrown if AST is already instrumented.', function () {
+
+    it('when going to instrument "assert(falsyStr);" twice', function () {
+        var alreadyEspoweredCode = "assert(assert._expr(assert._capt(falsyStr,'arguments/0'),{content:'assert(falsyStr)',filepath:'/path/to/some_test.js',line:1}));";
+        var ast = esprima.parse(alreadyEspoweredCode, {tolerant: true, loc: true, raw: true});
+        try {
+            espower(ast, {destructive: false, source: alreadyEspoweredCode, path: '/path/to/baz_test.js'});
+            assert.ok(false, 'Error should be thrown');
+        } catch (e) {
+            assert.equal(e.name, 'Error');
+            assert.equal(e.message, 'Attempted to transform AST twice. path: /path/to/baz_test.js');
+        }
+    });
+
+    it('when going to instrument "browser.assert.element(foo);" twice', function () {
+        var alreadyEspoweredCode = "browser.assert.element(browser.assert._expr(browser.assert._capt(foo,'arguments/0'),{content:'browser.assert.element(foo)',line:1}));";
+        var ast = esprima.parse(alreadyEspoweredCode, {tolerant: true, loc: true, raw: true});
+        try {
+            espower(ast, {
+                destructive: false,
+                source: alreadyEspoweredCode,
+                path: '/path/to/foo_test.js',
+                patterns: [
+                    'browser.assert.element(selection, [message])'
+                ]
+            });
+            assert.ok(false, 'Error should be thrown');
+        } catch (e) {
+            assert.equal(e.name, 'Error');
+            assert.equal(e.message, 'Attempted to transform AST twice. path: /path/to/foo_test.js');
+        }
+    });
+
+});
+
+
 describe('location information', function () {
     it('preserve location of instrumented nodes.', function () {
         var jsCode = 'assert((three * (seven * ten)) === three);',
