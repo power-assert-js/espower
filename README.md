@@ -242,7 +242,7 @@ Licensed under the [MIT](https://github.com/twada/espower/blob/master/MIT-LICENS
 [codeclimate-image]: https://codeclimate.com/github/twada/espower/badges/gpa.svg
 
 [coverage-url]: https://coveralls.io/r/twada/espower?branch=master
-[coverage-image]: https://coveralls.io/repos/twada/espower/badge.png?branch=master
+[coverage-image]: https://coveralls.io/repos/twada/espower/badge.svg?branch=master
 
 [gulp-url]: http://gulpjs.com/
 [gulp-image]: http://img.shields.io/badge/built_with-gulp-brightgreen.svg
