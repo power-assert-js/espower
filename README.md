@@ -1,13 +1,14 @@
 espower
 ================================
 
-[![Build Status](https://travis-ci.org/twada/espower.svg?branch=master)](https://travis-ci.org/twada/espower)
-[![NPM version](https://badge.fury.io/js/espower.svg)](http://badge.fury.io/js/espower)
-[![Dependency Status](https://gemnasium.com/twada/espower.svg)](https://gemnasium.com/twada/espower)
-[![Coverage Status](https://coveralls.io/repos/twada/espower/badge.png?branch=master)](https://coveralls.io/r/twada/espower?branch=master)
-[![Code Climate](https://codeclimate.com/github/twada/espower/badges/gpa.svg)](https://codeclimate.com/github/twada/espower)
-[![License](http://img.shields.io/badge/license-MIT-brightgreen.svg)](https://github.com/twada/espower/blob/master/MIT-LICENSE.txt)
-[![Built with Gulp](http://img.shields.io/badge/built_with-gulp-brightgreen.svg)](http://gulpjs.com/)
+[![Build Status][travis-image]][travis-url]
+[![NPM package][npm-image]][npm-url]
+[![Bower package][bower-image]][bower-url]
+[![Dependency Status][depstat-image]][depstat-url]
+[![Coverage Status][coverage-image]][coverage-url]
+[![Code Climate][codeclimate-image]][codeclimate-url]
+[![License][license-image]][license-url]
+[![Built with Gulp][gulp-image]][gulp-url]
 
 
 Power Assert feature instrumentor based on the Mozilla JavaScript AST.
@@ -220,3 +221,28 @@ AUTHOR
 LICENSE
 ---------------------------------------
 Licensed under the [MIT](https://github.com/twada/espower/blob/master/MIT-LICENSE.txt) license.
+
+
+[npm-url]: https://npmjs.org/package/espower
+[npm-image]: https://badge.fury.io/js/espower.svg
+
+[bower-url]: http://badge.fury.io/bo/espower
+[bower-image]: https://badge.fury.io/bo/espower.svg
+
+[travis-url]: http://travis-ci.org/twada/espower
+[travis-image]: https://secure.travis-ci.org/twada/espower.svg?branch=master
+
+[depstat-url]: https://gemnasium.com/twada/espower
+[depstat-image]: https://gemnasium.com/twada/espower.svg
+
+[license-url]: https://github.com/twada/espower/blob/master/MIT-LICENSE.txt
+[license-image]: http://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat
+
+[codeclimate-url]: https://codeclimate.com/github/twada/espower
+[codeclimate-image]: https://codeclimate.com/github/twada/espower/badges/gpa.svg
+
+[coverage-url]: https://coveralls.io/r/twada/espower?branch=master
+[coverage-image]: https://coveralls.io/repos/twada/espower/badge.png?branch=master
+
+[gulp-url]: http://gulpjs.com/
+[gulp-image]: http://img.shields.io/badge/built_with-gulp-brightgreen.svg
