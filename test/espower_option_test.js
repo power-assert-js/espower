@@ -148,11 +148,11 @@ describe('option prerequisites', function () {
 
     optionPrerequisitesTest('destructive option shoud be a boolean',
                             {source: 'assert(falsyStr);', destructive: 1},
-                            'options.destructive should be a boolean value.');
+                            '[espower] options.destructive should be a boolean value.');
 
     optionPrerequisitesTest('patterns option should be an array',
                             {source: 'assert(falsyStr);', patterns: 'hoge'},
-                            'options.patterns should be an array.');
+                            '[espower] options.patterns should be an array.');
 });
 
 
@@ -167,7 +167,7 @@ describe('AST prerequisites. Error should be thrown if location is missing.', fu
             assert.ok(false, 'Error should be thrown');
         } catch (e) {
             assert.equal(e.name, 'Error');
-            assert.equal(e.message, 'JavaScript AST should contain location information.');
+            assert.equal(e.message, '[espower] JavaScript AST should contain location information.');
         }
     });
     it('error message when path option is specified', function () {
@@ -176,7 +176,7 @@ describe('AST prerequisites. Error should be thrown if location is missing.', fu
             assert.ok(false, 'Error should be thrown');
         } catch (e) {
             assert.equal(e.name, 'Error');
-            assert.equal(e.message, 'JavaScript AST should contain location information. path: /path/to/baz_test.js');
+            assert.equal(e.message, '[espower] JavaScript AST should contain location information. path: /path/to/baz_test.js');
         }
     });
 });
@@ -192,7 +192,7 @@ describe('AST prerequisites. Error should be thrown if AST is already instrument
             assert.ok(false, 'Error should be thrown');
         } catch (e) {
             assert.equal(e.name, 'Error');
-            assert.equal(e.message, 'Attempted to transform AST twice. path: /path/to/baz_test.js');
+            assert.equal(e.message, '[espower] Attempted to transform AST twice. path: /path/to/baz_test.js');
         }
     });
 
@@ -211,7 +211,7 @@ describe('AST prerequisites. Error should be thrown if AST is already instrument
             assert.ok(false, 'Error should be thrown');
         } catch (e) {
             assert.equal(e.name, 'Error');
-            assert.equal(e.message, 'Attempted to transform AST twice. path: /path/to/foo_test.js');
+            assert.equal(e.message, '[espower] Attempted to transform AST twice. path: /path/to/foo_test.js');
         }
     });
 
