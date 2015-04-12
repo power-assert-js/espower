@@ -35,4 +35,9 @@ espower.defaultOptions = defaultOptions;
 espower.EspowerError = EspowerError;
 espower.Instrumentor = Instrumentor;
 espower.AssertionVisitor = AssertionVisitor;
+espower.rules = {
+    supportedNodeTypes: require('./lib/rules/supported-node-types'),
+    toBeSkipped: require('./lib/rules/to-be-skipped'),
+    toBeCaptured: require('./lib/rules/to-be-captured')
+};
 module.exports = espower;
