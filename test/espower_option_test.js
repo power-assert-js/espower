@@ -59,11 +59,43 @@ describe('espower.defaultOptions()', function () {
 
 describe('instrumentation tests for options', function () {
 
+    /**
+     * Copyright (C) 2012 Yusuke Suzuki (twitter: @Constellation) and other contributors.
+     * Released under the BSD license.
+     * https://github.com/Constellation/esmangle/blob/master/LICENSE.BSD
+     */
+    function deepCopy (obj) {
+        var isArray = Array.isArray || function isArray (array) {
+            return Object.prototype.toString.call(array) === '[object Array]';
+        };
+        function deepCopyInternal (obj, result) {
+            var key, val;
+            for (key in obj) {
+                if (key.lastIndexOf('_', 0) === 0) {
+                    continue;
+                }
+                if (obj.hasOwnProperty(key)) {
+                    val = obj[key];
+                    if (typeof val === 'object' && val !== null) {
+                        if (val instanceof RegExp) {
+                            val = new RegExp(val);
+                        } else {
+                            val = deepCopyInternal(val, isArray(val) ? [] : {});
+                        }
+                    }
+                    result[key] = val;
+                }
+            }
+            return result;
+        }
+        return deepCopyInternal(obj, isArray(obj) ? [] : {});
+    }
+
     describe('destructive option', function () {
         function destructiveOptionTest (testName, option, callback) {
             it(testName, function () {
                 var tree = esprima.parse('assert(falsyStr);', {tolerant: true, loc: true, range: true, tokens: true, raw: true}),
-                    saved = espower.deepCopy(tree),
+                    saved = deepCopy(tree),
                     result = espower(tree, option);
                 callback(assert, saved, tree, result);
             });
@@ -239,7 +271,6 @@ describe('location information', function () {
     it('preserve location of instrumented nodes.', function () {
         var jsCode = 'assert((three * (seven * ten)) === three);',
             tree = esprima.parse(jsCode, {tolerant: true, loc: true, range: true, tokens: true, raw: true}),
-            saved = espower.deepCopy(tree),
             result = espower(tree, {destructive: false, source: jsCode, path: '/path/to/baz_test.js'});
         estraverse.traverse(result, function (node) {
             if (typeof node.type === 'undefined') return;

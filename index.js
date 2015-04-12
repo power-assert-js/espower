@@ -11,8 +11,6 @@
 
 var defaultOptions = require('./lib/default-options'),
     Instrumentor = require('./lib/instrumentor'),
-    EspowerError = require('./lib/espower-error'),
-    clone = require('clone'),
     extend = require('xtend');
 
 /**
@@ -29,7 +27,13 @@ function espower (originalAst, options) {
     return instrumentor.instrument(originalAst);
 }
 
-espower.deepCopy = clone;
 espower.defaultOptions = defaultOptions;
-espower.EspowerError = EspowerError;
+espower.Instrumentor = Instrumentor;
+espower.AssertionVisitor = require('./lib/assertion-visitor');
+espower.EspowerError = require('./lib/espower-error');
+espower.rules = {
+    supportedNodeTypes: require('./lib/rules/supported-node-types'),
+    toBeSkipped: require('./lib/rules/to-be-skipped'),
+    toBeCaptured: require('./lib/rules/to-be-captured')
+};
 module.exports = espower;
