@@ -13,7 +13,6 @@ var defaultOptions = require('./lib/default-options'),
     Instrumentor = require('./lib/instrumentor'),
     AssertionVisitor = require('./lib/assertion-visitor'),
     EspowerError = require('./lib/espower-error'),
-    clone = require('clone'),
     extend = require('xtend');
 
 /**
@@ -30,7 +29,6 @@ function espower (originalAst, options) {
     return instrumentor.instrument(originalAst);
 }
 
-espower.deepCopy = clone;
 espower.defaultOptions = defaultOptions;
 espower.EspowerError = EspowerError;
 espower.Instrumentor = Instrumentor;
