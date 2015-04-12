@@ -11,8 +11,6 @@
 
 var defaultOptions = require('./lib/default-options'),
     Instrumentor = require('./lib/instrumentor'),
-    AssertionVisitor = require('./lib/assertion-visitor'),
-    EspowerError = require('./lib/espower-error'),
     extend = require('xtend');
 
 /**
@@ -30,9 +28,9 @@ function espower (originalAst, options) {
 }
 
 espower.defaultOptions = defaultOptions;
-espower.EspowerError = EspowerError;
 espower.Instrumentor = Instrumentor;
-espower.AssertionVisitor = AssertionVisitor;
+espower.AssertionVisitor = require('./lib/assertion-visitor');
+espower.EspowerError = require('./lib/espower-error');
 espower.rules = {
     supportedNodeTypes: require('./lib/rules/supported-node-types'),
     toBeSkipped: require('./lib/rules/to-be-skipped'),
