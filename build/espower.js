@@ -12,6 +12,7 @@
 
 var defaultOptions = _dereq_('./lib/default-options'),
     Instrumentor = _dereq_('./lib/instrumentor'),
+    EspowerError = _dereq_('./lib/espower-error'),
     clone = _dereq_('clone'),
     extend = _dereq_('xtend');
 
@@ -20,9 +21,9 @@ var defaultOptions = _dereq_('./lib/default-options'),
  * @param {object} originalAst JavaScript Mozilla JS AST to instrument (directly modified if destructive option is truthy)
  * @param {object} options Instrumentation options.
  * @returns {object} instrumented AST
- * @throws {Error} if `originalAst` is already instrumented
- * @throws {Error} if `originalAst` does not contain location information
- * @throws {Error} if `options` is not valid
+ * @throws {EspowerError} if `originalAst` is already instrumented
+ * @throws {EspowerError} if `originalAst` does not contain location information
+ * @throws {EspowerError} if `options` is not valid
  */
 function espower (originalAst, options) {
     var instrumentor = new Instrumentor(extend(defaultOptions(), options));
@@ -31,9 +32,10 @@ function espower (originalAst, options) {
 
 espower.deepCopy = clone;
 espower.defaultOptions = defaultOptions;
+espower.EspowerError = EspowerError;
 module.exports = espower;
 
-},{"./lib/default-options":3,"./lib/instrumentor":4,"clone":11,"xtend":40}],2:[function(_dereq_,module,exports){
+},{"./lib/default-options":3,"./lib/espower-error":4,"./lib/instrumentor":5,"clone":12,"xtend":41}],2:[function(_dereq_,module,exports){
 'use strict';
 
 var estraverse = _dereq_('estraverse'),
@@ -42,6 +44,7 @@ var estraverse = _dereq_('estraverse'),
     clone = _dereq_('clone'),
     deepEqual = _dereq_('deep-equal'),
     syntax = estraverse.Syntax,
+    EspowerError = _dereq_('./espower-error'),
     canonicalCodeOptions = {
         format: {
             indent: {
@@ -98,7 +101,7 @@ AssertionVisitor.prototype.enter = function (currentNode, parentNode) {
     }
 };
 
-AssertionVisitor.prototype.ensureNotInstrumented = function (currentNode) {
+AssertionVisitor.prototype.verifyNotInstrumented = function (currentNode) {
     if (currentNode.type !== syntax.CallExpression) {
         return;
     }
@@ -108,11 +111,11 @@ AssertionVisitor.prototype.ensureNotInstrumented = function (currentNode) {
     var prop = currentNode.callee.property;
     if (prop.type === syntax.Identifier && prop.name === '_expr') {
         if (astEqual(currentNode.callee.object, this.powerAssertCalleeObject)) {
-            var errorMessage = '[espower] Attempted to transform AST twice.';
+            var errorMessage = 'Attempted to transform AST twice.';
             if (this.options.path) {
                 errorMessage += ' path: ' + this.options.path;
             }
-            throw new Error(errorMessage);
+            throw new EspowerError(errorMessage, this.verifyNotInstrumented);
         }
     }
 };
@@ -124,7 +127,7 @@ AssertionVisitor.prototype.enterArgument = function (currentNode, parentNode, pa
             // skip optional message argument
             return undefined;
         }
-        this.ensureNotInstrumented(currentNode);
+        this.verifyNotInstrumented(currentNode);
         // entering target argument
         this.currentArgumentPath = [].concat(path);
         return undefined;
@@ -284,7 +287,7 @@ function newNodeWithLocationCopyOf (original) {
 
 module.exports = AssertionVisitor;
 
-},{"clone":11,"deep-equal":12,"escodegen":16,"espurify":23,"estraverse":27}],3:[function(_dereq_,module,exports){
+},{"./espower-error":4,"clone":12,"deep-equal":13,"escodegen":17,"espurify":24,"estraverse":28}],3:[function(_dereq_,module,exports){
 'use strict';
 
 module.exports = function defaultOptions () {
@@ -306,11 +309,38 @@ module.exports = function defaultOptions () {
 },{}],4:[function(_dereq_,module,exports){
 'use strict';
 
+function EspowerError (message, stackStartFunction) {
+    if (Error.captureStackTrace) { // V8
+        Error.captureStackTrace(this, stackStartFunction);
+    } else {
+        var _err = new Error();
+        var _stack = _err.stack;
+        if (!_stack) {  // IE10
+            try {
+                throw _err;
+            } catch (e) {
+                _stack = e.stack;
+            }
+        }
+        this.stack = _stack;
+    }
+    this.message = '[espower] ' + message;
+}
+EspowerError.prototype = Object.create(Error.prototype);
+EspowerError.prototype.constructor = EspowerError;
+EspowerError.prototype.name = 'EspowerError';
+
+module.exports = EspowerError;
+
+},{}],5:[function(_dereq_,module,exports){
+'use strict';
+
 var estraverse = _dereq_('estraverse'),
     escallmatch = _dereq_('escallmatch'),
     SourceMapConsumer = _dereq_('source-map').SourceMapConsumer,
     clone = _dereq_('clone'),
     AssertionVisitor = _dereq_('./assertion-visitor'),
+    EspowerError = _dereq_('./espower-error'),
     typeName = _dereq_('type-name'),
     syntax = estraverse.Syntax,
     supportedNodeTypes = [
@@ -330,7 +360,7 @@ var estraverse = _dereq_('estraverse'),
     ];
 
 function Instrumentor (options) {
-    ensureOptionPrerequisites(options);
+    verifyOptionPrerequisites(options);
     this.options = options;
     this.matchers = options.patterns.map(escallmatch);
     if (this.options.sourceMap) {
@@ -339,7 +369,7 @@ function Instrumentor (options) {
 }
 
 Instrumentor.prototype.instrument = function (ast) {
-    ensureAstPrerequisites(ast, this.options);
+    verifyAstPrerequisites(ast, this.options);
     var that = this,
         assertionVisitor,
         skipping = false,
@@ -461,29 +491,29 @@ function isSupportedNodeType (node) {
     return supportedNodeTypes.indexOf(node.type) !== -1;
 }
 
-function ensureAstPrerequisites (ast, options) {
+function verifyAstPrerequisites (ast, options) {
     var errorMessage;
     if (typeof ast.loc === 'undefined') {
-        errorMessage = '[espower] JavaScript AST should contain location information.';
+        errorMessage = 'JavaScript AST should contain location information.';
         if (options.path) {
             errorMessage += ' path: ' + options.path;
         }
-        throw new Error(errorMessage);
+        throw new EspowerError(errorMessage, verifyAstPrerequisites);
     }
 }
 
-function ensureOptionPrerequisites (options) {
+function verifyOptionPrerequisites (options) {
     if (typeName(options.destructive) !== 'boolean') {
-        throw new Error('[espower] options.destructive should be a boolean value.');
+        throw new EspowerError('options.destructive should be a boolean value.', verifyOptionPrerequisites);
     }
     if (typeName(options.patterns) !== 'Array') {
-        throw new Error('[espower] options.patterns should be an array.');
+        throw new EspowerError('options.patterns should be an array.', verifyOptionPrerequisites);
     }
 }
 
 module.exports = Instrumentor;
 
-},{"./assertion-visitor":2,"clone":11,"escallmatch":15,"estraverse":27,"source-map":28,"type-name":39}],5:[function(_dereq_,module,exports){
+},{"./assertion-visitor":2,"./espower-error":4,"clone":12,"escallmatch":16,"estraverse":28,"source-map":29,"type-name":40}],6:[function(_dereq_,module,exports){
 /*!
  * The buffer module from node.js, for the browser.
  *
@@ -1795,7 +1825,7 @@ function decodeUtf8Char (str) {
   }
 }
 
-},{"base64-js":6,"ieee754":7,"is-array":8}],6:[function(_dereq_,module,exports){
+},{"base64-js":7,"ieee754":8,"is-array":9}],7:[function(_dereq_,module,exports){
 var lookup = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
 
 ;(function (exports) {
@@ -1921,7 +1951,7 @@ var lookup = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
 	exports.fromByteArray = uint8ToBase64
 }(typeof exports === 'undefined' ? (this.base64js = {}) : exports))
 
-},{}],7:[function(_dereq_,module,exports){
+},{}],8:[function(_dereq_,module,exports){
 exports.read = function(buffer, offset, isLE, mLen, nBytes) {
   var e, m,
       eLen = nBytes * 8 - mLen - 1,
@@ -2007,7 +2037,7 @@ exports.write = function(buffer, value, offset, isLE, mLen, nBytes) {
   buffer[offset + i - d] |= s * 128;
 };
 
-},{}],8:[function(_dereq_,module,exports){
+},{}],9:[function(_dereq_,module,exports){
 
 /**
  * isArray
@@ -2042,7 +2072,7 @@ module.exports = isArray || function (val) {
   return !! val && '[object Array]' == str.call(val);
 };
 
-},{}],9:[function(_dereq_,module,exports){
+},{}],10:[function(_dereq_,module,exports){
 (function (process){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -2270,7 +2300,7 @@ var substr = 'ab'.substr(-1) === 'b'
 ;
 
 }).call(this,_dereq_('_process'))
-},{"_process":10}],10:[function(_dereq_,module,exports){
+},{"_process":11}],11:[function(_dereq_,module,exports){
 // shim for using process in browser
 
 var process = module.exports = {};
@@ -2358,7 +2388,7 @@ process.chdir = function (dir) {
     throw new Error('process.chdir is not supported');
 };
 
-},{}],11:[function(_dereq_,module,exports){
+},{}],12:[function(_dereq_,module,exports){
 (function (Buffer){
 'use strict';
 
@@ -2506,7 +2536,7 @@ clone.clonePrototype = function(parent) {
 };
 
 }).call(this,_dereq_("buffer").Buffer)
-},{"buffer":5}],12:[function(_dereq_,module,exports){
+},{"buffer":6}],13:[function(_dereq_,module,exports){
 var pSlice = Array.prototype.slice;
 var objectKeys = _dereq_('./lib/keys.js');
 var isArguments = _dereq_('./lib/is_arguments.js');
@@ -2602,7 +2632,7 @@ function objEquiv(a, b, opts) {
   return typeof a === typeof b;
 }
 
-},{"./lib/is_arguments.js":13,"./lib/keys.js":14}],13:[function(_dereq_,module,exports){
+},{"./lib/is_arguments.js":14,"./lib/keys.js":15}],14:[function(_dereq_,module,exports){
 var supportsArgumentsClass = (function(){
   return Object.prototype.toString.call(arguments)
 })() == '[object Arguments]';
@@ -2624,7 +2654,7 @@ function unsupported(object){
     false;
 };
 
-},{}],14:[function(_dereq_,module,exports){
+},{}],15:[function(_dereq_,module,exports){
 exports = module.exports = typeof Object.keys === 'function'
   ? Object.keys : shim;
 
@@ -2635,7 +2665,7 @@ function shim (obj) {
   return keys;
 }
 
-},{}],15:[function(_dereq_,module,exports){
+},{}],16:[function(_dereq_,module,exports){
 /**
  * escallmatch:
  *   ECMAScript CallExpression matcher made from function/method signature
@@ -2830,7 +2860,7 @@ function extractExpressionFrom (tree) {
 
 module.exports = createMatcher;
 
-},{"deep-equal":12,"esprima":22,"espurify":23,"estraverse":27}],16:[function(_dereq_,module,exports){
+},{"deep-equal":13,"esprima":23,"espurify":24,"estraverse":28}],17:[function(_dereq_,module,exports){
 (function (global){
 /*
   Copyright (C) 2012-2014 Yusuke Suzuki <utatane.tea@gmail.com>
@@ -5221,7 +5251,7 @@ module.exports = createMatcher;
 /* vim: set sw=4 ts=4 et tw=80 : */
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./package.json":21,"estraverse":27,"esutils":20,"source-map":28}],17:[function(_dereq_,module,exports){
+},{"./package.json":22,"estraverse":28,"esutils":21,"source-map":29}],18:[function(_dereq_,module,exports){
 /*
   Copyright (C) 2013 Yusuke Suzuki <utatane.tea@gmail.com>
 
@@ -5367,7 +5397,7 @@ module.exports = createMatcher;
 }());
 /* vim: set sw=4 ts=4 et tw=80 : */
 
-},{}],18:[function(_dereq_,module,exports){
+},{}],19:[function(_dereq_,module,exports){
 /*
   Copyright (C) 2013-2014 Yusuke Suzuki <utatane.tea@gmail.com>
   Copyright (C) 2014 Ivan Nikulin <ifaaan@gmail.com>
@@ -5470,7 +5500,7 @@ module.exports = createMatcher;
 }());
 /* vim: set sw=4 ts=4 et tw=80 : */
 
-},{}],19:[function(_dereq_,module,exports){
+},{}],20:[function(_dereq_,module,exports){
 /*
   Copyright (C) 2013 Yusuke Suzuki <utatane.tea@gmail.com>
 
@@ -5609,7 +5639,7 @@ module.exports = createMatcher;
 }());
 /* vim: set sw=4 ts=4 et tw=80 : */
 
-},{"./code":18}],20:[function(_dereq_,module,exports){
+},{"./code":19}],21:[function(_dereq_,module,exports){
 /*
   Copyright (C) 2013 Yusuke Suzuki <utatane.tea@gmail.com>
 
@@ -5644,7 +5674,7 @@ module.exports = createMatcher;
 }());
 /* vim: set sw=4 ts=4 et tw=80 : */
 
-},{"./ast":17,"./code":18,"./keyword":19}],21:[function(_dereq_,module,exports){
+},{"./ast":18,"./code":19,"./keyword":20}],22:[function(_dereq_,module,exports){
 module.exports={
   "name": "escodegen",
   "description": "ECMAScript code generator",
@@ -5733,7 +5763,7 @@ module.exports={
   "readme": "ERROR: No README data found!"
 }
 
-},{}],22:[function(_dereq_,module,exports){
+},{}],23:[function(_dereq_,module,exports){
 /*
   Copyright (C) 2013 Ariya Hidayat <ariya.hidayat@gmail.com>
   Copyright (C) 2013 Thaddee Tyl <thaddee.tyl@gmail.com>
@@ -9492,7 +9522,7 @@ parseStatement: true, parseSourceElement: true */
 }));
 /* vim: set sw=4 ts=4 et tw=80 : */
 
-},{}],23:[function(_dereq_,module,exports){
+},{}],24:[function(_dereq_,module,exports){
 /**
  * espurify - Clone new AST without extra properties
  * 
@@ -9534,7 +9564,7 @@ function isSupportedKey (type, key) {
 
 module.exports = espurify;
 
-},{"./lib/ast-deepcopy":24,"./lib/ast-properties":25,"traverse":26}],24:[function(_dereq_,module,exports){
+},{"./lib/ast-deepcopy":25,"./lib/ast-properties":26,"traverse":27}],25:[function(_dereq_,module,exports){
 /**
  * Copyright (C) 2012 Yusuke Suzuki (twitter: @Constellation) and other contributors.
  * Released under the BSD license.
@@ -9573,7 +9603,7 @@ function deepCopy (obj) {
 
 module.exports = deepCopy;
 
-},{}],25:[function(_dereq_,module,exports){
+},{}],26:[function(_dereq_,module,exports){
 module.exports = {
     AssignmentExpression: ['type', 'operator', 'left', 'right'],
     ArrayExpression: ['type', 'elements'],
@@ -9626,7 +9656,7 @@ module.exports = {
     YieldExpression: ['type', 'argument']
 };
 
-},{}],26:[function(_dereq_,module,exports){
+},{}],27:[function(_dereq_,module,exports){
 var traverse = module.exports = function (obj) {
     return new Traverse(obj);
 };
@@ -9942,7 +9972,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
     return key in obj;
 };
 
-},{}],27:[function(_dereq_,module,exports){
+},{}],28:[function(_dereq_,module,exports){
 /*
   Copyright (C) 2012-2013 Yusuke Suzuki <utatane.tea@gmail.com>
   Copyright (C) 2012 Ariya Hidayat <ariya.hidayat@gmail.com>
@@ -10787,7 +10817,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 }));
 /* vim: set sw=4 ts=4 et tw=80 : */
 
-},{}],28:[function(_dereq_,module,exports){
+},{}],29:[function(_dereq_,module,exports){
 /*
  * Copyright 2009-2011 Mozilla Foundation and contributors
  * Licensed under the New BSD license. See LICENSE.txt or:
@@ -10797,7 +10827,7 @@ exports.SourceMapGenerator = _dereq_('./source-map/source-map-generator').Source
 exports.SourceMapConsumer = _dereq_('./source-map/source-map-consumer').SourceMapConsumer;
 exports.SourceNode = _dereq_('./source-map/source-node').SourceNode;
 
-},{"./source-map/source-map-consumer":34,"./source-map/source-map-generator":35,"./source-map/source-node":36}],29:[function(_dereq_,module,exports){
+},{"./source-map/source-map-consumer":35,"./source-map/source-map-generator":36,"./source-map/source-node":37}],30:[function(_dereq_,module,exports){
 /* -*- Mode: js; js-indent-level: 2; -*- */
 /*
  * Copyright 2011 Mozilla Foundation and contributors
@@ -10896,7 +10926,7 @@ define(function (_dereq_, exports, module) {
 
 });
 
-},{"./util":37,"amdefine":38}],30:[function(_dereq_,module,exports){
+},{"./util":38,"amdefine":39}],31:[function(_dereq_,module,exports){
 /* -*- Mode: js; js-indent-level: 2; -*- */
 /*
  * Copyright 2011 Mozilla Foundation and contributors
@@ -11040,7 +11070,7 @@ define(function (_dereq_, exports, module) {
 
 });
 
-},{"./base64":31,"amdefine":38}],31:[function(_dereq_,module,exports){
+},{"./base64":32,"amdefine":39}],32:[function(_dereq_,module,exports){
 /* -*- Mode: js; js-indent-level: 2; -*- */
 /*
  * Copyright 2011 Mozilla Foundation and contributors
@@ -11084,7 +11114,7 @@ define(function (_dereq_, exports, module) {
 
 });
 
-},{"amdefine":38}],32:[function(_dereq_,module,exports){
+},{"amdefine":39}],33:[function(_dereq_,module,exports){
 /* -*- Mode: js; js-indent-level: 2; -*- */
 /*
  * Copyright 2011 Mozilla Foundation and contributors
@@ -11166,7 +11196,7 @@ define(function (_dereq_, exports, module) {
 
 });
 
-},{"amdefine":38}],33:[function(_dereq_,module,exports){
+},{"amdefine":39}],34:[function(_dereq_,module,exports){
 /* -*- Mode: js; js-indent-level: 2; -*- */
 /*
  * Copyright 2014 Mozilla Foundation and contributors
@@ -11254,7 +11284,7 @@ define(function (_dereq_, exports, module) {
 
 });
 
-},{"./util":37,"amdefine":38}],34:[function(_dereq_,module,exports){
+},{"./util":38,"amdefine":39}],35:[function(_dereq_,module,exports){
 /* -*- Mode: js; js-indent-level: 2; -*- */
 /*
  * Copyright 2011 Mozilla Foundation and contributors
@@ -11831,7 +11861,7 @@ define(function (_dereq_, exports, module) {
 
 });
 
-},{"./array-set":29,"./base64-vlq":30,"./binary-search":32,"./util":37,"amdefine":38}],35:[function(_dereq_,module,exports){
+},{"./array-set":30,"./base64-vlq":31,"./binary-search":33,"./util":38,"amdefine":39}],36:[function(_dereq_,module,exports){
 /* -*- Mode: js; js-indent-level: 2; -*- */
 /*
  * Copyright 2011 Mozilla Foundation and contributors
@@ -12233,7 +12263,7 @@ define(function (_dereq_, exports, module) {
 
 });
 
-},{"./array-set":29,"./base64-vlq":30,"./mapping-list":33,"./util":37,"amdefine":38}],36:[function(_dereq_,module,exports){
+},{"./array-set":30,"./base64-vlq":31,"./mapping-list":34,"./util":38,"amdefine":39}],37:[function(_dereq_,module,exports){
 /* -*- Mode: js; js-indent-level: 2; -*- */
 /*
  * Copyright 2011 Mozilla Foundation and contributors
@@ -12649,7 +12679,7 @@ define(function (_dereq_, exports, module) {
 
 });
 
-},{"./source-map-generator":35,"./util":37,"amdefine":38}],37:[function(_dereq_,module,exports){
+},{"./source-map-generator":36,"./util":38,"amdefine":39}],38:[function(_dereq_,module,exports){
 /* -*- Mode: js; js-indent-level: 2; -*- */
 /*
  * Copyright 2011 Mozilla Foundation and contributors
@@ -12970,7 +13000,7 @@ define(function (_dereq_, exports, module) {
 
 });
 
-},{"amdefine":38}],38:[function(_dereq_,module,exports){
+},{"amdefine":39}],39:[function(_dereq_,module,exports){
 (function (process,__filename){
 /** vim: et:ts=4:sw=4:sts=4
  * @license amdefine 0.1.0 Copyright (c) 2011, The Dojo Foundation All Rights Reserved.
@@ -13273,7 +13303,7 @@ function amdefine(module, requireFn) {
 module.exports = amdefine;
 
 }).call(this,_dereq_('_process'),"/node_modules/source-map/node_modules/amdefine/amdefine.js")
-},{"_process":10,"path":9}],39:[function(_dereq_,module,exports){
+},{"_process":11,"path":10}],40:[function(_dereq_,module,exports){
 /**
  * type-name - Just a reasonable typeof
  * 
@@ -13313,7 +13343,7 @@ function typeName (val) {
 
 module.exports = typeName;
 
-},{}],40:[function(_dereq_,module,exports){
+},{}],41:[function(_dereq_,module,exports){
 module.exports = extend
 
 function extend() {

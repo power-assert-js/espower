@@ -42,7 +42,7 @@ API
 `espower` function manipulates `originalAst` then returns `modifiedAst` that is also an AST node object defined in [Mozilla JavaScript AST spec](https://developer.mozilla.org/en-US/docs/SpiderMonkey/Parser_API).
 If `destructive` option is falsy, `originalAst` will be unchanged. If `destructive` option is truthy, `originalAst` will be manipulated directly and returned `modifiedAst` will be the same instance of `originalAst`.
 
-`espower` function throws Error when
+`espower` function throws `EspowerError` when
 
 * `originalAst` is already instrumented
 * `originalAst` does not contain location information

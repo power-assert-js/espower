@@ -11,6 +11,7 @@
 
 var defaultOptions = require('./lib/default-options'),
     Instrumentor = require('./lib/instrumentor'),
+    EspowerError = require('./lib/espower-error'),
     clone = require('clone'),
     extend = require('xtend');
 
@@ -19,9 +20,9 @@ var defaultOptions = require('./lib/default-options'),
  * @param {object} originalAst JavaScript Mozilla JS AST to instrument (directly modified if destructive option is truthy)
  * @param {object} options Instrumentation options.
  * @returns {object} instrumented AST
- * @throws {Error} if `originalAst` is already instrumented
- * @throws {Error} if `originalAst` does not contain location information
- * @throws {Error} if `options` is not valid
+ * @throws {EspowerError} if `originalAst` is already instrumented
+ * @throws {EspowerError} if `originalAst` does not contain location information
+ * @throws {EspowerError} if `options` is not valid
  */
 function espower (originalAst, options) {
     var instrumentor = new Instrumentor(extend(defaultOptions(), options));
@@ -30,4 +31,5 @@ function espower (originalAst, options) {
 
 espower.deepCopy = clone;
 espower.defaultOptions = defaultOptions;
+espower.EspowerError = EspowerError;
 module.exports = espower;
