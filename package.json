@@ -11,15 +11,15 @@
     "url": "http://github.com/twada/espower/issues"
   },
   "dependencies": {
-    "clone": "~0.2.0",
-    "deep-equal": "~1.0.0",
-    "escallmatch": "~1.1.0",
-    "escodegen": "~1.4.1",
-    "espurify": "~1.0.0",
-    "estraverse": "~1.9.1",
-    "source-map": "~0.1.40",
-    "type-name": "~1.0.0",
-    "xtend": "~4.0.0"
+    "clone": "^1.0.1",
+    "deep-equal": "^1.0.0",
+    "escallmatch": "^1.1.0",
+    "escodegen": "^1.6.1",
+    "espurify": "^1.1.0",
+    "estraverse": "^3.1.0",
+    "source-map": "^0.4.2",
+    "type-name": "^1.0.1",
+    "xtend": "^4.0.0"
   },
   "devDependencies": {
     "blanket": "^1.1.6",
