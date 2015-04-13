@@ -1,5 +1,5 @@
 /**
- * espower - Power Assert feature instrumentor based on the ECMASCript AST.
+ * espower - Power Assert feature instrumentor based on the ECMAScript AST.
  *
  * https://github.com/twada/espower
  *
@@ -14,8 +14,8 @@ var defaultOptions = require('./lib/default-options'),
     extend = require('xtend');
 
 /**
- * Instrument power assert feature into code. ECMASCript AST in, ECMASCript AST out.
- * @param {object} originalAst JavaScript ECMASCript JS AST to instrument (directly modified if destructive option is truthy)
+ * Instrument power assert feature into code. ECMAScript AST in, ECMAScript AST out.
+ * @param {object} originalAst JavaScript ECMAScript JS AST to instrument (directly modified if destructive option is truthy)
  * @param {object} options Instrumentation options.
  * @returns {object} instrumented AST
  * @throws {EspowerError} if `originalAst` is already instrumented

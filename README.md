@@ -11,7 +11,7 @@ espower
 [![Built with Gulp][gulp-image]][gulp-url]
 
 
-Power Assert feature instrumentor based on the [ECMASCript AST](https://github.com/estree/estree).
+Power Assert feature instrumentor based on the [ECMAScript AST](https://github.com/estree/estree).
 
 
 DESCRIPTION
@@ -19,7 +19,7 @@ DESCRIPTION
 `espower` is a core module of [power-assert](http://github.com/twada/power-assert) family. 
 
 
-`espower` detects and manipulates assertion expression (JavaScript Code) in the form of ECMASCript AST defined in [The ESTree Spec](https://github.com/estree/estree) (formerly known as [Mozilla SpiderMonkey Parser API](https://developer.mozilla.org/en-US/docs/SpiderMonkey/Parser_API)), to instrument power-assert feature into returned new AST object. AST in, AST out.
+`espower` detects and manipulates assertion expression (JavaScript Code) in the form of ECMAScript AST defined in [The ESTree Spec](https://github.com/estree/estree) (formerly known as [Mozilla SpiderMonkey Parser API](https://developer.mozilla.org/en-US/docs/SpiderMonkey/Parser_API)), to instrument power-assert feature into returned new AST object. AST in, AST out.
 
 
 Please note that `espower` is a beta version product. Pull-requests, issue reports and patches are always welcomed. See [power-assert](http://github.com/twada/power-assert) project for more documentation.
