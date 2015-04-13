@@ -2,7 +2,7 @@
   "name": "espower",
   "description": "Power Assert feature instrumentor based on the ECMAScript AST",
   "main": "build/espower.js",
-  "license": "MIT-LICENSE.txt",
+  "license": "MIT",
   "ignore": [
     "**/.*",
     "gulpfile.js",
