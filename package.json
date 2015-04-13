@@ -1,6 +1,6 @@
 {
   "name": "espower",
-  "description": "Power Assert feature instrumentor based on the Mozilla JavaScript AST",
+  "description": "Power Assert feature instrumentor based on the ECMAScript AST",
   "version": "0.10.0",
   "author": {
     "name": "Takuto Wada",
@@ -62,6 +62,7 @@
     "test",
     "testing",
     "ecmascript",
+    "estree",
     "ast"
   ],
   "license": {

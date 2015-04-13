@@ -206,7 +206,7 @@ describe('AST prerequisites. Error should be thrown if location is missing.', fu
             assert.equal(e.name, 'EspowerError');
             assert(e instanceof Error);
             assert(e instanceof EspowerError);
-            assert.equal(e.message, '[espower] JavaScript AST should contain location information.');
+            assert.equal(e.message, '[espower] ECMAScript AST should contain location information.');
             assert(e.stack);
         }
     });
@@ -218,7 +218,7 @@ describe('AST prerequisites. Error should be thrown if location is missing.', fu
             assert.equal(e.name, 'EspowerError');
             assert(e instanceof Error);
             assert(e instanceof EspowerError);
-            assert.equal(e.message, '[espower] JavaScript AST should contain location information. path: /path/to/baz_test.js');
+            assert.equal(e.message, '[espower] ECMAScript AST should contain location information. path: /path/to/baz_test.js');
             assert(e.stack);
         }
     });
