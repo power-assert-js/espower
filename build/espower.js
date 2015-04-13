@@ -48,6 +48,7 @@ var estraverse = _dereq_('estraverse'),
     clone = _dereq_('clone'),
     deepEqual = _dereq_('deep-equal'),
     syntax = estraverse.Syntax,
+    SourceMapConsumer = _dereq_('source-map').SourceMapConsumer,
     EspowerError = _dereq_('./espower-error'),
     canonicalCodeOptions = {
         format: {
@@ -68,11 +69,13 @@ if (typeof define === 'function' && define.amd) {
     escodegen = window.escodegen;
 }
 
-function AssertionVisitor (matcher, path, sourceMapConsumer, options) {
+function AssertionVisitor (matcher, path, options) {
     this.matcher = matcher;
     this.assertionPath = [].concat(path);
-    this.sourceMapConsumer = sourceMapConsumer;
     this.options = options || {};
+    if (this.options.sourceMap) {
+        this.sourceMapConsumer = new SourceMapConsumer(this.options.sourceMap);
+    }
     this.currentArgumentPath = null;
     this.argumentModified = false;
 }
@@ -291,7 +294,7 @@ function newNodeWithLocationCopyOf (original) {
 
 module.exports = AssertionVisitor;
 
-},{"./espower-error":4,"clone":15,"deep-equal":16,"escodegen":27,"espurify":45,"estraverse":50}],3:[function(_dereq_,module,exports){
+},{"./espower-error":4,"clone":15,"deep-equal":16,"escodegen":27,"espurify":45,"estraverse":50,"source-map":52}],3:[function(_dereq_,module,exports){
 'use strict';
 
 module.exports = function defaultOptions () {
@@ -342,7 +345,6 @@ module.exports = EspowerError;
 var estraverse = _dereq_('estraverse'),
     syntax = estraverse.Syntax,
     escallmatch = _dereq_('escallmatch'),
-    SourceMapConsumer = _dereq_('source-map').SourceMapConsumer,
     clone = _dereq_('clone'),
     AssertionVisitor = _dereq_('./assertion-visitor'),
     EspowerError = _dereq_('./espower-error'),
@@ -354,9 +356,6 @@ function Instrumentor (options) {
     verifyOptionPrerequisites(options);
     this.options = options;
     this.matchers = options.patterns.map(escallmatch);
-    if (this.options.sourceMap) {
-        this.sourceMapConsumer = new SourceMapConsumer(this.options.sourceMap);
-    }
 }
 
 Instrumentor.prototype.instrument = function (ast) {
@@ -383,7 +382,7 @@ Instrumentor.prototype.instrument = function (ast) {
                 var candidates = that.matchers.filter(function (matcher) { return matcher.test(currentNode); });
                 if (candidates.length === 1) {
                     // entering target assertion
-                    assertionVisitor = new AssertionVisitor(candidates[0], path, that.sourceMapConsumer, that.options);
+                    assertionVisitor = new AssertionVisitor(candidates[0], path, that.options);
                     assertionVisitor.enter(currentNode, parentNode);
                     return undefined;
                 }
@@ -449,7 +448,7 @@ function verifyOptionPrerequisites (options) {
 
 module.exports = Instrumentor;
 
-},{"./assertion-visitor":2,"./espower-error":4,"./rules/to-be-captured":7,"./rules/to-be-skipped":8,"clone":15,"escallmatch":19,"estraverse":50,"source-map":52,"type-name":63}],6:[function(_dereq_,module,exports){
+},{"./assertion-visitor":2,"./espower-error":4,"./rules/to-be-captured":7,"./rules/to-be-skipped":8,"clone":15,"escallmatch":19,"estraverse":50,"type-name":63}],6:[function(_dereq_,module,exports){
 'use strict';
 
 var estraverse = _dereq_('estraverse'),
