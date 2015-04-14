@@ -108,6 +108,10 @@ AssertionVisitor.prototype.enter = function (currentNode, parentNode) {
     }
 };
 
+AssertionVisitor.prototype.leave = function (currentNode, parentNode) {
+    // nothing to do now
+};
+
 AssertionVisitor.prototype.verifyNotInstrumented = function (currentNode) {
     if (currentNode.type !== syntax.CallExpression) {
         return;
@@ -369,9 +373,9 @@ Instrumentor.prototype.instrument = function (ast) {
         enter: function (currentNode, parentNode) {
             var controller = this,
                 path = controller.path(),
-                currentPath = path ? path[path.length - 1] : null;
+                currentKey = path ? path[path.length - 1] : null;
             if (assertionVisitor) {
-                if (toBeSkipped(currentNode, parentNode, currentPath)) {
+                if (toBeSkipped(currentNode, parentNode, currentKey)) {
                     skipping = true;
                     return controller.skip();
                 }
@@ -391,7 +395,8 @@ Instrumentor.prototype.instrument = function (ast) {
         },
         leave: function (currentNode, parentNode) {
             var path = this.path(),
-                resultTree = currentNode;
+                resultTree = currentNode,
+                currentKey = path ? path[path.length - 1] : null;
             if (!assertionVisitor) {
                 return undefined;
             }
@@ -400,16 +405,14 @@ Instrumentor.prototype.instrument = function (ast) {
                 return undefined;
             }
             if (assertionVisitor.isLeavingAssertion(path)) {
+                assertionVisitor.leave(currentNode, parentNode);
                 assertionVisitor = null;
                 return undefined;
             }
             if (!assertionVisitor.isCapturingArgument()) {
                 return undefined;
             }
-            if (isCalleeOfParent(currentNode, parentNode)) {
-                return undefined;
-            }
-            if (toBeCaptured(currentNode)) {
+            if (toBeCaptured(currentNode, parentNode, currentKey)) {
                 resultTree = assertionVisitor.captureNode(currentNode, path);
             }
             if (assertionVisitor.isLeavingArgument(path)) {
@@ -420,11 +423,6 @@ Instrumentor.prototype.instrument = function (ast) {
     });
     return result;
 };
-
-function isCalleeOfParent(currentNode, parentNode) {
-    return (parentNode.type === syntax.CallExpression || parentNode.type === syntax.NewExpression) &&
-        parentNode.callee === currentNode;
-}
 
 function verifyAstPrerequisites (ast, options) {
     var errorMessage;
@@ -467,30 +465,51 @@ module.exports = [
     syntax.ArrayExpression,
     syntax.ConditionalExpression,
     syntax.UpdateExpression,
+    syntax.TemplateLiteral,
+    syntax.TaggedTemplateExpression,
+    syntax.SpreadElement,
     syntax.Property
 ];
 
 },{"estraverse":50}],7:[function(_dereq_,module,exports){
 'use strict';
 
-var estraverse = _dereq_('estraverse'),
-    syntax = estraverse.Syntax;
+var estraverse = _dereq_('estraverse');
+var syntax = estraverse.Syntax;
+var caputuringTargetTypes = [
+    // syntax.Property,
+    // syntax.ObjectExpression,
+    // syntax.ArrayExpression,
+    // syntax.ConditionalExpression,
+    syntax.Identifier,
+    syntax.MemberExpression,
+    syntax.CallExpression,
+    syntax.UnaryExpression,
+    syntax.BinaryExpression,
+    syntax.LogicalExpression,
+    syntax.AssignmentExpression,
+    syntax.NewExpression,
+    syntax.UpdateExpression,
+    syntax.TemplateLiteral,
+    syntax.TaggedTemplateExpression
+];
 
-module.exports = function toBeCaptured (currentNode) {
-    switch(currentNode.type) {
-    case syntax.Identifier:
-    case syntax.MemberExpression:
-    case syntax.CallExpression:
-    case syntax.UnaryExpression:
-    case syntax.BinaryExpression:
-    case syntax.LogicalExpression:
-    case syntax.AssignmentExpression:
-    case syntax.UpdateExpression:
-    case syntax.NewExpression:
-        return true;
-    default:
-        return false;
-    }
+function isCaputuringTargetType (currentNode) {
+    return caputuringTargetTypes.indexOf(currentNode.type) !== -1;
+}
+
+function isCalleeOfParent(parentNode, currentKey) {
+    return (parentNode.type === syntax.CallExpression || parentNode.type === syntax.NewExpression) && currentKey === 'callee';
+}
+
+function isChildOfTaggedTemplateExpression(parentNode) {
+    return parentNode.type === syntax.TaggedTemplateExpression;
+}
+
+module.exports = function toBeCaptured (currentNode, parentNode, currentKey) {
+    return isCaputuringTargetType(currentNode) &&
+        !isCalleeOfParent(parentNode, currentKey) &&
+        !isChildOfTaggedTemplateExpression(parentNode);
 };
 
 },{"estraverse":50}],8:[function(_dereq_,module,exports){
@@ -500,14 +519,14 @@ var estraverse = _dereq_('estraverse'),
     syntax = estraverse.Syntax,
     supportedNodeTypes = _dereq_('./supported-node-types');
 
-function isLeftHandSideOfAssignment(parentNode, currentPath) {
+function isLeftHandSideOfAssignment(parentNode, currentKey) {
     // Do not instrument left due to 'Invalid left-hand side in assignment'
-    return parentNode.type === syntax.AssignmentExpression && currentPath === 'left';
+    return parentNode.type === syntax.AssignmentExpression && currentKey === 'left';
 }
 
-function isObjectLiteralKey(parentNode, currentPath) {
+function isObjectLiteralKey(parentNode, currentKey) {
     // Do not instrument Object literal key
-    return parentNode.type === syntax.Property && parentNode.kind === 'init' && currentPath === 'key';
+    return parentNode.type === syntax.Property && parentNode.kind === 'init' && currentKey === 'key';
 }
 
 function isUpdateExpression(parentNode) {
@@ -515,27 +534,27 @@ function isUpdateExpression(parentNode) {
     return parentNode.type === syntax.UpdateExpression;
 }
 
-function isCallExpressionWithNonComputedMemberExpression(currentNode, parentNode, currentPath) {
+function isCallExpressionWithNonComputedMemberExpression(currentNode, parentNode, currentKey) {
     // Do not instrument non-computed property of MemberExpression within CallExpression.
-    return currentNode.type === syntax.Identifier && parentNode.type === syntax.MemberExpression && !parentNode.computed && currentPath === 'property';
+    return currentNode.type === syntax.Identifier && parentNode.type === syntax.MemberExpression && !parentNode.computed && currentKey === 'property';
 }
 
-function isTypeOfOrDeleteUnaryExpression(currentNode, parentNode, currentPath) {
+function isTypeOfOrDeleteUnaryExpression(currentNode, parentNode, currentKey) {
     // 'typeof Identifier' or 'delete Identifier' is not instrumented
-    return currentNode.type === syntax.Identifier && parentNode.type === syntax.UnaryExpression && (parentNode.operator === 'typeof' || parentNode.operator === 'delete') && currentPath === 'argument';
+    return currentNode.type === syntax.Identifier && parentNode.type === syntax.UnaryExpression && (parentNode.operator === 'typeof' || parentNode.operator === 'delete') && currentKey === 'argument';
 }
 
 function isSupportedNodeType (node) {
     return supportedNodeTypes.indexOf(node.type) !== -1;
 }
 
-module.exports = function toBeSkipped (currentNode, parentNode, currentPath) {
+module.exports = function toBeSkipped (currentNode, parentNode, currentKey) {
     return !isSupportedNodeType(currentNode) ||
-        isLeftHandSideOfAssignment(parentNode, currentPath) ||
-        isObjectLiteralKey(parentNode, currentPath) ||
+        isLeftHandSideOfAssignment(parentNode, currentKey) ||
+        isObjectLiteralKey(parentNode, currentKey) ||
         isUpdateExpression(parentNode) ||
-        isCallExpressionWithNonComputedMemberExpression(currentNode, parentNode, currentPath) ||
-        isTypeOfOrDeleteUnaryExpression(currentNode, parentNode, currentPath);
+        isCallExpressionWithNonComputedMemberExpression(currentNode, parentNode, currentKey) ||
+        isTypeOfOrDeleteUnaryExpression(currentNode, parentNode, currentKey);
 };
 
 },{"./supported-node-types":6,"estraverse":50}],9:[function(_dereq_,module,exports){
