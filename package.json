@@ -79,6 +79,7 @@
     "build": "gulp bundle",
     "lint": "gulp lint",
     "test": "gulp test",
+    "unit": "gulp unit",
     "coveralls": "gulp coverage && cat ./coverage.lcov | coveralls"
   }
 }
