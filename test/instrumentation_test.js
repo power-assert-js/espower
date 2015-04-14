@@ -357,6 +357,15 @@ describe('instrumentation spec', function () {
                  "assert(assert._expr(assert._capt(fn`a${assert._capt(foo,'arguments/0/quasi/expressions/0')}b${assert._capt(bar,'arguments/0/quasi/expressions/1')}c${assert._capt(baz,'arguments/0/quasi/expressions/2')}`,'arguments/0'),{content:'assert(fn`a${ foo }b${ bar }c${ baz }`)',filepath:'/path/to/some_test.js',line:1}));");
         });
 
+        describe('ArrowFunctionExpression will not be instrumented', function () {
+            inst("assert(v => v + 1);",
+                 "assert(v=>v+1);");
+            inst("assert((v, i) => v + i);",
+                 "assert((v,i)=>v+i);");
+            inst("assert(v => ({even: v, odd: v + 1}));",
+                 "assert(v=>({even:v,odd:v+1}));");
+        });
+
     });
 
 });
