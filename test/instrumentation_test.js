@@ -26,6 +26,7 @@ describe('instrumentation spec', function () {
                 espoweredAST = espower(jsAST, {source: jsCode, path: '/path/to/some_test.js'}),
                 instrumentedCode = escodegen.generate(espoweredAST, {format: {compact: true}});
             assert.equal(instrumentedCode, expected);
+            assert(acorn.parse(instrumentedCode, options));
         });
     }
 
