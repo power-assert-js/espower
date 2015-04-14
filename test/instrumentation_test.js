@@ -366,6 +366,13 @@ describe('instrumentation spec', function () {
                  "assert(v=>({even:v,odd:v+1}));");
         });
 
+        describe('Binary and Octal Literals', function () {
+            inst("assert(0b111110111);",
+                 "assert(503);");
+            inst("assert(0o767);",
+                 "assert(503);");
+        });
+
     });
 
 });
