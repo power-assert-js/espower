@@ -397,6 +397,18 @@ describe('instrumentation spec', function () {
                  "assert(assert._expr(assert._capt(f(assert._capt(head,'arguments/0/arguments/0'),...assert._capt(iter(),'arguments/0/arguments/1/argument'),...[assert._capt(foo,'arguments/0/arguments/2/argument/elements/0'),assert._capt(bar,'arguments/0/arguments/2/argument/elements/1')]),'arguments/0'),{content:'assert(f(head, ...iter(), ...[foo,bar]))',filepath:'/path/to/some_test.js',line:1}));");
         });
 
+        describe('Enhanced Object Literals', function () {
+            describe('Computed (dynamic) property names', function () {
+                inst("assert({[num]: foo});",
+                     "assert(assert._expr({[assert._capt(num,'arguments/0/properties/0/key')]:assert._capt(foo,'arguments/0/properties/0/value')},{content:'assert({ [num]: foo })',filepath:'/path/to/some_test.js',line:1}));");
+
+                inst("assert({[ 'prop_' + (() => bar())() ]: 42});",
+                     "assert(assert._expr({[assert._capt('prop_'+assert._capt((()=>bar())(),'arguments/0/properties/0/key/right'),'arguments/0/properties/0/key')]:42},{content:'assert({ [\\'prop_\\' + (() => bar())()]: 42 })',filepath:'/path/to/some_test.js',line:1}));");
+
+                inst("assert({[`prop_${generate(seed)}`]: foo});",
+                     "assert(assert._expr({[assert._capt(`prop_${assert._capt(generate(assert._capt(seed,'arguments/0/properties/0/key/expressions/0/arguments/0')),'arguments/0/properties/0/key/expressions/0')}`,'arguments/0/properties/0/key')]:assert._capt(foo,'arguments/0/properties/0/value')},{content:'assert({ [`prop_${ generate(seed) }`]: foo })',filepath:'/path/to/some_test.js',line:1}));");
+            });
+        });
     });
 
 });
