@@ -373,6 +373,13 @@ describe('instrumentation spec', function () {
                  "assert(class Me{getClassName(){return foo+Me.name;}});");
         });
 
+        describe('left hand side of Destructuring will not be instrumented', function () {
+            inst("assert([x] = [3]);",
+                 "assert(assert._expr(assert._capt([x]=[3],'arguments/0'),{content:'assert([x] = [3])',filepath:'/path/to/some_test.js',line:1}));");
+            inst("assert([x] = [foo]);",
+                 "assert(assert._expr(assert._capt([x]=[assert._capt(foo,'arguments/0/right/elements/0')],'arguments/0'),{content:'assert([x] = [foo])',filepath:'/path/to/some_test.js',line:1}));");
+        });
+
         describe('Binary and Octal Literals', function () {
             inst("assert(0b111110111);",
                  "assert(503);");
