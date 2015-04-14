@@ -1,15 +1,15 @@
 (function (root, factory) {
     'use strict';
     if (typeof define === 'function' && define.amd) {
-        define(['espower', 'esprima', 'escodegen', 'assert'], factory);
+        define(['espower', 'acorn', 'escodegen', 'assert'], factory);
     } else if (typeof exports === 'object') {
-        factory(require('..'), require('esprima'), require('escodegen'), require('assert'));
+        factory(require('..'), require('acorn'), require('escodegen'), require('assert'));
     } else {
-        factory(root.espower, root.esprima, root.escodegen, root.assert);
+        factory(root.espower, root.acorn, root.escodegen, root.assert);
     }
 }(this, function (
     espower,
-    esprima,
+    acorn,
     escodegen,
     assert
 ) {
@@ -20,9 +20,9 @@ if (typeof define === 'function' && define.amd) {
 }
 
 describe('instrumentation spec', function () {
-    function testWithEsprimaOptions (jsCode, expected, options) {
+    function testWithOptions (jsCode, expected, options) {
         it(jsCode, function () {
-            var jsAST = esprima.parse(jsCode, options),
+            var jsAST = acorn.parse(jsCode, options),
                 espoweredAST = espower(jsAST, {source: jsCode, path: '/path/to/some_test.js'}),
                 instrumentedCode = escodegen.generate(espoweredAST, {format: {compact: true}});
             assert.equal(instrumentedCode, expected);
@@ -31,12 +31,12 @@ describe('instrumentation spec', function () {
 
     function inst (jsCode, expected) {
         describe('with loc, range', function () {
-            var options = {tolerant: true, loc: true, range: true};
-            testWithEsprimaOptions(jsCode, expected, options);
+            var options = {ecmaVersion: 6, locations: true, ranges: true};
+            testWithOptions(jsCode, expected, options);
         });
         describe('with loc', function () {
-            var options = {tolerant: true, loc: true};
-            testWithEsprimaOptions(jsCode, expected, options);
+            var options = {ecmaVersion: 6, locations: true};
+            testWithOptions(jsCode, expected, options);
         });
     }
 

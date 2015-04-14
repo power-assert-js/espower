@@ -3,7 +3,7 @@ var require = {
         espower: '../build/espower',
         assert: '../bower_components/assert/assert',
         escodegen: '../bower_components/escodegen/escodegen.browser',
-        esprima: '../bower_components/esprima/esprima',
+        acorn: '../node_modules/acorn/dist/acorn',
         estraverse: '../bower_components/estraverse/estraverse',
         "source-map": '../build/source-map',
         mocha: '../bower_components/mocha/mocha',

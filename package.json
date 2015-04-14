@@ -22,10 +22,10 @@
     "xtend": "^4.0.0"
   },
   "devDependencies": {
+    "acorn": "^1.0.3",
     "blanket": "^1.1.6",
     "browserify": "^9.0.8",
     "del": "^1.1.1",
-    "esprima": "^2.1.0",
     "gulp": "^3.8.11",
     "gulp-derequire": "^2.0.0",
     "gulp-dereserve": "^0.2.0",
