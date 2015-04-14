@@ -264,6 +264,9 @@ function addToProps (props, createNode, name, value) {
             name: name
         }),
         value: value,
+        method: false,
+        shorthand: false,
+        computed: false,
         kind: 'init'
     }));
 }
@@ -524,9 +527,26 @@ function isLeftHandSideOfAssignment(parentNode, currentKey) {
     return parentNode.type === syntax.AssignmentExpression && currentKey === 'left';
 }
 
-function isObjectLiteralKey(parentNode, currentKey) {
-    // Do not instrument Object literal key
-    return parentNode.type === syntax.Property && parentNode.kind === 'init' && currentKey === 'key';
+function isChildOfObjectLiteral (parentNode) {
+    return parentNode.type === syntax.Property && parentNode.kind === 'init';
+}
+
+function isObjectLiteralKey (parentNode, currentKey) {
+    return isChildOfObjectLiteral(parentNode) && currentKey === 'key';
+}
+
+function isObjectLiteralValue (parentNode, currentKey) {
+    return isChildOfObjectLiteral(parentNode) && currentKey === 'value';
+}
+
+function isNonComputedObjectLiteralKey(parentNode, currentKey) {
+    // Do not instrument non-computed Object literal key
+    return isObjectLiteralKey(parentNode, currentKey) && !parentNode.computed;
+}
+
+function isShorthandedValueOfObjectLiteral(parentNode, currentKey) {
+    // Do not instrument shorthanded Object literal value
+    return isObjectLiteralValue(parentNode, currentKey) && parentNode.shorthand;
 }
 
 function isUpdateExpression(parentNode) {
@@ -551,7 +571,8 @@ function isSupportedNodeType (node) {
 module.exports = function toBeSkipped (currentNode, parentNode, currentKey) {
     return !isSupportedNodeType(currentNode) ||
         isLeftHandSideOfAssignment(parentNode, currentKey) ||
-        isObjectLiteralKey(parentNode, currentKey) ||
+        isNonComputedObjectLiteralKey(parentNode, currentKey) ||
+        isShorthandedValueOfObjectLiteral(parentNode, currentKey) ||
         isUpdateExpression(parentNode) ||
         isCallExpressionWithNonComputedMemberExpression(currentNode, parentNode, currentKey) ||
         isTypeOfOrDeleteUnaryExpression(currentNode, parentNode, currentKey);
