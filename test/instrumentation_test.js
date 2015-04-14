@@ -408,6 +408,12 @@ describe('instrumentation spec', function () {
                 inst("assert({[`prop_${generate(seed)}`]: foo});",
                      "assert(assert._expr({[assert._capt(`prop_${assert._capt(generate(assert._capt(seed,'arguments/0/properties/0/key/expressions/0/arguments/0')),'arguments/0/properties/0/key/expressions/0')}`,'arguments/0/properties/0/key')]:assert._capt(foo,'arguments/0/properties/0/value')},{content:'assert({ [`prop_${ generate(seed) }`]: foo })',filepath:'/path/to/some_test.js',line:1}));");
             });
+            describe('shorthand literal will not be instrumented', function () {
+                inst("assert({foo});",
+                     "assert({foo});");
+                inst("assert({foo, bar: baz});",
+                     "assert(assert._expr({foo,bar:assert._capt(baz,'arguments/0/properties/1/value')},{content:'assert({foo,bar: baz})',filepath:'/path/to/some_test.js',line:1}));");
+            });
         });
     });
 
