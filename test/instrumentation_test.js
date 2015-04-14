@@ -364,6 +364,13 @@ describe('instrumentation spec', function () {
                  "assert((v,i)=>v+i);");
             inst("assert(v => ({even: v, odd: v + 1}));",
                  "assert(v=>({even:v,odd:v+1}));");
+            inst("assert(foo === ((v, i) => v + i)());",
+                 "assert(assert._expr(assert._capt(assert._capt(foo,'arguments/0/left')===assert._capt(((v,i)=>v+i)(),'arguments/0/right'),'arguments/0'),{content:'assert(foo === ((v, i) => v + i)())',filepath:'/path/to/some_test.js',line:1}));");
+        });
+
+        describe('ClassExpression will not be instrumented', function () {
+            inst("assert(class Me { getClassName() { return foo + Me.name; } });",
+                 "assert(class Me{getClassName(){return foo+Me.name;}});");
         });
 
         describe('Binary and Octal Literals', function () {
