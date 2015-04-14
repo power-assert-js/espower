@@ -28,7 +28,7 @@ if (typeof define === 'function' && define.amd) {
 
 
 function instrument (jsCode, options) {
-    var jsAST = esprima.parse(jsCode, {tolerant: true, loc: true, tokens: true, raw: true});
+    var jsAST = esprima.parse(jsCode, {tolerant: true, loc: true});
     var espoweredAST = espower(jsAST, options);
     var instrumentedCode = escodegen.generate(espoweredAST, {format: {compact: true}});
     return instrumentedCode;
@@ -94,7 +94,7 @@ describe('instrumentation tests for options', function () {
     describe('destructive option', function () {
         function destructiveOptionTest (testName, option, callback) {
             it(testName, function () {
-                var tree = esprima.parse('assert(falsyStr);', {tolerant: true, loc: true, range: true, tokens: true, raw: true}),
+                var tree = esprima.parse('assert(falsyStr);', {tolerant: true, loc: true, range: true}),
                     saved = deepCopy(tree),
                     result = espower(tree, option);
                 callback(assert, saved, tree, result);
@@ -166,7 +166,7 @@ describe('instrumentation tests for options', function () {
 
 describe('option prerequisites', function () {
     beforeEach(function () {
-        this.tree = esprima.parse('assert(falsyStr);', {tolerant: true, loc: true, range: true, tokens: true, raw: true});
+        this.tree = esprima.parse('assert(falsyStr);', {tolerant: true, loc: true, range: true});
     });
     function optionPrerequisitesTest (name, options, expected) {
         it(name, function () {
@@ -196,7 +196,7 @@ describe('option prerequisites', function () {
 describe('AST prerequisites. Error should be thrown if location is missing.', function () {
     beforeEach(function () {
         this.jsCode = 'assert(falsyStr);';
-        this.tree = esprima.parse(this.jsCode, {tolerant: true, loc: false, tokens: true, raw: true});
+        this.tree = esprima.parse(this.jsCode, {tolerant: true, loc: false});
     });
     it('error message when path option is not specified', function () {
         try {
@@ -229,7 +229,7 @@ describe('AST prerequisites. Error should be thrown if AST is already instrument
 
     it('when going to instrument "assert(falsyStr);" twice', function () {
         var alreadyEspoweredCode = "assert(assert._expr(assert._capt(falsyStr,'arguments/0'),{content:'assert(falsyStr)',filepath:'/path/to/some_test.js',line:1}));";
-        var ast = esprima.parse(alreadyEspoweredCode, {tolerant: true, loc: true, raw: true});
+        var ast = esprima.parse(alreadyEspoweredCode, {tolerant: true, loc: true});
         try {
             espower(ast, {destructive: false, source: alreadyEspoweredCode, path: '/path/to/baz_test.js'});
             assert.ok(false, 'Error should be thrown');
@@ -244,7 +244,7 @@ describe('AST prerequisites. Error should be thrown if AST is already instrument
 
     it('when going to instrument "browser.assert.element(foo);" twice', function () {
         var alreadyEspoweredCode = "browser.assert.element(browser.assert._expr(browser.assert._capt(foo,'arguments/0'),{content:'browser.assert.element(foo)',line:1}));";
-        var ast = esprima.parse(alreadyEspoweredCode, {tolerant: true, loc: true, raw: true});
+        var ast = esprima.parse(alreadyEspoweredCode, {tolerant: true, loc: true});
         try {
             espower(ast, {
                 destructive: false,
@@ -270,11 +270,11 @@ describe('AST prerequisites. Error should be thrown if AST is already instrument
 describe('location information', function () {
     it('preserve location of instrumented nodes.', function () {
         var jsCode = 'assert((three * (seven * ten)) === three);',
-            tree = esprima.parse(jsCode, {tolerant: true, loc: true, range: true, tokens: true, raw: true}),
+            tree = esprima.parse(jsCode, {tolerant: true, loc: true, range: true}),
             result = espower(tree, {destructive: false, source: jsCode, path: '/path/to/baz_test.js'});
         estraverse.traverse(result, function (node) {
             if (typeof node.type === 'undefined') return;
-            assert.ok(node.loc !== 'undefined', 'type: ' + node.type);
+            assert.ok(typeof node.loc !== 'undefined', 'type: ' + node.type);
             assert.ok(typeof node.range !== 'undefined', 'type: ' + node.type);
         });
     });
