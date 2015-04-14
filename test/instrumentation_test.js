@@ -341,22 +341,21 @@ describe('instrumentation spec', function () {
     });
 
 
-    describe('TemplateLiteral', function () {
+    describe('ES6 features', function () {
 
-        inst("assert(`Hello`);",
-             "assert(assert._expr(assert._capt(`Hello`,'arguments/0'),{content:'assert(`Hello`)',filepath:'/path/to/some_test.js',line:1}));");
+        describe('TemplateLiteral', function () {
+            inst("assert(`Hello`);",
+                 "assert(assert._expr(assert._capt(`Hello`,'arguments/0'),{content:'assert(`Hello`)',filepath:'/path/to/some_test.js',line:1}));");
+            inst("assert(`Hello, ${nickname}`);",
+                 "assert(assert._expr(assert._capt(`Hello, ${assert._capt(nickname,'arguments/0/expressions/0')}`,'arguments/0'),{content:'assert(`Hello, ${ nickname }`)',filepath:'/path/to/some_test.js',line:1}));");
+        });
 
-        inst("assert(`Hello, ${nickname}`);",
-             "assert(assert._expr(assert._capt(`Hello, ${assert._capt(nickname,'arguments/0/expressions/0')}`,'arguments/0'),{content:'assert(`Hello, ${ nickname }`)',filepath:'/path/to/some_test.js',line:1}));");
-    });
-
-    describe('TaggedTemplateExpression', function () {
-
-        inst("assert(fn`a${1}`);",
-             "assert(assert._expr(assert._capt(fn`a${1}`,'arguments/0'),{content:'assert(fn`a${ 1 }`)',filepath:'/path/to/some_test.js',line:1}));");
-
-        inst("assert(fn`a${foo}b${bar}c${baz}`);",
-             "assert(assert._expr(assert._capt(fn`a${assert._capt(foo,'arguments/0/quasi/expressions/0')}b${assert._capt(bar,'arguments/0/quasi/expressions/1')}c${assert._capt(baz,'arguments/0/quasi/expressions/2')}`,'arguments/0'),{content:'assert(fn`a${ foo }b${ bar }c${ baz }`)',filepath:'/path/to/some_test.js',line:1}));");
+        describe('TaggedTemplateExpression', function () {
+            inst("assert(fn`a${1}`);",
+                 "assert(assert._expr(assert._capt(fn`a${1}`,'arguments/0'),{content:'assert(fn`a${ 1 }`)',filepath:'/path/to/some_test.js',line:1}));");
+            inst("assert(fn`a${foo}b${bar}c${baz}`);",
+                 "assert(assert._expr(assert._capt(fn`a${assert._capt(foo,'arguments/0/quasi/expressions/0')}b${assert._capt(bar,'arguments/0/quasi/expressions/1')}c${assert._capt(baz,'arguments/0/quasi/expressions/2')}`,'arguments/0'),{content:'assert(fn`a${ foo }b${ bar }c${ baz }`)',filepath:'/path/to/some_test.js',line:1}));");
+        });
 
     });
 
