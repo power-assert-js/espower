@@ -340,6 +340,17 @@ describe('instrumentation spec', function () {
              "assert(assert._expr(assert._capt('\\u307B\\u3052'!=='\\u3075\\u304C','arguments/0'),{content:'assert(\\'\\u307B\\u3052\\' !== \\'\\u3075\\u304C\\')',filepath:'/path/to/some_test.js',line:1}));");
     });
 
+
+    describe('TemplateLiteral', function () {
+
+        inst("assert(`Hello`);",
+             "assert(assert._expr(assert._capt(`Hello`,'arguments/0'),{content:'assert(`Hello`)',filepath:'/path/to/some_test.js',line:1}));");
+
+        inst("assert(`Hello, ${nickname}`);",
+             "assert(assert._expr(assert._capt(`Hello, ${assert._capt(nickname,'arguments/0/expressions/0')}`,'arguments/0'),{content:'assert(`Hello, ${ nickname }`)',filepath:'/path/to/some_test.js',line:1}));");
+
+    });
+
 });
 
 }));
