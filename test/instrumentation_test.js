@@ -300,13 +300,13 @@ describe('instrumentation spec', function () {
 
     describe('ObjectExpression', function () {
         inst("assert({foo: bar, hoge: fuga});",
-             "assert(assert._expr({foo:assert._capt(bar,'arguments/0/properties/0/value'),hoge:assert._capt(fuga,'arguments/0/properties/1/value')},{content:'assert({foo: bar,hoge: fuga})',filepath:'/path/to/some_test.js',line:1}));");
+             "assert(assert._expr(assert._capt({foo:assert._capt(bar,'arguments/0/properties/0/value'),hoge:assert._capt(fuga,'arguments/0/properties/1/value')},'arguments/0'),{content:'assert({foo: bar,hoge: fuga})',filepath:'/path/to/some_test.js',line:1}));");
 
         inst("assert(!({ foo: bar.baz, name: nameOf({firstName: first, lastName: last}) }));",
-             "assert(assert._expr(assert._capt(!{foo:assert._capt(assert._capt(bar,'arguments/0/argument/properties/0/value/object').baz,'arguments/0/argument/properties/0/value'),name:assert._capt(nameOf({firstName:assert._capt(first,'arguments/0/argument/properties/1/value/arguments/0/properties/0/value'),lastName:assert._capt(last,'arguments/0/argument/properties/1/value/arguments/0/properties/1/value')}),'arguments/0/argument/properties/1/value')},'arguments/0'),{content:'assert(!{foo: bar.baz,name: nameOf({firstName: first,lastName: last})})',filepath:'/path/to/some_test.js',line:1}));");
+             "assert(assert._expr(assert._capt(!assert._capt({foo:assert._capt(assert._capt(bar,'arguments/0/argument/properties/0/value/object').baz,'arguments/0/argument/properties/0/value'),name:assert._capt(nameOf(assert._capt({firstName:assert._capt(first,'arguments/0/argument/properties/1/value/arguments/0/properties/0/value'),lastName:assert._capt(last,'arguments/0/argument/properties/1/value/arguments/0/properties/1/value')},'arguments/0/argument/properties/1/value/arguments/0')),'arguments/0/argument/properties/1/value')},'arguments/0/argument'),'arguments/0'),{content:'assert(!{foo: bar.baz,name: nameOf({firstName: first,lastName: last})})',filepath:'/path/to/some_test.js',line:1}));");
 
         inst("assert.deepEqual({foo: bar, hoge: fuga}, {hoge: fuga, foo: bar});",
-             "assert.deepEqual(assert._expr({foo:assert._capt(bar,'arguments/0/properties/0/value'),hoge:assert._capt(fuga,'arguments/0/properties/1/value')},{content:'assert.deepEqual({foo: bar,hoge: fuga}, {hoge: fuga,foo: bar})',filepath:'/path/to/some_test.js',line:1}),assert._expr({hoge:assert._capt(fuga,'arguments/1/properties/0/value'),foo:assert._capt(bar,'arguments/1/properties/1/value')},{content:'assert.deepEqual({foo: bar,hoge: fuga}, {hoge: fuga,foo: bar})',filepath:'/path/to/some_test.js',line:1}));");
+             "assert.deepEqual(assert._expr(assert._capt({foo:assert._capt(bar,'arguments/0/properties/0/value'),hoge:assert._capt(fuga,'arguments/0/properties/1/value')},'arguments/0'),{content:'assert.deepEqual({foo: bar,hoge: fuga}, {hoge: fuga,foo: bar})',filepath:'/path/to/some_test.js',line:1}),assert._expr(assert._capt({hoge:assert._capt(fuga,'arguments/1/properties/0/value'),foo:assert._capt(bar,'arguments/1/properties/1/value')},'arguments/1'),{content:'assert.deepEqual({foo: bar,hoge: fuga}, {hoge: fuga,foo: bar})',filepath:'/path/to/some_test.js',line:1}));");
     });
 
 
@@ -402,21 +402,24 @@ describe('instrumentation spec', function () {
         });
 
         describe('Enhanced Object Literals', function () {
+
             describe('Computed (dynamic) property names', function () {
                 inst("assert({[num]: foo});",
-                     "assert(assert._expr({[assert._capt(num,'arguments/0/properties/0/key')]:assert._capt(foo,'arguments/0/properties/0/value')},{content:'assert({ [num]: foo })',filepath:'/path/to/some_test.js',line:1}));");
+                     "assert(assert._expr(assert._capt({[assert._capt(num,'arguments/0/properties/0/key')]:assert._capt(foo,'arguments/0/properties/0/value')},'arguments/0'),{content:'assert({ [num]: foo })',filepath:'/path/to/some_test.js',line:1}));");
 
                 inst("assert({[ 'prop_' + (() => bar())() ]: 42});",
-                     "assert(assert._expr({[assert._capt('prop_'+assert._capt((()=>bar())(),'arguments/0/properties/0/key/right'),'arguments/0/properties/0/key')]:42},{content:'assert({ [\\'prop_\\' + (() => bar())()]: 42 })',filepath:'/path/to/some_test.js',line:1}));");
+                     "assert(assert._expr(assert._capt({[assert._capt('prop_'+assert._capt((()=>bar())(),'arguments/0/properties/0/key/right'),'arguments/0/properties/0/key')]:42},'arguments/0'),{content:'assert({ [\\'prop_\\' + (() => bar())()]: 42 })',filepath:'/path/to/some_test.js',line:1}));");
 
                 inst("assert({[`prop_${generate(seed)}`]: foo});",
-                     "assert(assert._expr({[assert._capt(`prop_${assert._capt(generate(assert._capt(seed,'arguments/0/properties/0/key/expressions/0/arguments/0')),'arguments/0/properties/0/key/expressions/0')}`,'arguments/0/properties/0/key')]:assert._capt(foo,'arguments/0/properties/0/value')},{content:'assert({ [`prop_${ generate(seed) }`]: foo })',filepath:'/path/to/some_test.js',line:1}));");
+                     "assert(assert._expr(assert._capt({[assert._capt(`prop_${assert._capt(generate(assert._capt(seed,'arguments/0/properties/0/key/expressions/0/arguments/0')),'arguments/0/properties/0/key/expressions/0')}`,'arguments/0/properties/0/key')]:assert._capt(foo,'arguments/0/properties/0/value')},'arguments/0'),{content:'assert({ [`prop_${ generate(seed) }`]: foo })',filepath:'/path/to/some_test.js',line:1}));");
             });
-            describe('shorthand literal will not be instrumented', function () {
+
+            describe('shorthand literal itself will not be instrumented', function () {
                 inst("assert({foo});",
-                     "assert({foo});");
+                     "assert(assert._expr(assert._capt({foo},'arguments/0'),{content:'assert({ foo })',filepath:'/path/to/some_test.js',line:1}));");
+
                 inst("assert({foo, bar: baz});",
-                     "assert(assert._expr({foo,bar:assert._capt(baz,'arguments/0/properties/1/value')},{content:'assert({foo,bar: baz})',filepath:'/path/to/some_test.js',line:1}));");
+                     "assert(assert._expr(assert._capt({foo,bar:assert._capt(baz,'arguments/0/properties/1/value')},'arguments/0'),{content:'assert({foo,bar: baz})',filepath:'/path/to/some_test.js',line:1}));");
             });
         });
     });
