@@ -349,6 +349,8 @@ describe('instrumentation spec', function () {
                  "assert(assert._expr(assert._capt(`Hello`,'arguments/0'),{content:'assert(`Hello`)',filepath:'/path/to/some_test.js',line:1}));");
             inst("assert(`Hello, ${nickname}`);",
                  "assert(assert._expr(assert._capt(`Hello, ${assert._capt(nickname,'arguments/0/expressions/0')}`,'arguments/0'),{content:'assert(`Hello, ${ nickname }`)',filepath:'/path/to/some_test.js',line:1}));");
+            inst("assert(`Hello, ${user.nickname}`);",
+                 "assert(assert._expr(assert._capt(`Hello, ${assert._capt(assert._capt(user,'arguments/0/expressions/0/object').nickname,'arguments/0/expressions/0')}`,'arguments/0'),{content:'assert(`Hello, ${ user.nickname }`)',filepath:'/path/to/some_test.js',line:1}));");
         });
 
         describe('TaggedTemplateExpression', function () {
@@ -356,6 +358,8 @@ describe('instrumentation spec', function () {
                  "assert(assert._expr(assert._capt(fn`a${1}`,'arguments/0'),{content:'assert(fn`a${ 1 }`)',filepath:'/path/to/some_test.js',line:1}));");
             inst("assert(fn`a${foo}b${bar}c${baz}`);",
                  "assert(assert._expr(assert._capt(fn`a${assert._capt(foo,'arguments/0/quasi/expressions/0')}b${assert._capt(bar,'arguments/0/quasi/expressions/1')}c${assert._capt(baz,'arguments/0/quasi/expressions/2')}`,'arguments/0'),{content:'assert(fn`a${ foo }b${ bar }c${ baz }`)',filepath:'/path/to/some_test.js',line:1}));");
+            inst("assert(fn`driver ${bob.name}, navigator ${alice.getName()}`);",
+                 "assert(assert._expr(assert._capt(fn`driver ${assert._capt(assert._capt(bob,'arguments/0/quasi/expressions/0/object').name,'arguments/0/quasi/expressions/0')}, navigator ${assert._capt(assert._capt(alice,'arguments/0/quasi/expressions/1/callee/object').getName(),'arguments/0/quasi/expressions/1')}`,'arguments/0'),{content:'assert(fn`driver ${ bob.name }, navigator ${ alice.getName() }`)',filepath:'/path/to/some_test.js',line:1}));");
         });
 
         describe('ArrowFunctionExpression will not be instrumented', function () {
@@ -365,8 +369,8 @@ describe('instrumentation spec', function () {
                  "assert((v,i)=>v+i);");
             inst("assert(v => ({even: v, odd: v + 1}));",
                  "assert(v=>({even:v,odd:v+1}));");
-            inst("assert(foo === ((v, i) => v + i)());",
-                 "assert(assert._expr(assert._capt(assert._capt(foo,'arguments/0/left')===assert._capt(((v,i)=>v+i)(),'arguments/0/right'),'arguments/0'),{content:'assert(foo === ((v, i) => v + i)())',filepath:'/path/to/some_test.js',line:1}));");
+            inst("assert(seven === ((v, i) => v + i)(four, five));",
+                 "assert(assert._expr(assert._capt(assert._capt(seven,'arguments/0/left')===assert._capt(((v,i)=>v+i)(assert._capt(four,'arguments/0/right/arguments/0'),assert._capt(five,'arguments/0/right/arguments/1')),'arguments/0/right'),'arguments/0'),{content:'assert(seven === ((v, i) => v + i)(four, five))',filepath:'/path/to/some_test.js',line:1}));");
         });
 
         describe('ClassExpression will not be instrumented', function () {
