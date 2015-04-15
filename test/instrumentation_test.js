@@ -42,7 +42,7 @@ describe('instrumentation spec', function () {
     }
 
 
-    describe('Non target', function () {
+    describe('NonTarget', function () {
         inst("assert.hoge(falsyStr);",
              "assert.hoge(falsyStr);");
 
@@ -72,13 +72,6 @@ describe('instrumentation spec', function () {
     });
 
 
-    describe('multiline, multiassert', function () {
-        inst("assert.equal(\nstr,\nanotherStr\n);\n\nassert.equal(\nstr,\nyetAnotherStr\n);",
-             "assert.equal(assert._expr(assert._capt(str,'arguments/0'),{content:'assert.equal(str, anotherStr)',filepath:'/path/to/some_test.js',line:1}),assert._expr(assert._capt(anotherStr,'arguments/1'),{content:'assert.equal(str, anotherStr)',filepath:'/path/to/some_test.js',line:1}));assert.equal(assert._expr(assert._capt(str,'arguments/0'),{content:'assert.equal(str, yetAnotherStr)',filepath:'/path/to/some_test.js',line:6}),assert._expr(assert._capt(yetAnotherStr,'arguments/1'),{content:'assert.equal(str, yetAnotherStr)',filepath:'/path/to/some_test.js',line:6}));");
-    });
-
-
-
     describe('Identifier', function () {
         inst("assert(falsyStr);",
              "assert(assert._expr(assert._capt(falsyStr,'arguments/0'),{content:'assert(falsyStr)',filepath:'/path/to/some_test.js',line:1}));");
@@ -94,6 +87,12 @@ describe('instrumentation spec', function () {
 
         inst("assert.equal(str, anotherStr, messageStr);",
              "assert.equal(assert._expr(assert._capt(str,'arguments/0'),{content:'assert.equal(str, anotherStr, messageStr)',filepath:'/path/to/some_test.js',line:1}),assert._expr(assert._capt(anotherStr,'arguments/1'),{content:'assert.equal(str, anotherStr, messageStr)',filepath:'/path/to/some_test.js',line:1}),messageStr);");
+    });
+
+
+    describe('Identifier: multiline, multiassert', function () {
+        inst("assert.equal(\nstr,\nanotherStr\n);\n\nassert.equal(\nstr,\nyetAnotherStr\n);",
+             "assert.equal(assert._expr(assert._capt(str,'arguments/0'),{content:'assert.equal(str, anotherStr)',filepath:'/path/to/some_test.js',line:1}),assert._expr(assert._capt(anotherStr,'arguments/1'),{content:'assert.equal(str, anotherStr)',filepath:'/path/to/some_test.js',line:1}));assert.equal(assert._expr(assert._capt(str,'arguments/0'),{content:'assert.equal(str, yetAnotherStr)',filepath:'/path/to/some_test.js',line:6}),assert._expr(assert._capt(yetAnotherStr,'arguments/1'),{content:'assert.equal(str, yetAnotherStr)',filepath:'/path/to/some_test.js',line:6}));");
     });
 
 
@@ -133,9 +132,6 @@ describe('instrumentation spec', function () {
 
         inst("assert(!!foo.bar);",
              "assert(assert._expr(assert._capt(!assert._capt(!assert._capt(assert._capt(foo,'arguments/0/argument/argument/object').bar,'arguments/0/argument/argument'),'arguments/0/argument'),'arguments/0'),{content:'assert(!!foo.bar)',filepath:'/path/to/some_test.js',line:1}));");
-
-        inst("assert(delete foo);",
-             "assert(assert._expr(assert._capt(delete foo,'arguments/0'),{content:'assert(delete foo)',filepath:'/path/to/some_test.js',line:1}));");
 
         inst("assert(delete foo.bar);",
              "assert(assert._expr(assert._capt(delete assert._capt(assert._capt(foo,'arguments/0/argument/object').bar,'arguments/0/argument'),'arguments/0'),{content:'assert(delete foo.bar)',filepath:'/path/to/some_test.js',line:1}));");
@@ -292,7 +288,7 @@ describe('instrumentation spec', function () {
     });
 
 
-    describe('RegularExpression will not be instrumented', function () {
+    describe('Literal: regular expression will not be instrumented', function () {
         inst("assert(/^not/.exec(str));",
              "assert(assert._expr(assert._capt(/^not/.exec(assert._capt(str,'arguments/0/arguments/0')),'arguments/0'),{content:'assert(/^not/.exec(str))',filepath:'/path/to/some_test.js',line:1}));");
     });
@@ -325,7 +321,7 @@ describe('instrumentation spec', function () {
     });
 
 
-    describe('FunctionExpression will not be instrumented', function () {
+    describe('FunctionExpression: body will not be instrumented', function () {
         inst("assert(function (a, b) { return a + b; });",
              "assert(function(a,b){return a+b;});");
         inst("assert(baz === (function (a, b) { return a + b; })(foo, bar));",
@@ -333,7 +329,7 @@ describe('instrumentation spec', function () {
     });
 
 
-    describe('multibyte string literal', function () {
+    describe('Literal: multibyte string literal', function () {
         inst("assert(fuga !== 'ふが');",
              "assert(assert._expr(assert._capt(assert._capt(fuga,'arguments/0/left')!=='\\u3075\\u304C','arguments/0'),{content:'assert(fuga !== \\'\\u3075\\u304C\\')',filepath:'/path/to/some_test.js',line:1}));");
 
@@ -342,7 +338,7 @@ describe('instrumentation spec', function () {
     });
 
 
-    describe('ES6 features', function () {
+    describe('ES6', function () {
 
         describe('TemplateLiteral', function () {
             inst("assert(`Hello`);",
@@ -362,7 +358,7 @@ describe('instrumentation spec', function () {
                  "assert(assert._expr(assert._capt(fn`driver ${assert._capt(assert._capt(bob,'arguments/0/quasi/expressions/0/object').name,'arguments/0/quasi/expressions/0')}, navigator ${assert._capt(assert._capt(alice,'arguments/0/quasi/expressions/1/callee/object').getName(),'arguments/0/quasi/expressions/1')}`,'arguments/0'),{content:'assert(fn`driver ${ bob.name }, navigator ${ alice.getName() }`)',filepath:'/path/to/some_test.js',line:1}));");
         });
 
-        describe('ArrowFunctionExpression will not be instrumented', function () {
+        describe('ArrowFunctionExpression: body will not be instrumented', function () {
             inst("assert(v => v + 1);",
                  "assert(v=>v+1);");
             inst("assert((v, i) => v + i);",
@@ -373,19 +369,19 @@ describe('instrumentation spec', function () {
                  "assert(assert._expr(assert._capt(assert._capt(seven,'arguments/0/left')===assert._capt(((v,i)=>v+i)(assert._capt(four,'arguments/0/right/arguments/0'),assert._capt(five,'arguments/0/right/arguments/1')),'arguments/0/right'),'arguments/0'),{content:'assert(seven === ((v, i) => v + i)(four, five))',filepath:'/path/to/some_test.js',line:1}));");
         });
 
-        describe('ClassExpression will not be instrumented', function () {
+        describe('ClassExpression: body will not be instrumented', function () {
             inst("assert(class Me { getClassName() { return foo + Me.name; } });",
                  "assert(class Me{getClassName(){return foo+Me.name;}});");
         });
 
-        describe('left hand side of Destructuring will not be instrumented', function () {
+        describe('AssignmentExpression: left hand side of Destructuring will not be instrumented', function () {
             inst("assert([x] = [3]);",
                  "assert(assert._expr(assert._capt([x]=assert._capt([3],'arguments/0/right'),'arguments/0'),{content:'assert([x] = [3])',filepath:'/path/to/some_test.js',line:1}));");
             inst("assert([x] = [foo]);",
                  "assert(assert._expr(assert._capt([x]=assert._capt([assert._capt(foo,'arguments/0/right/elements/0')],'arguments/0/right'),'arguments/0'),{content:'assert([x] = [foo])',filepath:'/path/to/some_test.js',line:1}));");
         });
 
-        describe('Binary and Octal Literals', function () {
+        describe('Literal: Binary and Octal Literals', function () {
             inst("assert(0b111110111);",
                  "assert(503);");
             inst("assert(0o767);",
@@ -403,7 +399,7 @@ describe('instrumentation spec', function () {
 
         describe('Enhanced Object Literals', function () {
 
-            describe('Computed (dynamic) property names', function () {
+            describe('Property: Computed (dynamic) property names', function () {
                 inst("assert({[num]: foo});",
                      "assert(assert._expr(assert._capt({[assert._capt(num,'arguments/0/properties/0/key')]:assert._capt(foo,'arguments/0/properties/0/value')},'arguments/0'),{content:'assert({ [num]: foo })',filepath:'/path/to/some_test.js',line:1}));");
 
@@ -414,7 +410,7 @@ describe('instrumentation spec', function () {
                      "assert(assert._expr(assert._capt({[assert._capt(`prop_${assert._capt(generate(assert._capt(seed,'arguments/0/properties/0/key/expressions/0/arguments/0')),'arguments/0/properties/0/key/expressions/0')}`,'arguments/0/properties/0/key')]:assert._capt(foo,'arguments/0/properties/0/value')},'arguments/0'),{content:'assert({ [`prop_${ generate(seed) }`]: foo })',filepath:'/path/to/some_test.js',line:1}));");
             });
 
-            describe('shorthand literal itself will not be instrumented', function () {
+            describe('Property: shorthand literal itself will not be instrumented', function () {
                 inst("assert({foo});",
                      "assert(assert._expr(assert._capt({foo},'arguments/0'),{content:'assert({ foo })',filepath:'/path/to/some_test.js',line:1}));");
 
