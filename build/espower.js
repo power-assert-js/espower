@@ -481,8 +481,8 @@ var estraverse = _dereq_('estraverse');
 var syntax = estraverse.Syntax;
 var caputuringTargetTypes = [
     // syntax.Property,
-    // syntax.ObjectExpression,
-    // syntax.ArrayExpression,
+    syntax.ObjectExpression,
+    syntax.ArrayExpression,
     // syntax.ConditionalExpression,
     syntax.Identifier,
     syntax.MemberExpression,
