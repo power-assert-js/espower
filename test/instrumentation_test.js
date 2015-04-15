@@ -255,13 +255,13 @@ describe('instrumentation spec', function () {
 
     describe('ArrayExpression', function () {
         inst("assert([foo, bar]);",
-             "assert(assert._expr([assert._capt(foo,'arguments/0/elements/0'),assert._capt(bar,'arguments/0/elements/1')],{content:'assert([foo,bar])',filepath:'/path/to/some_test.js',line:1}));");
+             "assert(assert._expr(assert._capt([assert._capt(foo,'arguments/0/elements/0'),assert._capt(bar,'arguments/0/elements/1')],'arguments/0'),{content:'assert([foo,bar])',filepath:'/path/to/some_test.js',line:1}));");
 
         inst("assert(typeof [[foo.bar, baz(moo)], + fourStr] === 'number');",
-             "assert(assert._expr(assert._capt(assert._capt(typeof[[assert._capt(assert._capt(foo,'arguments/0/left/argument/elements/0/elements/0/object').bar,'arguments/0/left/argument/elements/0/elements/0'),assert._capt(baz(assert._capt(moo,'arguments/0/left/argument/elements/0/elements/1/arguments/0')),'arguments/0/left/argument/elements/0/elements/1')],assert._capt(+assert._capt(fourStr,'arguments/0/left/argument/elements/1/argument'),'arguments/0/left/argument/elements/1')],'arguments/0/left')==='number','arguments/0'),{content:'assert(typeof [[foo.bar,baz(moo)],+fourStr] === \\'number\\')',filepath:'/path/to/some_test.js',line:1}));");
+             "assert(assert._expr(assert._capt(assert._capt(typeof assert._capt([assert._capt([assert._capt(assert._capt(foo,'arguments/0/left/argument/elements/0/elements/0/object').bar,'arguments/0/left/argument/elements/0/elements/0'),assert._capt(baz(assert._capt(moo,'arguments/0/left/argument/elements/0/elements/1/arguments/0')),'arguments/0/left/argument/elements/0/elements/1')],'arguments/0/left/argument/elements/0'),assert._capt(+assert._capt(fourStr,'arguments/0/left/argument/elements/1/argument'),'arguments/0/left/argument/elements/1')],'arguments/0/left/argument'),'arguments/0/left')==='number','arguments/0'),{content:'assert(typeof [[foo.bar,baz(moo)],+fourStr] === \\'number\\')',filepath:'/path/to/some_test.js',line:1}));");
 
         inst("assert.notDeepEqual([foo, bar], [hoge, fuga, piyo]);",
-             "assert.notDeepEqual(assert._expr([assert._capt(foo,'arguments/0/elements/0'),assert._capt(bar,'arguments/0/elements/1')],{content:'assert.notDeepEqual([foo,bar], [hoge,fuga,piyo])',filepath:'/path/to/some_test.js',line:1}),assert._expr([assert._capt(hoge,'arguments/1/elements/0'),assert._capt(fuga,'arguments/1/elements/1'),assert._capt(piyo,'arguments/1/elements/2')],{content:'assert.notDeepEqual([foo,bar], [hoge,fuga,piyo])',filepath:'/path/to/some_test.js',line:1}));");
+             "assert.notDeepEqual(assert._expr(assert._capt([assert._capt(foo,'arguments/0/elements/0'),assert._capt(bar,'arguments/0/elements/1')],'arguments/0'),{content:'assert.notDeepEqual([foo,bar], [hoge,fuga,piyo])',filepath:'/path/to/some_test.js',line:1}),assert._expr(assert._capt([assert._capt(hoge,'arguments/1/elements/0'),assert._capt(fuga,'arguments/1/elements/1'),assert._capt(piyo,'arguments/1/elements/2')],'arguments/1'),{content:'assert.notDeepEqual([foo,bar], [hoge,fuga,piyo])',filepath:'/path/to/some_test.js',line:1}));");
     });
 
 
@@ -380,9 +380,9 @@ describe('instrumentation spec', function () {
 
         describe('left hand side of Destructuring will not be instrumented', function () {
             inst("assert([x] = [3]);",
-                 "assert(assert._expr(assert._capt([x]=[3],'arguments/0'),{content:'assert([x] = [3])',filepath:'/path/to/some_test.js',line:1}));");
+                 "assert(assert._expr(assert._capt([x]=assert._capt([3],'arguments/0/right'),'arguments/0'),{content:'assert([x] = [3])',filepath:'/path/to/some_test.js',line:1}));");
             inst("assert([x] = [foo]);",
-                 "assert(assert._expr(assert._capt([x]=[assert._capt(foo,'arguments/0/right/elements/0')],'arguments/0'),{content:'assert([x] = [foo])',filepath:'/path/to/some_test.js',line:1}));");
+                 "assert(assert._expr(assert._capt([x]=assert._capt([assert._capt(foo,'arguments/0/right/elements/0')],'arguments/0/right'),'arguments/0'),{content:'assert([x] = [foo])',filepath:'/path/to/some_test.js',line:1}));");
         });
 
         describe('Binary and Octal Literals', function () {
@@ -396,9 +396,9 @@ describe('instrumentation spec', function () {
             inst("assert(hello(...names));",
                  "assert(assert._expr(assert._capt(hello(...assert._capt(names,'arguments/0/arguments/0/argument')),'arguments/0'),{content:'assert(hello(...names))',filepath:'/path/to/some_test.js',line:1}));");
             inst("assert([head, ...tail].length);",
-                 "assert(assert._expr(assert._capt([assert._capt(head,'arguments/0/object/elements/0'),...assert._capt(tail,'arguments/0/object/elements/1/argument')].length,'arguments/0'),{content:'assert([head,...tail].length)',filepath:'/path/to/some_test.js',line:1}));");
+                 "assert(assert._expr(assert._capt(assert._capt([assert._capt(head,'arguments/0/object/elements/0'),...assert._capt(tail,'arguments/0/object/elements/1/argument')],'arguments/0/object').length,'arguments/0'),{content:'assert([head,...tail].length)',filepath:'/path/to/some_test.js',line:1}));");
             inst("assert(f(head, ...iter(), ...[foo, bar]));",
-                 "assert(assert._expr(assert._capt(f(assert._capt(head,'arguments/0/arguments/0'),...assert._capt(iter(),'arguments/0/arguments/1/argument'),...[assert._capt(foo,'arguments/0/arguments/2/argument/elements/0'),assert._capt(bar,'arguments/0/arguments/2/argument/elements/1')]),'arguments/0'),{content:'assert(f(head, ...iter(), ...[foo,bar]))',filepath:'/path/to/some_test.js',line:1}));");
+                 "assert(assert._expr(assert._capt(f(assert._capt(head,'arguments/0/arguments/0'),...assert._capt(iter(),'arguments/0/arguments/1/argument'),...assert._capt([assert._capt(foo,'arguments/0/arguments/2/argument/elements/0'),assert._capt(bar,'arguments/0/arguments/2/argument/elements/1')],'arguments/0/arguments/2/argument')),'arguments/0'),{content:'assert(f(head, ...iter(), ...[foo,bar]))',filepath:'/path/to/some_test.js',line:1}));");
         });
 
         describe('Enhanced Object Literals', function () {
