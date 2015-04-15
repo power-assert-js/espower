@@ -32,14 +32,9 @@ espower.defaultOptions = defaultOptions;
 espower.Instrumentor = Instrumentor;
 espower.AssertionVisitor = _dereq_('./lib/assertion-visitor');
 espower.EspowerError = _dereq_('./lib/espower-error');
-espower.rules = {
-    supportedNodeTypes: _dereq_('./lib/rules/supported-node-types'),
-    toBeSkipped: _dereq_('./lib/rules/to-be-skipped'),
-    toBeCaptured: _dereq_('./lib/rules/to-be-captured')
-};
 module.exports = espower;
 
-},{"./lib/assertion-visitor":2,"./lib/default-options":3,"./lib/espower-error":4,"./lib/instrumentor":5,"./lib/rules/supported-node-types":6,"./lib/rules/to-be-captured":7,"./lib/rules/to-be-skipped":8,"xtend":63}],2:[function(_dereq_,module,exports){
+},{"./lib/assertion-visitor":2,"./lib/default-options":3,"./lib/espower-error":4,"./lib/instrumentor":5,"xtend":63}],2:[function(_dereq_,module,exports){
 'use strict';
 
 var estraverse = _dereq_('estraverse'),
@@ -50,6 +45,8 @@ var estraverse = _dereq_('estraverse'),
     syntax = estraverse.Syntax,
     SourceMapConsumer = _dereq_('source-map').SourceMapConsumer,
     EspowerError = _dereq_('./espower-error'),
+    toBeSkipped = _dereq_('./rules/to-be-skipped'),
+    toBeCaptured = _dereq_('./rules/to-be-captured'),
     canonicalCodeOptions = {
         format: {
             indent: {
@@ -219,6 +216,14 @@ AssertionVisitor.prototype.captureNode = function (target, path) {
     });
 };
 
+AssertionVisitor.prototype.toBeSkipped = function (currentNode, parentNode, currentKey) {
+    return toBeSkipped(currentNode, parentNode, currentKey);
+};
+
+AssertionVisitor.prototype.toBeCaptured = function (currentNode, parentNode, currentKey) {
+    return toBeCaptured(currentNode, parentNode, currentKey);
+};
+
 function guessPowerAssertCalleeObjectFor (node) {
     switch(node.type) {
     case syntax.Identifier:
@@ -301,7 +306,7 @@ function newNodeWithLocationCopyOf (original) {
 
 module.exports = AssertionVisitor;
 
-},{"./espower-error":4,"clone":15,"deep-equal":16,"escodegen":26,"espurify":44,"estraverse":49,"source-map":51}],3:[function(_dereq_,module,exports){
+},{"./espower-error":4,"./rules/to-be-captured":7,"./rules/to-be-skipped":8,"clone":15,"deep-equal":16,"escodegen":26,"espurify":44,"estraverse":49,"source-map":51}],3:[function(_dereq_,module,exports){
 'use strict';
 
 module.exports = function defaultOptions () {
@@ -355,8 +360,6 @@ var estraverse = _dereq_('estraverse'),
     clone = _dereq_('clone'),
     AssertionVisitor = _dereq_('./assertion-visitor'),
     EspowerError = _dereq_('./espower-error'),
-    toBeSkipped = _dereq_('./rules/to-be-skipped'),
-    toBeCaptured = _dereq_('./rules/to-be-captured'),
     typeName = _dereq_('type-name');
 
 function Instrumentor (options) {
@@ -378,7 +381,7 @@ Instrumentor.prototype.instrument = function (ast) {
                 path = controller.path(),
                 currentKey = path ? path[path.length - 1] : null;
             if (assertionVisitor) {
-                if (toBeSkipped(currentNode, parentNode, currentKey)) {
+                if (assertionVisitor.toBeSkipped(currentNode, parentNode, currentKey)) {
                     skipping = true;
                     return controller.skip();
                 }
@@ -415,7 +418,7 @@ Instrumentor.prototype.instrument = function (ast) {
             if (!assertionVisitor.isCapturingArgument()) {
                 return undefined;
             }
-            if (toBeCaptured(currentNode, parentNode, currentKey)) {
+            if (assertionVisitor.toBeCaptured(currentNode, parentNode, currentKey)) {
                 resultTree = assertionVisitor.captureNode(currentNode, path);
             }
             if (assertionVisitor.isLeavingArgument(path)) {
@@ -449,7 +452,7 @@ function verifyOptionPrerequisites (options) {
 
 module.exports = Instrumentor;
 
-},{"./assertion-visitor":2,"./espower-error":4,"./rules/to-be-captured":7,"./rules/to-be-skipped":8,"clone":15,"escallmatch":19,"estraverse":49,"type-name":62}],6:[function(_dereq_,module,exports){
+},{"./assertion-visitor":2,"./espower-error":4,"clone":15,"escallmatch":19,"estraverse":49,"type-name":62}],6:[function(_dereq_,module,exports){
 'use strict';
 
 var estraverse = _dereq_('estraverse'),
