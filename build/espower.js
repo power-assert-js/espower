@@ -32,24 +32,22 @@ espower.defaultOptions = defaultOptions;
 espower.Instrumentor = Instrumentor;
 espower.AssertionVisitor = _dereq_('./lib/assertion-visitor');
 espower.EspowerError = _dereq_('./lib/espower-error');
-espower.rules = {
-    supportedNodeTypes: _dereq_('./lib/rules/supported-node-types'),
-    toBeSkipped: _dereq_('./lib/rules/to-be-skipped'),
-    toBeCaptured: _dereq_('./lib/rules/to-be-captured')
-};
 module.exports = espower;
 
-},{"./lib/assertion-visitor":2,"./lib/default-options":3,"./lib/espower-error":4,"./lib/instrumentor":5,"./lib/rules/supported-node-types":6,"./lib/rules/to-be-captured":7,"./lib/rules/to-be-skipped":8,"xtend":64}],2:[function(_dereq_,module,exports){
+},{"./lib/assertion-visitor":2,"./lib/default-options":4,"./lib/espower-error":5,"./lib/instrumentor":6,"xtend":61}],2:[function(_dereq_,module,exports){
 'use strict';
 
 var estraverse = _dereq_('estraverse'),
     escodegen = _dereq_('escodegen'),
     espurify = _dereq_('espurify'),
-    clone = _dereq_('clone'),
+    espurifyWithRaw = espurify.customize({extra: 'raw'}),
+    isArray = _dereq_('isarray'),
     deepEqual = _dereq_('deep-equal'),
     syntax = estraverse.Syntax,
     SourceMapConsumer = _dereq_('source-map').SourceMapConsumer,
     EspowerError = _dereq_('./espower-error'),
+    toBeSkipped = _dereq_('./rules/to-be-skipped'),
+    toBeCaptured = _dereq_('./rules/to-be-captured'),
     canonicalCodeOptions = {
         format: {
             indent: {
@@ -106,6 +104,10 @@ AssertionVisitor.prototype.enter = function (currentNode, parentNode) {
     if (!this.lineNum) {
         this.lineNum = currentNode.loc.start.line;
     }
+};
+
+AssertionVisitor.prototype.leave = function (currentNode, parentNode) {
+    // nothing to do now
 };
 
 AssertionVisitor.prototype.verifyNotInstrumented = function (currentNode) {
@@ -215,6 +217,14 @@ AssertionVisitor.prototype.captureNode = function (target, path) {
     });
 };
 
+AssertionVisitor.prototype.toBeSkipped = function (currentNode, parentNode, currentKey) {
+    return toBeSkipped(currentNode, parentNode, currentKey);
+};
+
+AssertionVisitor.prototype.toBeCaptured = function (currentNode, parentNode, currentKey) {
+    return toBeCaptured(currentNode, parentNode, currentKey);
+};
+
 function guessPowerAssertCalleeObjectFor (node) {
     switch(node.type) {
     case syntax.Identifier:
@@ -226,7 +236,7 @@ function guessPowerAssertCalleeObjectFor (node) {
 }
 
 function generateCanonicalCode (node) {
-    var ast = clone(node);
+    var ast = espurifyWithRaw(node);
     estraverse.replace(ast, {
         leave: function (currentNode, parentNode) {
             if (currentNode.type === syntax.Literal && typeof currentNode.raw !== 'undefined') {
@@ -260,6 +270,9 @@ function addToProps (props, createNode, name, value) {
             name: name
         }),
         value: value,
+        method: false,
+        shorthand: false,
+        computed: false,
         kind: 'init'
     }));
 }
@@ -283,10 +296,23 @@ function isPathIdentical (path1, path2) {
 function newNodeWithLocationCopyOf (original) {
     return function (newNode) {
         if (typeof original.loc !== 'undefined') {
-            newNode.loc = clone(original.loc);
+            var newLoc = {
+                start: {
+                    line: original.loc.start.line,
+                    column: original.loc.start.column
+                },
+                end: {
+                    line: original.loc.end.line,
+                    column: original.loc.end.column
+                }
+            };
+            if (typeof original.loc.source !== 'undefined') {
+                newLoc.source = original.loc.source;
+            }
+            newNode.loc = newLoc;
         }
-        if (typeof original.range !== 'undefined') {
-            newNode.range = clone(original.range);
+        if (isArray(original.range)) {
+            newNode.range = [original.range[0], original.range[1]];
         }
         return newNode;
     };
@@ -294,7 +320,44 @@ function newNodeWithLocationCopyOf (original) {
 
 module.exports = AssertionVisitor;
 
-},{"./espower-error":4,"clone":15,"deep-equal":16,"escodegen":27,"espurify":45,"estraverse":50,"source-map":52}],3:[function(_dereq_,module,exports){
+},{"./espower-error":5,"./rules/to-be-captured":8,"./rules/to-be-skipped":9,"deep-equal":12,"escodegen":22,"espurify":40,"estraverse":46,"isarray":48,"source-map":49}],3:[function(_dereq_,module,exports){
+/**
+ * Copyright (C) 2012 Yusuke Suzuki (twitter: @Constellation) and other contributors.
+ * Released under the BSD license.
+ * https://github.com/Constellation/esmangle/blob/master/LICENSE.BSD
+ */
+'use strict';
+
+var isArray = _dereq_('isarray');
+
+function deepCopyInternal (obj, result) {
+    var key, val;
+    for (key in obj) {
+        if (key.lastIndexOf('_', 0) === 0) {
+            continue;
+        }
+        if (obj.hasOwnProperty(key)) {
+            val = obj[key];
+            if (typeof val === 'object' && val !== null) {
+                if (val instanceof RegExp) {
+                    val = new RegExp(val);
+                } else {
+                    val = deepCopyInternal(val, isArray(val) ? [] : {});
+                }
+            }
+            result[key] = val;
+        }
+    }
+    return result;
+}
+
+function deepCopy (obj) {
+    return deepCopyInternal(obj, isArray(obj) ? [] : {});
+}
+
+module.exports = deepCopy;
+
+},{"isarray":48}],4:[function(_dereq_,module,exports){
 'use strict';
 
 module.exports = function defaultOptions () {
@@ -313,7 +376,7 @@ module.exports = function defaultOptions () {
     };
 };
 
-},{}],4:[function(_dereq_,module,exports){
+},{}],5:[function(_dereq_,module,exports){
 'use strict';
 
 function EspowerError (message, stackStartFunction) {
@@ -339,17 +402,15 @@ EspowerError.prototype.name = 'EspowerError';
 
 module.exports = EspowerError;
 
-},{}],5:[function(_dereq_,module,exports){
+},{}],6:[function(_dereq_,module,exports){
 'use strict';
 
 var estraverse = _dereq_('estraverse'),
     syntax = estraverse.Syntax,
     escallmatch = _dereq_('escallmatch'),
-    clone = _dereq_('clone'),
+    cloneAst = _dereq_('./clone-ast'),
     AssertionVisitor = _dereq_('./assertion-visitor'),
     EspowerError = _dereq_('./espower-error'),
-    toBeSkipped = _dereq_('./rules/to-be-skipped'),
-    toBeCaptured = _dereq_('./rules/to-be-captured'),
     typeName = _dereq_('type-name');
 
 function Instrumentor (options) {
@@ -363,15 +424,15 @@ Instrumentor.prototype.instrument = function (ast) {
     var that = this,
         assertionVisitor,
         skipping = false,
-        result = (this.options.destructive) ? ast : clone(ast);
+        result = (this.options.destructive) ? ast : cloneAst(ast);
 
     estraverse.replace(result, {
         enter: function (currentNode, parentNode) {
             var controller = this,
                 path = controller.path(),
-                currentPath = path ? path[path.length - 1] : null;
+                currentKey = path ? path[path.length - 1] : null;
             if (assertionVisitor) {
-                if (toBeSkipped(currentNode, parentNode, currentPath)) {
+                if (assertionVisitor.toBeSkipped(currentNode, parentNode, currentKey)) {
                     skipping = true;
                     return controller.skip();
                 }
@@ -391,7 +452,8 @@ Instrumentor.prototype.instrument = function (ast) {
         },
         leave: function (currentNode, parentNode) {
             var path = this.path(),
-                resultTree = currentNode;
+                resultTree = currentNode,
+                currentKey = path ? path[path.length - 1] : null;
             if (!assertionVisitor) {
                 return undefined;
             }
@@ -400,16 +462,14 @@ Instrumentor.prototype.instrument = function (ast) {
                 return undefined;
             }
             if (assertionVisitor.isLeavingAssertion(path)) {
+                assertionVisitor.leave(currentNode, parentNode);
                 assertionVisitor = null;
                 return undefined;
             }
             if (!assertionVisitor.isCapturingArgument()) {
                 return undefined;
             }
-            if (isCalleeOfParent(currentNode, parentNode)) {
-                return undefined;
-            }
-            if (toBeCaptured(currentNode)) {
+            if (assertionVisitor.toBeCaptured(currentNode, parentNode, currentKey)) {
                 resultTree = assertionVisitor.captureNode(currentNode, path);
             }
             if (assertionVisitor.isLeavingArgument(path)) {
@@ -420,11 +480,6 @@ Instrumentor.prototype.instrument = function (ast) {
     });
     return result;
 };
-
-function isCalleeOfParent(currentNode, parentNode) {
-    return (parentNode.type === syntax.CallExpression || parentNode.type === syntax.NewExpression) &&
-        parentNode.callee === currentNode;
-}
 
 function verifyAstPrerequisites (ast, options) {
     var errorMessage;
@@ -448,7 +503,7 @@ function verifyOptionPrerequisites (options) {
 
 module.exports = Instrumentor;
 
-},{"./assertion-visitor":2,"./espower-error":4,"./rules/to-be-captured":7,"./rules/to-be-skipped":8,"clone":15,"escallmatch":19,"estraverse":50,"type-name":63}],6:[function(_dereq_,module,exports){
+},{"./assertion-visitor":2,"./clone-ast":3,"./espower-error":5,"escallmatch":15,"estraverse":46,"type-name":60}],7:[function(_dereq_,module,exports){
 'use strict';
 
 var estraverse = _dereq_('estraverse'),
@@ -467,47 +522,85 @@ module.exports = [
     syntax.ArrayExpression,
     syntax.ConditionalExpression,
     syntax.UpdateExpression,
+    syntax.TemplateLiteral,
+    syntax.TaggedTemplateExpression,
+    syntax.SpreadElement,
     syntax.Property
 ];
 
-},{"estraverse":50}],7:[function(_dereq_,module,exports){
+},{"estraverse":46}],8:[function(_dereq_,module,exports){
 'use strict';
 
-var estraverse = _dereq_('estraverse'),
-    syntax = estraverse.Syntax;
+var estraverse = _dereq_('estraverse');
+var syntax = estraverse.Syntax;
+var caputuringTargetTypes = [
+    // syntax.Property,
+    syntax.ObjectExpression,
+    syntax.ArrayExpression,
+    // syntax.ConditionalExpression,
+    syntax.Identifier,
+    syntax.MemberExpression,
+    syntax.CallExpression,
+    syntax.UnaryExpression,
+    syntax.BinaryExpression,
+    syntax.LogicalExpression,
+    syntax.AssignmentExpression,
+    syntax.NewExpression,
+    syntax.UpdateExpression,
+    syntax.TemplateLiteral,
+    syntax.TaggedTemplateExpression
+];
 
-module.exports = function toBeCaptured (currentNode) {
-    switch(currentNode.type) {
-    case syntax.Identifier:
-    case syntax.MemberExpression:
-    case syntax.CallExpression:
-    case syntax.UnaryExpression:
-    case syntax.BinaryExpression:
-    case syntax.LogicalExpression:
-    case syntax.AssignmentExpression:
-    case syntax.UpdateExpression:
-    case syntax.NewExpression:
-        return true;
-    default:
-        return false;
-    }
+function isCaputuringTargetType (currentNode) {
+    return caputuringTargetTypes.indexOf(currentNode.type) !== -1;
+}
+
+function isCalleeOfParent(parentNode, currentKey) {
+    return (parentNode.type === syntax.CallExpression || parentNode.type === syntax.NewExpression) && currentKey === 'callee';
+}
+
+function isChildOfTaggedTemplateExpression(parentNode) {
+    return parentNode.type === syntax.TaggedTemplateExpression;
+}
+
+module.exports = function toBeCaptured (currentNode, parentNode, currentKey) {
+    return isCaputuringTargetType(currentNode) &&
+        !isCalleeOfParent(parentNode, currentKey) &&
+        !isChildOfTaggedTemplateExpression(parentNode);
 };
 
-},{"estraverse":50}],8:[function(_dereq_,module,exports){
+},{"estraverse":46}],9:[function(_dereq_,module,exports){
 'use strict';
 
 var estraverse = _dereq_('estraverse'),
     syntax = estraverse.Syntax,
     supportedNodeTypes = _dereq_('./supported-node-types');
 
-function isLeftHandSideOfAssignment(parentNode, currentPath) {
+function isLeftHandSideOfAssignment(parentNode, currentKey) {
     // Do not instrument left due to 'Invalid left-hand side in assignment'
-    return parentNode.type === syntax.AssignmentExpression && currentPath === 'left';
+    return parentNode.type === syntax.AssignmentExpression && currentKey === 'left';
 }
 
-function isObjectLiteralKey(parentNode, currentPath) {
-    // Do not instrument Object literal key
-    return parentNode.type === syntax.Property && parentNode.kind === 'init' && currentPath === 'key';
+function isChildOfObjectLiteral (parentNode) {
+    return parentNode.type === syntax.Property && parentNode.kind === 'init';
+}
+
+function isObjectLiteralKey (parentNode, currentKey) {
+    return isChildOfObjectLiteral(parentNode) && currentKey === 'key';
+}
+
+function isObjectLiteralValue (parentNode, currentKey) {
+    return isChildOfObjectLiteral(parentNode) && currentKey === 'value';
+}
+
+function isNonComputedObjectLiteralKey(parentNode, currentKey) {
+    // Do not instrument non-computed Object literal key
+    return isObjectLiteralKey(parentNode, currentKey) && !parentNode.computed;
+}
+
+function isShorthandedValueOfObjectLiteral(parentNode, currentKey) {
+    // Do not instrument shorthanded Object literal value
+    return isObjectLiteralValue(parentNode, currentKey) && parentNode.shorthand;
 }
 
 function isUpdateExpression(parentNode) {
@@ -515,1610 +608,31 @@ function isUpdateExpression(parentNode) {
     return parentNode.type === syntax.UpdateExpression;
 }
 
-function isCallExpressionWithNonComputedMemberExpression(currentNode, parentNode, currentPath) {
+function isCallExpressionWithNonComputedMemberExpression(currentNode, parentNode, currentKey) {
     // Do not instrument non-computed property of MemberExpression within CallExpression.
-    return currentNode.type === syntax.Identifier && parentNode.type === syntax.MemberExpression && !parentNode.computed && currentPath === 'property';
+    return currentNode.type === syntax.Identifier && parentNode.type === syntax.MemberExpression && !parentNode.computed && currentKey === 'property';
 }
 
-function isTypeOfOrDeleteUnaryExpression(currentNode, parentNode, currentPath) {
+function isTypeOfOrDeleteUnaryExpression(currentNode, parentNode, currentKey) {
     // 'typeof Identifier' or 'delete Identifier' is not instrumented
-    return currentNode.type === syntax.Identifier && parentNode.type === syntax.UnaryExpression && (parentNode.operator === 'typeof' || parentNode.operator === 'delete') && currentPath === 'argument';
+    return currentNode.type === syntax.Identifier && parentNode.type === syntax.UnaryExpression && (parentNode.operator === 'typeof' || parentNode.operator === 'delete') && currentKey === 'argument';
 }
 
 function isSupportedNodeType (node) {
     return supportedNodeTypes.indexOf(node.type) !== -1;
 }
 
-module.exports = function toBeSkipped (currentNode, parentNode, currentPath) {
+module.exports = function toBeSkipped (currentNode, parentNode, currentKey) {
     return !isSupportedNodeType(currentNode) ||
-        isLeftHandSideOfAssignment(parentNode, currentPath) ||
-        isObjectLiteralKey(parentNode, currentPath) ||
+        isLeftHandSideOfAssignment(parentNode, currentKey) ||
+        isNonComputedObjectLiteralKey(parentNode, currentKey) ||
+        isShorthandedValueOfObjectLiteral(parentNode, currentKey) ||
         isUpdateExpression(parentNode) ||
-        isCallExpressionWithNonComputedMemberExpression(currentNode, parentNode, currentPath) ||
-        isTypeOfOrDeleteUnaryExpression(currentNode, parentNode, currentPath);
+        isCallExpressionWithNonComputedMemberExpression(currentNode, parentNode, currentKey) ||
+        isTypeOfOrDeleteUnaryExpression(currentNode, parentNode, currentKey);
 };
 
-},{"./supported-node-types":6,"estraverse":50}],9:[function(_dereq_,module,exports){
-/*!
- * The buffer module from node.js, for the browser.
- *
- * @author   Feross Aboukhadijeh <feross@feross.org> <http://feross.org>
- * @license  MIT
- */
-
-var base64 = _dereq_('base64-js')
-var ieee754 = _dereq_('ieee754')
-var isArray = _dereq_('is-array')
-
-exports.Buffer = Buffer
-exports.SlowBuffer = SlowBuffer
-exports.INSPECT_MAX_BYTES = 50
-Buffer.poolSize = 8192 // not used by this implementation
-
-var kMaxLength = 0x3fffffff
-var rootParent = {}
-
-/**
- * If `Buffer.TYPED_ARRAY_SUPPORT`:
- *   === true    Use Uint8Array implementation (fastest)
- *   === false   Use Object implementation (most compatible, even IE6)
- *
- * Browsers that support typed arrays are IE 10+, Firefox 4+, Chrome 7+, Safari 5.1+,
- * Opera 11.6+, iOS 4.2+.
- *
- * Note:
- *
- * - Implementation must support adding new properties to `Uint8Array` instances.
- *   Firefox 4-29 lacked support, fixed in Firefox 30+.
- *   See: https://bugzilla.mozilla.org/show_bug.cgi?id=695438.
- *
- *  - Chrome 9-10 is missing the `TypedArray.prototype.subarray` function.
- *
- *  - IE10 has a broken `TypedArray.prototype.subarray` function which returns arrays of
- *    incorrect length in some situations.
- *
- * We detect these buggy browsers and set `Buffer.TYPED_ARRAY_SUPPORT` to `false` so they will
- * get the Object implementation, which is slower but will work correctly.
- */
-Buffer.TYPED_ARRAY_SUPPORT = (function () {
-  try {
-    var buf = new ArrayBuffer(0)
-    var arr = new Uint8Array(buf)
-    arr.foo = function () { return 42 }
-    return arr.foo() === 42 && // typed array instances can be augmented
-        typeof arr.subarray === 'function' && // chrome 9-10 lack `subarray`
-        new Uint8Array(1).subarray(1, 1).byteLength === 0 // ie10 has broken `subarray`
-  } catch (e) {
-    return false
-  }
-})()
-
-/**
- * Class: Buffer
- * =============
- *
- * The Buffer constructor returns instances of `Uint8Array` that are augmented
- * with function properties for all the node `Buffer` API functions. We use
- * `Uint8Array` so that square bracket notation works as expected -- it returns
- * a single octet.
- *
- * By augmenting the instances, we can avoid modifying the `Uint8Array`
- * prototype.
- */
-function Buffer (subject, encoding) {
-  var self = this
-  if (!(self instanceof Buffer)) return new Buffer(subject, encoding)
-
-  var type = typeof subject
-  var length
-
-  if (type === 'number') {
-    length = +subject
-  } else if (type === 'string') {
-    length = Buffer.byteLength(subject, encoding)
-  } else if (type === 'object' && subject !== null) {
-    // assume object is array-like
-    if (subject.type === 'Buffer' && isArray(subject.data)) subject = subject.data
-    length = +subject.length
-  } else {
-    throw new TypeError('must start with number, buffer, array or string')
-  }
-
-  if (length > kMaxLength) {
-    throw new RangeError('Attempt to allocate Buffer larger than maximum size: 0x' +
-      kMaxLength.toString(16) + ' bytes')
-  }
-
-  if (length < 0) length = 0
-  else length >>>= 0 // coerce to uint32
-
-  if (Buffer.TYPED_ARRAY_SUPPORT) {
-    // Preferred: Return an augmented `Uint8Array` instance for best performance
-    self = Buffer._augment(new Uint8Array(length)) // eslint-disable-line consistent-this
-  } else {
-    // Fallback: Return THIS instance of Buffer (created by `new`)
-    self.length = length
-    self._isBuffer = true
-  }
-
-  var i
-  if (Buffer.TYPED_ARRAY_SUPPORT && typeof subject.byteLength === 'number') {
-    // Speed optimization -- use set if we're copying from a typed array
-    self._set(subject)
-  } else if (isArrayish(subject)) {
-    // Treat array-ish objects as a byte array
-    if (Buffer.isBuffer(subject)) {
-      for (i = 0; i < length; i++) {
-        self[i] = subject.readUInt8(i)
-      }
-    } else {
-      for (i = 0; i < length; i++) {
-        self[i] = ((subject[i] % 256) + 256) % 256
-      }
-    }
-  } else if (type === 'string') {
-    self.write(subject, 0, encoding)
-  } else if (type === 'number' && !Buffer.TYPED_ARRAY_SUPPORT) {
-    for (i = 0; i < length; i++) {
-      self[i] = 0
-    }
-  }
-
-  if (length > 0 && length <= Buffer.poolSize) self.parent = rootParent
-
-  return self
-}
-
-function SlowBuffer (subject, encoding) {
-  if (!(this instanceof SlowBuffer)) return new SlowBuffer(subject, encoding)
-
-  var buf = new Buffer(subject, encoding)
-  delete buf.parent
-  return buf
-}
-
-Buffer.isBuffer = function isBuffer (b) {
-  return !!(b != null && b._isBuffer)
-}
-
-Buffer.compare = function compare (a, b) {
-  if (!Buffer.isBuffer(a) || !Buffer.isBuffer(b)) {
-    throw new TypeError('Arguments must be Buffers')
-  }
-
-  if (a === b) return 0
-
-  var x = a.length
-  var y = b.length
-  for (var i = 0, len = Math.min(x, y); i < len && a[i] === b[i]; i++) {}
-  if (i !== len) {
-    x = a[i]
-    y = b[i]
-  }
-  if (x < y) return -1
-  if (y < x) return 1
-  return 0
-}
-
-Buffer.isEncoding = function isEncoding (encoding) {
-  switch (String(encoding).toLowerCase()) {
-    case 'hex':
-    case 'utf8':
-    case 'utf-8':
-    case 'ascii':
-    case 'binary':
-    case 'base64':
-    case 'raw':
-    case 'ucs2':
-    case 'ucs-2':
-    case 'utf16le':
-    case 'utf-16le':
-      return true
-    default:
-      return false
-  }
-}
-
-Buffer.concat = function concat (list, totalLength) {
-  if (!isArray(list)) throw new TypeError('list argument must be an Array of Buffers.')
-
-  if (list.length === 0) {
-    return new Buffer(0)
-  } else if (list.length === 1) {
-    return list[0]
-  }
-
-  var i
-  if (totalLength === undefined) {
-    totalLength = 0
-    for (i = 0; i < list.length; i++) {
-      totalLength += list[i].length
-    }
-  }
-
-  var buf = new Buffer(totalLength)
-  var pos = 0
-  for (i = 0; i < list.length; i++) {
-    var item = list[i]
-    item.copy(buf, pos)
-    pos += item.length
-  }
-  return buf
-}
-
-Buffer.byteLength = function byteLength (str, encoding) {
-  var ret
-  str = str + ''
-  switch (encoding || 'utf8') {
-    case 'ascii':
-    case 'binary':
-    case 'raw':
-      ret = str.length
-      break
-    case 'ucs2':
-    case 'ucs-2':
-    case 'utf16le':
-    case 'utf-16le':
-      ret = str.length * 2
-      break
-    case 'hex':
-      ret = str.length >>> 1
-      break
-    case 'utf8':
-    case 'utf-8':
-      ret = utf8ToBytes(str).length
-      break
-    case 'base64':
-      ret = base64ToBytes(str).length
-      break
-    default:
-      ret = str.length
-  }
-  return ret
-}
-
-// pre-set for values that may exist in the future
-Buffer.prototype.length = undefined
-Buffer.prototype.parent = undefined
-
-// toString(encoding, start=0, end=buffer.length)
-Buffer.prototype.toString = function toString (encoding, start, end) {
-  var loweredCase = false
-
-  start = start >>> 0
-  end = end === undefined || end === Infinity ? this.length : end >>> 0
-
-  if (!encoding) encoding = 'utf8'
-  if (start < 0) start = 0
-  if (end > this.length) end = this.length
-  if (end <= start) return ''
-
-  while (true) {
-    switch (encoding) {
-      case 'hex':
-        return hexSlice(this, start, end)
-
-      case 'utf8':
-      case 'utf-8':
-        return utf8Slice(this, start, end)
-
-      case 'ascii':
-        return asciiSlice(this, start, end)
-
-      case 'binary':
-        return binarySlice(this, start, end)
-
-      case 'base64':
-        return base64Slice(this, start, end)
-
-      case 'ucs2':
-      case 'ucs-2':
-      case 'utf16le':
-      case 'utf-16le':
-        return utf16leSlice(this, start, end)
-
-      default:
-        if (loweredCase) throw new TypeError('Unknown encoding: ' + encoding)
-        encoding = (encoding + '').toLowerCase()
-        loweredCase = true
-    }
-  }
-}
-
-Buffer.prototype.equals = function equals (b) {
-  if (!Buffer.isBuffer(b)) throw new TypeError('Argument must be a Buffer')
-  if (this === b) return true
-  return Buffer.compare(this, b) === 0
-}
-
-Buffer.prototype.inspect = function inspect () {
-  var str = ''
-  var max = exports.INSPECT_MAX_BYTES
-  if (this.length > 0) {
-    str = this.toString('hex', 0, max).match(/.{2}/g).join(' ')
-    if (this.length > max) str += ' ... '
-  }
-  return '<Buffer ' + str + '>'
-}
-
-Buffer.prototype.compare = function compare (b) {
-  if (!Buffer.isBuffer(b)) throw new TypeError('Argument must be a Buffer')
-  if (this === b) return 0
-  return Buffer.compare(this, b)
-}
-
-Buffer.prototype.indexOf = function indexOf (val, byteOffset) {
-  if (byteOffset > 0x7fffffff) byteOffset = 0x7fffffff
-  else if (byteOffset < -0x80000000) byteOffset = -0x80000000
-  byteOffset >>= 0
-
-  if (this.length === 0) return -1
-  if (byteOffset >= this.length) return -1
-
-  // Negative offsets start from the end of the buffer
-  if (byteOffset < 0) byteOffset = Math.max(this.length + byteOffset, 0)
-
-  if (typeof val === 'string') {
-    if (val.length === 0) return -1 // special case: looking for empty string always fails
-    return String.prototype.indexOf.call(this, val, byteOffset)
-  }
-  if (Buffer.isBuffer(val)) {
-    return arrayIndexOf(this, val, byteOffset)
-  }
-  if (typeof val === 'number') {
-    if (Buffer.TYPED_ARRAY_SUPPORT && Uint8Array.prototype.indexOf === 'function') {
-      return Uint8Array.prototype.indexOf.call(this, val, byteOffset)
-    }
-    return arrayIndexOf(this, [ val ], byteOffset)
-  }
-
-  function arrayIndexOf (arr, val, byteOffset) {
-    var foundIndex = -1
-    for (var i = 0; byteOffset + i < arr.length; i++) {
-      if (arr[byteOffset + i] === val[foundIndex === -1 ? 0 : i - foundIndex]) {
-        if (foundIndex === -1) foundIndex = i
-        if (i - foundIndex + 1 === val.length) return byteOffset + foundIndex
-      } else {
-        foundIndex = -1
-      }
-    }
-    return -1
-  }
-
-  throw new TypeError('val must be string, number or Buffer')
-}
-
-// `get` will be removed in Node 0.13+
-Buffer.prototype.get = function get (offset) {
-  console.log('.get() is deprecated. Access using array indexes instead.')
-  return this.readUInt8(offset)
-}
-
-// `set` will be removed in Node 0.13+
-Buffer.prototype.set = function set (v, offset) {
-  console.log('.set() is deprecated. Access using array indexes instead.')
-  return this.writeUInt8(v, offset)
-}
-
-function hexWrite (buf, string, offset, length) {
-  offset = Number(offset) || 0
-  var remaining = buf.length - offset
-  if (!length) {
-    length = remaining
-  } else {
-    length = Number(length)
-    if (length > remaining) {
-      length = remaining
-    }
-  }
-
-  // must be an even number of digits
-  var strLen = string.length
-  if (strLen % 2 !== 0) throw new Error('Invalid hex string')
-
-  if (length > strLen / 2) {
-    length = strLen / 2
-  }
-  for (var i = 0; i < length; i++) {
-    var parsed = parseInt(string.substr(i * 2, 2), 16)
-    if (isNaN(parsed)) throw new Error('Invalid hex string')
-    buf[offset + i] = parsed
-  }
-  return i
-}
-
-function utf8Write (buf, string, offset, length) {
-  var charsWritten = blitBuffer(utf8ToBytes(string, buf.length - offset), buf, offset, length)
-  return charsWritten
-}
-
-function asciiWrite (buf, string, offset, length) {
-  var charsWritten = blitBuffer(asciiToBytes(string), buf, offset, length)
-  return charsWritten
-}
-
-function binaryWrite (buf, string, offset, length) {
-  return asciiWrite(buf, string, offset, length)
-}
-
-function base64Write (buf, string, offset, length) {
-  var charsWritten = blitBuffer(base64ToBytes(string), buf, offset, length)
-  return charsWritten
-}
-
-function utf16leWrite (buf, string, offset, length) {
-  var charsWritten = blitBuffer(utf16leToBytes(string, buf.length - offset), buf, offset, length)
-  return charsWritten
-}
-
-Buffer.prototype.write = function write (string, offset, length, encoding) {
-  // Support both (string, offset, length, encoding)
-  // and the legacy (string, encoding, offset, length)
-  if (isFinite(offset)) {
-    if (!isFinite(length)) {
-      encoding = length
-      length = undefined
-    }
-  } else {  // legacy
-    var swap = encoding
-    encoding = offset
-    offset = length
-    length = swap
-  }
-
-  offset = Number(offset) || 0
-
-  if (length < 0 || offset < 0 || offset > this.length) {
-    throw new RangeError('attempt to write outside buffer bounds')
-  }
-
-  var remaining = this.length - offset
-  if (!length) {
-    length = remaining
-  } else {
-    length = Number(length)
-    if (length > remaining) {
-      length = remaining
-    }
-  }
-  encoding = String(encoding || 'utf8').toLowerCase()
-
-  var ret
-  switch (encoding) {
-    case 'hex':
-      ret = hexWrite(this, string, offset, length)
-      break
-    case 'utf8':
-    case 'utf-8':
-      ret = utf8Write(this, string, offset, length)
-      break
-    case 'ascii':
-      ret = asciiWrite(this, string, offset, length)
-      break
-    case 'binary':
-      ret = binaryWrite(this, string, offset, length)
-      break
-    case 'base64':
-      ret = base64Write(this, string, offset, length)
-      break
-    case 'ucs2':
-    case 'ucs-2':
-    case 'utf16le':
-    case 'utf-16le':
-      ret = utf16leWrite(this, string, offset, length)
-      break
-    default:
-      throw new TypeError('Unknown encoding: ' + encoding)
-  }
-  return ret
-}
-
-Buffer.prototype.toJSON = function toJSON () {
-  return {
-    type: 'Buffer',
-    data: Array.prototype.slice.call(this._arr || this, 0)
-  }
-}
-
-function base64Slice (buf, start, end) {
-  if (start === 0 && end === buf.length) {
-    return base64.fromByteArray(buf)
-  } else {
-    return base64.fromByteArray(buf.slice(start, end))
-  }
-}
-
-function utf8Slice (buf, start, end) {
-  var res = ''
-  var tmp = ''
-  end = Math.min(buf.length, end)
-
-  for (var i = start; i < end; i++) {
-    if (buf[i] <= 0x7F) {
-      res += decodeUtf8Char(tmp) + String.fromCharCode(buf[i])
-      tmp = ''
-    } else {
-      tmp += '%' + buf[i].toString(16)
-    }
-  }
-
-  return res + decodeUtf8Char(tmp)
-}
-
-function asciiSlice (buf, start, end) {
-  var ret = ''
-  end = Math.min(buf.length, end)
-
-  for (var i = start; i < end; i++) {
-    ret += String.fromCharCode(buf[i] & 0x7F)
-  }
-  return ret
-}
-
-function binarySlice (buf, start, end) {
-  var ret = ''
-  end = Math.min(buf.length, end)
-
-  for (var i = start; i < end; i++) {
-    ret += String.fromCharCode(buf[i])
-  }
-  return ret
-}
-
-function hexSlice (buf, start, end) {
-  var len = buf.length
-
-  if (!start || start < 0) start = 0
-  if (!end || end < 0 || end > len) end = len
-
-  var out = ''
-  for (var i = start; i < end; i++) {
-    out += toHex(buf[i])
-  }
-  return out
-}
-
-function utf16leSlice (buf, start, end) {
-  var bytes = buf.slice(start, end)
-  var res = ''
-  for (var i = 0; i < bytes.length; i += 2) {
-    res += String.fromCharCode(bytes[i] + bytes[i + 1] * 256)
-  }
-  return res
-}
-
-Buffer.prototype.slice = function slice (start, end) {
-  var len = this.length
-  start = ~~start
-  end = end === undefined ? len : ~~end
-
-  if (start < 0) {
-    start += len
-    if (start < 0) start = 0
-  } else if (start > len) {
-    start = len
-  }
-
-  if (end < 0) {
-    end += len
-    if (end < 0) end = 0
-  } else if (end > len) {
-    end = len
-  }
-
-  if (end < start) end = start
-
-  var newBuf
-  if (Buffer.TYPED_ARRAY_SUPPORT) {
-    newBuf = Buffer._augment(this.subarray(start, end))
-  } else {
-    var sliceLen = end - start
-    newBuf = new Buffer(sliceLen, undefined)
-    for (var i = 0; i < sliceLen; i++) {
-      newBuf[i] = this[i + start]
-    }
-  }
-
-  if (newBuf.length) newBuf.parent = this.parent || this
-
-  return newBuf
-}
-
-/*
- * Need to make sure that buffer isn't trying to write out of bounds.
- */
-function checkOffset (offset, ext, length) {
-  if ((offset % 1) !== 0 || offset < 0) throw new RangeError('offset is not uint')
-  if (offset + ext > length) throw new RangeError('Trying to access beyond buffer length')
-}
-
-Buffer.prototype.readUIntLE = function readUIntLE (offset, byteLength, noAssert) {
-  offset = offset >>> 0
-  byteLength = byteLength >>> 0
-  if (!noAssert) checkOffset(offset, byteLength, this.length)
-
-  var val = this[offset]
-  var mul = 1
-  var i = 0
-  while (++i < byteLength && (mul *= 0x100)) {
-    val += this[offset + i] * mul
-  }
-
-  return val
-}
-
-Buffer.prototype.readUIntBE = function readUIntBE (offset, byteLength, noAssert) {
-  offset = offset >>> 0
-  byteLength = byteLength >>> 0
-  if (!noAssert) {
-    checkOffset(offset, byteLength, this.length)
-  }
-
-  var val = this[offset + --byteLength]
-  var mul = 1
-  while (byteLength > 0 && (mul *= 0x100)) {
-    val += this[offset + --byteLength] * mul
-  }
-
-  return val
-}
-
-Buffer.prototype.readUInt8 = function readUInt8 (offset, noAssert) {
-  if (!noAssert) checkOffset(offset, 1, this.length)
-  return this[offset]
-}
-
-Buffer.prototype.readUInt16LE = function readUInt16LE (offset, noAssert) {
-  if (!noAssert) checkOffset(offset, 2, this.length)
-  return this[offset] | (this[offset + 1] << 8)
-}
-
-Buffer.prototype.readUInt16BE = function readUInt16BE (offset, noAssert) {
-  if (!noAssert) checkOffset(offset, 2, this.length)
-  return (this[offset] << 8) | this[offset + 1]
-}
-
-Buffer.prototype.readUInt32LE = function readUInt32LE (offset, noAssert) {
-  if (!noAssert) checkOffset(offset, 4, this.length)
-
-  return ((this[offset]) |
-      (this[offset + 1] << 8) |
-      (this[offset + 2] << 16)) +
-      (this[offset + 3] * 0x1000000)
-}
-
-Buffer.prototype.readUInt32BE = function readUInt32BE (offset, noAssert) {
-  if (!noAssert) checkOffset(offset, 4, this.length)
-
-  return (this[offset] * 0x1000000) +
-    ((this[offset + 1] << 16) |
-    (this[offset + 2] << 8) |
-    this[offset + 3])
-}
-
-Buffer.prototype.readIntLE = function readIntLE (offset, byteLength, noAssert) {
-  offset = offset >>> 0
-  byteLength = byteLength >>> 0
-  if (!noAssert) checkOffset(offset, byteLength, this.length)
-
-  var val = this[offset]
-  var mul = 1
-  var i = 0
-  while (++i < byteLength && (mul *= 0x100)) {
-    val += this[offset + i] * mul
-  }
-  mul *= 0x80
-
-  if (val >= mul) val -= Math.pow(2, 8 * byteLength)
-
-  return val
-}
-
-Buffer.prototype.readIntBE = function readIntBE (offset, byteLength, noAssert) {
-  offset = offset >>> 0
-  byteLength = byteLength >>> 0
-  if (!noAssert) checkOffset(offset, byteLength, this.length)
-
-  var i = byteLength
-  var mul = 1
-  var val = this[offset + --i]
-  while (i > 0 && (mul *= 0x100)) {
-    val += this[offset + --i] * mul
-  }
-  mul *= 0x80
-
-  if (val >= mul) val -= Math.pow(2, 8 * byteLength)
-
-  return val
-}
-
-Buffer.prototype.readInt8 = function readInt8 (offset, noAssert) {
-  if (!noAssert) checkOffset(offset, 1, this.length)
-  if (!(this[offset] & 0x80)) return (this[offset])
-  return ((0xff - this[offset] + 1) * -1)
-}
-
-Buffer.prototype.readInt16LE = function readInt16LE (offset, noAssert) {
-  if (!noAssert) checkOffset(offset, 2, this.length)
-  var val = this[offset] | (this[offset + 1] << 8)
-  return (val & 0x8000) ? val | 0xFFFF0000 : val
-}
-
-Buffer.prototype.readInt16BE = function readInt16BE (offset, noAssert) {
-  if (!noAssert) checkOffset(offset, 2, this.length)
-  var val = this[offset + 1] | (this[offset] << 8)
-  return (val & 0x8000) ? val | 0xFFFF0000 : val
-}
-
-Buffer.prototype.readInt32LE = function readInt32LE (offset, noAssert) {
-  if (!noAssert) checkOffset(offset, 4, this.length)
-
-  return (this[offset]) |
-    (this[offset + 1] << 8) |
-    (this[offset + 2] << 16) |
-    (this[offset + 3] << 24)
-}
-
-Buffer.prototype.readInt32BE = function readInt32BE (offset, noAssert) {
-  if (!noAssert) checkOffset(offset, 4, this.length)
-
-  return (this[offset] << 24) |
-    (this[offset + 1] << 16) |
-    (this[offset + 2] << 8) |
-    (this[offset + 3])
-}
-
-Buffer.prototype.readFloatLE = function readFloatLE (offset, noAssert) {
-  if (!noAssert) checkOffset(offset, 4, this.length)
-  return ieee754.read(this, offset, true, 23, 4)
-}
-
-Buffer.prototype.readFloatBE = function readFloatBE (offset, noAssert) {
-  if (!noAssert) checkOffset(offset, 4, this.length)
-  return ieee754.read(this, offset, false, 23, 4)
-}
-
-Buffer.prototype.readDoubleLE = function readDoubleLE (offset, noAssert) {
-  if (!noAssert) checkOffset(offset, 8, this.length)
-  return ieee754.read(this, offset, true, 52, 8)
-}
-
-Buffer.prototype.readDoubleBE = function readDoubleBE (offset, noAssert) {
-  if (!noAssert) checkOffset(offset, 8, this.length)
-  return ieee754.read(this, offset, false, 52, 8)
-}
-
-function checkInt (buf, value, offset, ext, max, min) {
-  if (!Buffer.isBuffer(buf)) throw new TypeError('buffer must be a Buffer instance')
-  if (value > max || value < min) throw new RangeError('value is out of bounds')
-  if (offset + ext > buf.length) throw new RangeError('index out of range')
-}
-
-Buffer.prototype.writeUIntLE = function writeUIntLE (value, offset, byteLength, noAssert) {
-  value = +value
-  offset = offset >>> 0
-  byteLength = byteLength >>> 0
-  if (!noAssert) checkInt(this, value, offset, byteLength, Math.pow(2, 8 * byteLength), 0)
-
-  var mul = 1
-  var i = 0
-  this[offset] = value & 0xFF
-  while (++i < byteLength && (mul *= 0x100)) {
-    this[offset + i] = (value / mul) >>> 0 & 0xFF
-  }
-
-  return offset + byteLength
-}
-
-Buffer.prototype.writeUIntBE = function writeUIntBE (value, offset, byteLength, noAssert) {
-  value = +value
-  offset = offset >>> 0
-  byteLength = byteLength >>> 0
-  if (!noAssert) checkInt(this, value, offset, byteLength, Math.pow(2, 8 * byteLength), 0)
-
-  var i = byteLength - 1
-  var mul = 1
-  this[offset + i] = value & 0xFF
-  while (--i >= 0 && (mul *= 0x100)) {
-    this[offset + i] = (value / mul) >>> 0 & 0xFF
-  }
-
-  return offset + byteLength
-}
-
-Buffer.prototype.writeUInt8 = function writeUInt8 (value, offset, noAssert) {
-  value = +value
-  offset = offset >>> 0
-  if (!noAssert) checkInt(this, value, offset, 1, 0xff, 0)
-  if (!Buffer.TYPED_ARRAY_SUPPORT) value = Math.floor(value)
-  this[offset] = value
-  return offset + 1
-}
-
-function objectWriteUInt16 (buf, value, offset, littleEndian) {
-  if (value < 0) value = 0xffff + value + 1
-  for (var i = 0, j = Math.min(buf.length - offset, 2); i < j; i++) {
-    buf[offset + i] = (value & (0xff << (8 * (littleEndian ? i : 1 - i)))) >>>
-      (littleEndian ? i : 1 - i) * 8
-  }
-}
-
-Buffer.prototype.writeUInt16LE = function writeUInt16LE (value, offset, noAssert) {
-  value = +value
-  offset = offset >>> 0
-  if (!noAssert) checkInt(this, value, offset, 2, 0xffff, 0)
-  if (Buffer.TYPED_ARRAY_SUPPORT) {
-    this[offset] = value
-    this[offset + 1] = (value >>> 8)
-  } else {
-    objectWriteUInt16(this, value, offset, true)
-  }
-  return offset + 2
-}
-
-Buffer.prototype.writeUInt16BE = function writeUInt16BE (value, offset, noAssert) {
-  value = +value
-  offset = offset >>> 0
-  if (!noAssert) checkInt(this, value, offset, 2, 0xffff, 0)
-  if (Buffer.TYPED_ARRAY_SUPPORT) {
-    this[offset] = (value >>> 8)
-    this[offset + 1] = value
-  } else {
-    objectWriteUInt16(this, value, offset, false)
-  }
-  return offset + 2
-}
-
-function objectWriteUInt32 (buf, value, offset, littleEndian) {
-  if (value < 0) value = 0xffffffff + value + 1
-  for (var i = 0, j = Math.min(buf.length - offset, 4); i < j; i++) {
-    buf[offset + i] = (value >>> (littleEndian ? i : 3 - i) * 8) & 0xff
-  }
-}
-
-Buffer.prototype.writeUInt32LE = function writeUInt32LE (value, offset, noAssert) {
-  value = +value
-  offset = offset >>> 0
-  if (!noAssert) checkInt(this, value, offset, 4, 0xffffffff, 0)
-  if (Buffer.TYPED_ARRAY_SUPPORT) {
-    this[offset + 3] = (value >>> 24)
-    this[offset + 2] = (value >>> 16)
-    this[offset + 1] = (value >>> 8)
-    this[offset] = value
-  } else {
-    objectWriteUInt32(this, value, offset, true)
-  }
-  return offset + 4
-}
-
-Buffer.prototype.writeUInt32BE = function writeUInt32BE (value, offset, noAssert) {
-  value = +value
-  offset = offset >>> 0
-  if (!noAssert) checkInt(this, value, offset, 4, 0xffffffff, 0)
-  if (Buffer.TYPED_ARRAY_SUPPORT) {
-    this[offset] = (value >>> 24)
-    this[offset + 1] = (value >>> 16)
-    this[offset + 2] = (value >>> 8)
-    this[offset + 3] = value
-  } else {
-    objectWriteUInt32(this, value, offset, false)
-  }
-  return offset + 4
-}
-
-Buffer.prototype.writeIntLE = function writeIntLE (value, offset, byteLength, noAssert) {
-  value = +value
-  offset = offset >>> 0
-  if (!noAssert) {
-    checkInt(
-      this, value, offset, byteLength,
-      Math.pow(2, 8 * byteLength - 1) - 1,
-      -Math.pow(2, 8 * byteLength - 1)
-    )
-  }
-
-  var i = 0
-  var mul = 1
-  var sub = value < 0 ? 1 : 0
-  this[offset] = value & 0xFF
-  while (++i < byteLength && (mul *= 0x100)) {
-    this[offset + i] = ((value / mul) >> 0) - sub & 0xFF
-  }
-
-  return offset + byteLength
-}
-
-Buffer.prototype.writeIntBE = function writeIntBE (value, offset, byteLength, noAssert) {
-  value = +value
-  offset = offset >>> 0
-  if (!noAssert) {
-    checkInt(
-      this, value, offset, byteLength,
-      Math.pow(2, 8 * byteLength - 1) - 1,
-      -Math.pow(2, 8 * byteLength - 1)
-    )
-  }
-
-  var i = byteLength - 1
-  var mul = 1
-  var sub = value < 0 ? 1 : 0
-  this[offset + i] = value & 0xFF
-  while (--i >= 0 && (mul *= 0x100)) {
-    this[offset + i] = ((value / mul) >> 0) - sub & 0xFF
-  }
-
-  return offset + byteLength
-}
-
-Buffer.prototype.writeInt8 = function writeInt8 (value, offset, noAssert) {
-  value = +value
-  offset = offset >>> 0
-  if (!noAssert) checkInt(this, value, offset, 1, 0x7f, -0x80)
-  if (!Buffer.TYPED_ARRAY_SUPPORT) value = Math.floor(value)
-  if (value < 0) value = 0xff + value + 1
-  this[offset] = value
-  return offset + 1
-}
-
-Buffer.prototype.writeInt16LE = function writeInt16LE (value, offset, noAssert) {
-  value = +value
-  offset = offset >>> 0
-  if (!noAssert) checkInt(this, value, offset, 2, 0x7fff, -0x8000)
-  if (Buffer.TYPED_ARRAY_SUPPORT) {
-    this[offset] = value
-    this[offset + 1] = (value >>> 8)
-  } else {
-    objectWriteUInt16(this, value, offset, true)
-  }
-  return offset + 2
-}
-
-Buffer.prototype.writeInt16BE = function writeInt16BE (value, offset, noAssert) {
-  value = +value
-  offset = offset >>> 0
-  if (!noAssert) checkInt(this, value, offset, 2, 0x7fff, -0x8000)
-  if (Buffer.TYPED_ARRAY_SUPPORT) {
-    this[offset] = (value >>> 8)
-    this[offset + 1] = value
-  } else {
-    objectWriteUInt16(this, value, offset, false)
-  }
-  return offset + 2
-}
-
-Buffer.prototype.writeInt32LE = function writeInt32LE (value, offset, noAssert) {
-  value = +value
-  offset = offset >>> 0
-  if (!noAssert) checkInt(this, value, offset, 4, 0x7fffffff, -0x80000000)
-  if (Buffer.TYPED_ARRAY_SUPPORT) {
-    this[offset] = value
-    this[offset + 1] = (value >>> 8)
-    this[offset + 2] = (value >>> 16)
-    this[offset + 3] = (value >>> 24)
-  } else {
-    objectWriteUInt32(this, value, offset, true)
-  }
-  return offset + 4
-}
-
-Buffer.prototype.writeInt32BE = function writeInt32BE (value, offset, noAssert) {
-  value = +value
-  offset = offset >>> 0
-  if (!noAssert) checkInt(this, value, offset, 4, 0x7fffffff, -0x80000000)
-  if (value < 0) value = 0xffffffff + value + 1
-  if (Buffer.TYPED_ARRAY_SUPPORT) {
-    this[offset] = (value >>> 24)
-    this[offset + 1] = (value >>> 16)
-    this[offset + 2] = (value >>> 8)
-    this[offset + 3] = value
-  } else {
-    objectWriteUInt32(this, value, offset, false)
-  }
-  return offset + 4
-}
-
-function checkIEEE754 (buf, value, offset, ext, max, min) {
-  if (value > max || value < min) throw new RangeError('value is out of bounds')
-  if (offset + ext > buf.length) throw new RangeError('index out of range')
-  if (offset < 0) throw new RangeError('index out of range')
-}
-
-function writeFloat (buf, value, offset, littleEndian, noAssert) {
-  if (!noAssert) {
-    checkIEEE754(buf, value, offset, 4, 3.4028234663852886e+38, -3.4028234663852886e+38)
-  }
-  ieee754.write(buf, value, offset, littleEndian, 23, 4)
-  return offset + 4
-}
-
-Buffer.prototype.writeFloatLE = function writeFloatLE (value, offset, noAssert) {
-  return writeFloat(this, value, offset, true, noAssert)
-}
-
-Buffer.prototype.writeFloatBE = function writeFloatBE (value, offset, noAssert) {
-  return writeFloat(this, value, offset, false, noAssert)
-}
-
-function writeDouble (buf, value, offset, littleEndian, noAssert) {
-  if (!noAssert) {
-    checkIEEE754(buf, value, offset, 8, 1.7976931348623157E+308, -1.7976931348623157E+308)
-  }
-  ieee754.write(buf, value, offset, littleEndian, 52, 8)
-  return offset + 8
-}
-
-Buffer.prototype.writeDoubleLE = function writeDoubleLE (value, offset, noAssert) {
-  return writeDouble(this, value, offset, true, noAssert)
-}
-
-Buffer.prototype.writeDoubleBE = function writeDoubleBE (value, offset, noAssert) {
-  return writeDouble(this, value, offset, false, noAssert)
-}
-
-// copy(targetBuffer, targetStart=0, sourceStart=0, sourceEnd=buffer.length)
-Buffer.prototype.copy = function copy (target, target_start, start, end) {
-  if (!start) start = 0
-  if (!end && end !== 0) end = this.length
-  if (target_start >= target.length) target_start = target.length
-  if (!target_start) target_start = 0
-  if (end > 0 && end < start) end = start
-
-  // Copy 0 bytes; we're done
-  if (end === start) return 0
-  if (target.length === 0 || this.length === 0) return 0
-
-  // Fatal error conditions
-  if (target_start < 0) {
-    throw new RangeError('targetStart out of bounds')
-  }
-  if (start < 0 || start >= this.length) throw new RangeError('sourceStart out of bounds')
-  if (end < 0) throw new RangeError('sourceEnd out of bounds')
-
-  // Are we oob?
-  if (end > this.length) end = this.length
-  if (target.length - target_start < end - start) {
-    end = target.length - target_start + start
-  }
-
-  var len = end - start
-
-  if (len < 1000 || !Buffer.TYPED_ARRAY_SUPPORT) {
-    for (var i = 0; i < len; i++) {
-      target[i + target_start] = this[i + start]
-    }
-  } else {
-    target._set(this.subarray(start, start + len), target_start)
-  }
-
-  return len
-}
-
-// fill(value, start=0, end=buffer.length)
-Buffer.prototype.fill = function fill (value, start, end) {
-  if (!value) value = 0
-  if (!start) start = 0
-  if (!end) end = this.length
-
-  if (end < start) throw new RangeError('end < start')
-
-  // Fill 0 bytes; we're done
-  if (end === start) return
-  if (this.length === 0) return
-
-  if (start < 0 || start >= this.length) throw new RangeError('start out of bounds')
-  if (end < 0 || end > this.length) throw new RangeError('end out of bounds')
-
-  var i
-  if (typeof value === 'number') {
-    for (i = start; i < end; i++) {
-      this[i] = value
-    }
-  } else {
-    var bytes = utf8ToBytes(value.toString())
-    var len = bytes.length
-    for (i = start; i < end; i++) {
-      this[i] = bytes[i % len]
-    }
-  }
-
-  return this
-}
-
-/**
- * Creates a new `ArrayBuffer` with the *copied* memory of the buffer instance.
- * Added in Node 0.12. Only available in browsers that support ArrayBuffer.
- */
-Buffer.prototype.toArrayBuffer = function toArrayBuffer () {
-  if (typeof Uint8Array !== 'undefined') {
-    if (Buffer.TYPED_ARRAY_SUPPORT) {
-      return (new Buffer(this)).buffer
-    } else {
-      var buf = new Uint8Array(this.length)
-      for (var i = 0, len = buf.length; i < len; i += 1) {
-        buf[i] = this[i]
-      }
-      return buf.buffer
-    }
-  } else {
-    throw new TypeError('Buffer.toArrayBuffer not supported in this browser')
-  }
-}
-
-// HELPER FUNCTIONS
-// ================
-
-var BP = Buffer.prototype
-
-/**
- * Augment a Uint8Array *instance* (not the Uint8Array class!) with Buffer methods
- */
-Buffer._augment = function _augment (arr) {
-  arr.constructor = Buffer
-  arr._isBuffer = true
-
-  // save reference to original Uint8Array set method before overwriting
-  arr._set = arr.set
-
-  // deprecated, will be removed in node 0.13+
-  arr.get = BP.get
-  arr.set = BP.set
-
-  arr.write = BP.write
-  arr.toString = BP.toString
-  arr.toLocaleString = BP.toString
-  arr.toJSON = BP.toJSON
-  arr.equals = BP.equals
-  arr.compare = BP.compare
-  arr.indexOf = BP.indexOf
-  arr.copy = BP.copy
-  arr.slice = BP.slice
-  arr.readUIntLE = BP.readUIntLE
-  arr.readUIntBE = BP.readUIntBE
-  arr.readUInt8 = BP.readUInt8
-  arr.readUInt16LE = BP.readUInt16LE
-  arr.readUInt16BE = BP.readUInt16BE
-  arr.readUInt32LE = BP.readUInt32LE
-  arr.readUInt32BE = BP.readUInt32BE
-  arr.readIntLE = BP.readIntLE
-  arr.readIntBE = BP.readIntBE
-  arr.readInt8 = BP.readInt8
-  arr.readInt16LE = BP.readInt16LE
-  arr.readInt16BE = BP.readInt16BE
-  arr.readInt32LE = BP.readInt32LE
-  arr.readInt32BE = BP.readInt32BE
-  arr.readFloatLE = BP.readFloatLE
-  arr.readFloatBE = BP.readFloatBE
-  arr.readDoubleLE = BP.readDoubleLE
-  arr.readDoubleBE = BP.readDoubleBE
-  arr.writeUInt8 = BP.writeUInt8
-  arr.writeUIntLE = BP.writeUIntLE
-  arr.writeUIntBE = BP.writeUIntBE
-  arr.writeUInt16LE = BP.writeUInt16LE
-  arr.writeUInt16BE = BP.writeUInt16BE
-  arr.writeUInt32LE = BP.writeUInt32LE
-  arr.writeUInt32BE = BP.writeUInt32BE
-  arr.writeIntLE = BP.writeIntLE
-  arr.writeIntBE = BP.writeIntBE
-  arr.writeInt8 = BP.writeInt8
-  arr.writeInt16LE = BP.writeInt16LE
-  arr.writeInt16BE = BP.writeInt16BE
-  arr.writeInt32LE = BP.writeInt32LE
-  arr.writeInt32BE = BP.writeInt32BE
-  arr.writeFloatLE = BP.writeFloatLE
-  arr.writeFloatBE = BP.writeFloatBE
-  arr.writeDoubleLE = BP.writeDoubleLE
-  arr.writeDoubleBE = BP.writeDoubleBE
-  arr.fill = BP.fill
-  arr.inspect = BP.inspect
-  arr.toArrayBuffer = BP.toArrayBuffer
-
-  return arr
-}
-
-var INVALID_BASE64_RE = /[^+\/0-9A-z\-]/g
-
-function base64clean (str) {
-  // Node strips out invalid characters like \n and \t from the string, base64-js does not
-  str = stringtrim(str).replace(INVALID_BASE64_RE, '')
-  // Node converts strings with length < 2 to ''
-  if (str.length < 2) return ''
-  // Node allows for non-padded base64 strings (missing trailing ===), base64-js does not
-  while (str.length % 4 !== 0) {
-    str = str + '='
-  }
-  return str
-}
-
-function stringtrim (str) {
-  if (str.trim) return str.trim()
-  return str.replace(/^\s+|\s+$/g, '')
-}
-
-function isArrayish (subject) {
-  return isArray(subject) || Buffer.isBuffer(subject) ||
-      subject && typeof subject === 'object' &&
-      typeof subject.length === 'number'
-}
-
-function toHex (n) {
-  if (n < 16) return '0' + n.toString(16)
-  return n.toString(16)
-}
-
-function utf8ToBytes (string, units) {
-  units = units || Infinity
-  var codePoint
-  var length = string.length
-  var leadSurrogate = null
-  var bytes = []
-  var i = 0
-
-  for (; i < length; i++) {
-    codePoint = string.charCodeAt(i)
-
-    // is surrogate component
-    if (codePoint > 0xD7FF && codePoint < 0xE000) {
-      // last char was a lead
-      if (leadSurrogate) {
-        // 2 leads in a row
-        if (codePoint < 0xDC00) {
-          if ((units -= 3) > -1) bytes.push(0xEF, 0xBF, 0xBD)
-          leadSurrogate = codePoint
-          continue
-        } else {
-          // valid surrogate pair
-          codePoint = leadSurrogate - 0xD800 << 10 | codePoint - 0xDC00 | 0x10000
-          leadSurrogate = null
-        }
-      } else {
-        // no lead yet
-
-        if (codePoint > 0xDBFF) {
-          // unexpected trail
-          if ((units -= 3) > -1) bytes.push(0xEF, 0xBF, 0xBD)
-          continue
-        } else if (i + 1 === length) {
-          // unpaired lead
-          if ((units -= 3) > -1) bytes.push(0xEF, 0xBF, 0xBD)
-          continue
-        } else {
-          // valid lead
-          leadSurrogate = codePoint
-          continue
-        }
-      }
-    } else if (leadSurrogate) {
-      // valid bmp char, but last char was a lead
-      if ((units -= 3) > -1) bytes.push(0xEF, 0xBF, 0xBD)
-      leadSurrogate = null
-    }
-
-    // encode utf8
-    if (codePoint < 0x80) {
-      if ((units -= 1) < 0) break
-      bytes.push(codePoint)
-    } else if (codePoint < 0x800) {
-      if ((units -= 2) < 0) break
-      bytes.push(
-        codePoint >> 0x6 | 0xC0,
-        codePoint & 0x3F | 0x80
-      )
-    } else if (codePoint < 0x10000) {
-      if ((units -= 3) < 0) break
-      bytes.push(
-        codePoint >> 0xC | 0xE0,
-        codePoint >> 0x6 & 0x3F | 0x80,
-        codePoint & 0x3F | 0x80
-      )
-    } else if (codePoint < 0x200000) {
-      if ((units -= 4) < 0) break
-      bytes.push(
-        codePoint >> 0x12 | 0xF0,
-        codePoint >> 0xC & 0x3F | 0x80,
-        codePoint >> 0x6 & 0x3F | 0x80,
-        codePoint & 0x3F | 0x80
-      )
-    } else {
-      throw new Error('Invalid code point')
-    }
-  }
-
-  return bytes
-}
-
-function asciiToBytes (str) {
-  var byteArray = []
-  for (var i = 0; i < str.length; i++) {
-    // Node's code seems to be doing this and not & 0x7F..
-    byteArray.push(str.charCodeAt(i) & 0xFF)
-  }
-  return byteArray
-}
-
-function utf16leToBytes (str, units) {
-  var c, hi, lo
-  var byteArray = []
-  for (var i = 0; i < str.length; i++) {
-    if ((units -= 2) < 0) break
-
-    c = str.charCodeAt(i)
-    hi = c >> 8
-    lo = c % 256
-    byteArray.push(lo)
-    byteArray.push(hi)
-  }
-
-  return byteArray
-}
-
-function base64ToBytes (str) {
-  return base64.toByteArray(base64clean(str))
-}
-
-function blitBuffer (src, dst, offset, length) {
-  for (var i = 0; i < length; i++) {
-    if ((i + offset >= dst.length) || (i >= src.length)) break
-    dst[i + offset] = src[i]
-  }
-  return i
-}
-
-function decodeUtf8Char (str) {
-  try {
-    return decodeURIComponent(str)
-  } catch (err) {
-    return String.fromCharCode(0xFFFD) // UTF 8 invalid char
-  }
-}
-
-},{"base64-js":10,"ieee754":11,"is-array":12}],10:[function(_dereq_,module,exports){
-var lookup = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
-
-;(function (exports) {
-	'use strict';
-
-  var Arr = (typeof Uint8Array !== 'undefined')
-    ? Uint8Array
-    : Array
-
-	var PLUS   = '+'.charCodeAt(0)
-	var SLASH  = '/'.charCodeAt(0)
-	var NUMBER = '0'.charCodeAt(0)
-	var LOWER  = 'a'.charCodeAt(0)
-	var UPPER  = 'A'.charCodeAt(0)
-	var PLUS_URL_SAFE = '-'.charCodeAt(0)
-	var SLASH_URL_SAFE = '_'.charCodeAt(0)
-
-	function decode (elt) {
-		var code = elt.charCodeAt(0)
-		if (code === PLUS ||
-		    code === PLUS_URL_SAFE)
-			return 62 // '+'
-		if (code === SLASH ||
-		    code === SLASH_URL_SAFE)
-			return 63 // '/'
-		if (code < NUMBER)
-			return -1 //no match
-		if (code < NUMBER + 10)
-			return code - NUMBER + 26 + 26
-		if (code < UPPER + 26)
-			return code - UPPER
-		if (code < LOWER + 26)
-			return code - LOWER + 26
-	}
-
-	function b64ToByteArray (b64) {
-		var i, j, l, tmp, placeHolders, arr
-
-		if (b64.length % 4 > 0) {
-			throw new Error('Invalid string. Length must be a multiple of 4')
-		}
-
-		// the number of equal signs (place holders)
-		// if there are two placeholders, than the two characters before it
-		// represent one byte
-		// if there is only one, then the three characters before it represent 2 bytes
-		// this is just a cheap hack to not do indexOf twice
-		var len = b64.length
-		placeHolders = '=' === b64.charAt(len - 2) ? 2 : '=' === b64.charAt(len - 1) ? 1 : 0
-
-		// base64 is 4/3 + up to two characters of the original data
-		arr = new Arr(b64.length * 3 / 4 - placeHolders)
-
-		// if there are placeholders, only get up to the last complete 4 chars
-		l = placeHolders > 0 ? b64.length - 4 : b64.length
-
-		var L = 0
-
-		function push (v) {
-			arr[L++] = v
-		}
-
-		for (i = 0, j = 0; i < l; i += 4, j += 3) {
-			tmp = (decode(b64.charAt(i)) << 18) | (decode(b64.charAt(i + 1)) << 12) | (decode(b64.charAt(i + 2)) << 6) | decode(b64.charAt(i + 3))
-			push((tmp & 0xFF0000) >> 16)
-			push((tmp & 0xFF00) >> 8)
-			push(tmp & 0xFF)
-		}
-
-		if (placeHolders === 2) {
-			tmp = (decode(b64.charAt(i)) << 2) | (decode(b64.charAt(i + 1)) >> 4)
-			push(tmp & 0xFF)
-		} else if (placeHolders === 1) {
-			tmp = (decode(b64.charAt(i)) << 10) | (decode(b64.charAt(i + 1)) << 4) | (decode(b64.charAt(i + 2)) >> 2)
-			push((tmp >> 8) & 0xFF)
-			push(tmp & 0xFF)
-		}
-
-		return arr
-	}
-
-	function uint8ToBase64 (uint8) {
-		var i,
-			extraBytes = uint8.length % 3, // if we have 1 byte left, pad 2 bytes
-			output = "",
-			temp, length
-
-		function encode (num) {
-			return lookup.charAt(num)
-		}
-
-		function tripletToBase64 (num) {
-			return encode(num >> 18 & 0x3F) + encode(num >> 12 & 0x3F) + encode(num >> 6 & 0x3F) + encode(num & 0x3F)
-		}
-
-		// go through the array every three bytes, we'll deal with trailing stuff later
-		for (i = 0, length = uint8.length - extraBytes; i < length; i += 3) {
-			temp = (uint8[i] << 16) + (uint8[i + 1] << 8) + (uint8[i + 2])
-			output += tripletToBase64(temp)
-		}
-
-		// pad the end with zeros, but make sure to not forget the extra bytes
-		switch (extraBytes) {
-			case 1:
-				temp = uint8[uint8.length - 1]
-				output += encode(temp >> 2)
-				output += encode((temp << 4) & 0x3F)
-				output += '=='
-				break
-			case 2:
-				temp = (uint8[uint8.length - 2] << 8) + (uint8[uint8.length - 1])
-				output += encode(temp >> 10)
-				output += encode((temp >> 4) & 0x3F)
-				output += encode((temp << 2) & 0x3F)
-				output += '='
-				break
-		}
-
-		return output
-	}
-
-	exports.toByteArray = b64ToByteArray
-	exports.fromByteArray = uint8ToBase64
-}(typeof exports === 'undefined' ? (this.base64js = {}) : exports))
-
-},{}],11:[function(_dereq_,module,exports){
-exports.read = function(buffer, offset, isLE, mLen, nBytes) {
-  var e, m,
-      eLen = nBytes * 8 - mLen - 1,
-      eMax = (1 << eLen) - 1,
-      eBias = eMax >> 1,
-      nBits = -7,
-      i = isLE ? (nBytes - 1) : 0,
-      d = isLE ? -1 : 1,
-      s = buffer[offset + i];
-
-  i += d;
-
-  e = s & ((1 << (-nBits)) - 1);
-  s >>= (-nBits);
-  nBits += eLen;
-  for (; nBits > 0; e = e * 256 + buffer[offset + i], i += d, nBits -= 8);
-
-  m = e & ((1 << (-nBits)) - 1);
-  e >>= (-nBits);
-  nBits += mLen;
-  for (; nBits > 0; m = m * 256 + buffer[offset + i], i += d, nBits -= 8);
-
-  if (e === 0) {
-    e = 1 - eBias;
-  } else if (e === eMax) {
-    return m ? NaN : ((s ? -1 : 1) * Infinity);
-  } else {
-    m = m + Math.pow(2, mLen);
-    e = e - eBias;
-  }
-  return (s ? -1 : 1) * m * Math.pow(2, e - mLen);
-};
-
-exports.write = function(buffer, value, offset, isLE, mLen, nBytes) {
-  var e, m, c,
-      eLen = nBytes * 8 - mLen - 1,
-      eMax = (1 << eLen) - 1,
-      eBias = eMax >> 1,
-      rt = (mLen === 23 ? Math.pow(2, -24) - Math.pow(2, -77) : 0),
-      i = isLE ? 0 : (nBytes - 1),
-      d = isLE ? 1 : -1,
-      s = value < 0 || (value === 0 && 1 / value < 0) ? 1 : 0;
-
-  value = Math.abs(value);
-
-  if (isNaN(value) || value === Infinity) {
-    m = isNaN(value) ? 1 : 0;
-    e = eMax;
-  } else {
-    e = Math.floor(Math.log(value) / Math.LN2);
-    if (value * (c = Math.pow(2, -e)) < 1) {
-      e--;
-      c *= 2;
-    }
-    if (e + eBias >= 1) {
-      value += rt / c;
-    } else {
-      value += rt * Math.pow(2, 1 - eBias);
-    }
-    if (value * c >= 2) {
-      e++;
-      c /= 2;
-    }
-
-    if (e + eBias >= eMax) {
-      m = 0;
-      e = eMax;
-    } else if (e + eBias >= 1) {
-      m = (value * c - 1) * Math.pow(2, mLen);
-      e = e + eBias;
-    } else {
-      m = value * Math.pow(2, eBias - 1) * Math.pow(2, mLen);
-      e = 0;
-    }
-  }
-
-  for (; mLen >= 8; buffer[offset + i] = m & 0xff, i += d, m /= 256, mLen -= 8);
-
-  e = (e << mLen) | m;
-  eLen += mLen;
-  for (; eLen > 0; buffer[offset + i] = e & 0xff, i += d, e /= 256, eLen -= 8);
-
-  buffer[offset + i - d] |= s * 128;
-};
-
-},{}],12:[function(_dereq_,module,exports){
-
-/**
- * isArray
- */
-
-var isArray = Array.isArray;
-
-/**
- * toString
- */
-
-var str = Object.prototype.toString;
-
-/**
- * Whether or not the given `val`
- * is an array.
- *
- * example:
- *
- *        isArray([]);
- *        // > true
- *        isArray(arguments);
- *        // > false
- *        isArray('');
- *        // > false
- *
- * @param {mixed} val
- * @return {bool}
- */
-
-module.exports = isArray || function (val) {
-  return !! val && '[object Array]' == str.call(val);
-};
-
-},{}],13:[function(_dereq_,module,exports){
+},{"./supported-node-types":7,"estraverse":46}],10:[function(_dereq_,module,exports){
 (function (process){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -2346,7 +860,7 @@ var substr = 'ab'.substr(-1) === 'b'
 ;
 
 }).call(this,_dereq_('_process'))
-},{"_process":14}],14:[function(_dereq_,module,exports){
+},{"_process":11}],11:[function(_dereq_,module,exports){
 // shim for using process in browser
 
 var process = module.exports = {};
@@ -2406,171 +920,7 @@ process.chdir = function (dir) {
 };
 process.umask = function() { return 0; };
 
-},{}],15:[function(_dereq_,module,exports){
-(function (Buffer){
-var clone = (function() {
-'use strict';
-
-/**
- * Clones (copies) an Object using deep copying.
- *
- * This function supports circular references by default, but if you are certain
- * there are no circular references in your object, you can save some CPU time
- * by calling clone(obj, false).
- *
- * Caution: if `circular` is false and `parent` contains circular references,
- * your program may enter an infinite loop and crash.
- *
- * @param `parent` - the object to be cloned
- * @param `circular` - set to true if the object to be cloned may contain
- *    circular references. (optional - true by default)
- * @param `depth` - set to a number if the object is only to be cloned to
- *    a particular depth. (optional - defaults to Infinity)
- * @param `prototype` - sets the prototype to be used when cloning an object.
- *    (optional - defaults to parent prototype).
-*/
-function clone(parent, circular, depth, prototype) {
-  var filter;
-  if (typeof circular === 'object') {
-    depth = circular.depth;
-    prototype = circular.prototype;
-    filter = circular.filter;
-    circular = circular.circular
-  }
-  // maintain two arrays for circular references, where corresponding parents
-  // and children have the same index
-  var allParents = [];
-  var allChildren = [];
-
-  var useBuffer = typeof Buffer != 'undefined';
-
-  if (typeof circular == 'undefined')
-    circular = true;
-
-  if (typeof depth == 'undefined')
-    depth = Infinity;
-
-  // recurse this function so we don't reset allParents and allChildren
-  function _clone(parent, depth) {
-    // cloning null always returns null
-    if (parent === null)
-      return null;
-
-    if (depth == 0)
-      return parent;
-
-    var child;
-    var proto;
-    if (typeof parent != 'object') {
-      return parent;
-    }
-
-    if (clone.__isArray(parent)) {
-      child = [];
-    } else if (clone.__isRegExp(parent)) {
-      child = new RegExp(parent.source, __getRegExpFlags(parent));
-      if (parent.lastIndex) child.lastIndex = parent.lastIndex;
-    } else if (clone.__isDate(parent)) {
-      child = new Date(parent.getTime());
-    } else if (useBuffer && Buffer.isBuffer(parent)) {
-      child = new Buffer(parent.length);
-      parent.copy(child);
-      return child;
-    } else {
-      if (typeof prototype == 'undefined') {
-        proto = Object.getPrototypeOf(parent);
-        child = Object.create(proto);
-      }
-      else {
-        child = Object.create(prototype);
-        proto = prototype;
-      }
-    }
-
-    if (circular) {
-      var index = allParents.indexOf(parent);
-
-      if (index != -1) {
-        return allChildren[index];
-      }
-      allParents.push(parent);
-      allChildren.push(child);
-    }
-
-    for (var i in parent) {
-      var attrs;
-      if (proto) {
-        attrs = Object.getOwnPropertyDescriptor(proto, i);
-      }
-
-      if (attrs && attrs.set == null) {
-        continue;
-      }
-      child[i] = _clone(parent[i], depth - 1);
-    }
-
-    return child;
-  }
-
-  return _clone(parent, depth);
-}
-
-/**
- * Simple flat clone using prototype, accepts only objects, usefull for property
- * override on FLAT configuration object (no nested props).
- *
- * USE WITH CAUTION! This may not behave as you wish if you do not know how this
- * works.
- */
-clone.clonePrototype = function clonePrototype(parent) {
-  if (parent === null)
-    return null;
-
-  var c = function () {};
-  c.prototype = parent;
-  return new c();
-};
-
-// private utility functions
-
-function __objToStr(o) {
-  return Object.prototype.toString.call(o);
-};
-clone.__objToStr = __objToStr;
-
-function __isDate(o) {
-  return typeof o === 'object' && __objToStr(o) === '[object Date]';
-};
-clone.__isDate = __isDate;
-
-function __isArray(o) {
-  return typeof o === 'object' && __objToStr(o) === '[object Array]';
-};
-clone.__isArray = __isArray;
-
-function __isRegExp(o) {
-  return typeof o === 'object' && __objToStr(o) === '[object RegExp]';
-};
-clone.__isRegExp = __isRegExp;
-
-function __getRegExpFlags(re) {
-  var flags = '';
-  if (re.global) flags += 'g';
-  if (re.ignoreCase) flags += 'i';
-  if (re.multiline) flags += 'm';
-  return flags;
-};
-clone.__getRegExpFlags = __getRegExpFlags;
-
-return clone;
-})();
-
-if (typeof module === 'object' && module.exports) {
-  module.exports = clone;
-}
-
-}).call(this,_dereq_("buffer").Buffer)
-},{"buffer":9}],16:[function(_dereq_,module,exports){
+},{}],12:[function(_dereq_,module,exports){
 var pSlice = Array.prototype.slice;
 var objectKeys = _dereq_('./lib/keys.js');
 var isArguments = _dereq_('./lib/is_arguments.js');
@@ -2666,7 +1016,7 @@ function objEquiv(a, b, opts) {
   return typeof a === typeof b;
 }
 
-},{"./lib/is_arguments.js":17,"./lib/keys.js":18}],17:[function(_dereq_,module,exports){
+},{"./lib/is_arguments.js":13,"./lib/keys.js":14}],13:[function(_dereq_,module,exports){
 var supportsArgumentsClass = (function(){
   return Object.prototype.toString.call(arguments)
 })() == '[object Arguments]';
@@ -2688,7 +1038,7 @@ function unsupported(object){
     false;
 };
 
-},{}],18:[function(_dereq_,module,exports){
+},{}],14:[function(_dereq_,module,exports){
 exports = module.exports = typeof Object.keys === 'function'
   ? Object.keys : shim;
 
@@ -2699,7 +1049,7 @@ function shim (obj) {
   return keys;
 }
 
-},{}],19:[function(_dereq_,module,exports){
+},{}],15:[function(_dereq_,module,exports){
 /**
  * escallmatch:
  *   ECMAScript CallExpression matcher made from function/method signature
@@ -2899,7 +1249,7 @@ function extractExpressionFrom (tree) {
 
 module.exports = createMatcher;
 
-},{"array-filter":20,"array-foreach":21,"array-map":22,"array-reduce":23,"deep-equal":16,"esprima":24,"espurify":45,"estraverse":25,"indexof":26}],20:[function(_dereq_,module,exports){
+},{"array-filter":16,"array-foreach":17,"array-map":18,"array-reduce":19,"deep-equal":12,"esprima":20,"espurify":40,"estraverse":46,"indexof":21}],16:[function(_dereq_,module,exports){
 
 /**
  * Array#filter.
@@ -2926,7 +1276,7 @@ module.exports = function (arr, fn, self) {
 
 var hasOwn = Object.prototype.hasOwnProperty;
 
-},{}],21:[function(_dereq_,module,exports){
+},{}],17:[function(_dereq_,module,exports){
 /**
  * array-foreach
  *   Array#forEach ponyfill for older browsers
@@ -2950,7 +1300,7 @@ module.exports = function forEach (ary, callback, thisArg) {
     }
 };
 
-},{}],22:[function(_dereq_,module,exports){
+},{}],18:[function(_dereq_,module,exports){
 module.exports = function (xs, f) {
     if (xs.map) return xs.map(f);
     var res = [];
@@ -2963,7 +1313,7 @@ module.exports = function (xs, f) {
 
 var hasOwn = Object.prototype.hasOwnProperty;
 
-},{}],23:[function(_dereq_,module,exports){
+},{}],19:[function(_dereq_,module,exports){
 var hasOwn = Object.prototype.hasOwnProperty;
 
 module.exports = function (xs, f, acc) {
@@ -2983,7 +1333,7 @@ module.exports = function (xs, f, acc) {
     return acc;
 };
 
-},{}],24:[function(_dereq_,module,exports){
+},{}],20:[function(_dereq_,module,exports){
 /*
   Copyright (C) 2013 Ariya Hidayat <ariya.hidayat@gmail.com>
   Copyright (C) 2013 Thaddee Tyl <thaddee.tyl@gmail.com>
@@ -3017,17 +1367,6 @@ module.exports = function (xs, f, acc) {
   THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-/*jslint bitwise:true plusplus:true */
-/*global esprima:true, define:true, exports:true, window: true,
-throwErrorTolerant: true,
-throwError: true, generateStatement: true, peek: true,
-parseAssignmentExpression: true, parseBlock: true, parseExpression: true,
-parseFunctionDeclaration: true, parseFunctionExpression: true,
-parseFunctionSourceElements: true, parseVariableIdentifier: true,
-parseLeftHandSideExpression: true,
-parseUnaryExpression: true,
-parseStatement: true, parseSourceElement: true */
-
 (function (root, factory) {
     'use strict';
 
@@ -3049,17 +1388,23 @@ parseStatement: true, parseSourceElement: true */
         TokenName,
         FnExprTokens,
         Syntax,
-        PropertyKind,
+        PlaceHolders,
         Messages,
         Regex,
-        SyntaxTreeDelegate,
         source,
         strict,
         index,
         lineNumber,
         lineStart,
+        hasLineTerminator,
+        lastIndex,
+        lastLineNumber,
+        lastLineStart,
+        startIndex,
+        startLineNumber,
+        startLineStart,
+        scanning,
         length,
-        delegate,
         lookahead,
         state,
         extra;
@@ -3101,11 +1446,15 @@ parseStatement: true, parseSourceElement: true */
     Syntax = {
         AssignmentExpression: 'AssignmentExpression',
         ArrayExpression: 'ArrayExpression',
+        ArrowFunctionExpression: 'ArrowFunctionExpression',
         BlockStatement: 'BlockStatement',
         BinaryExpression: 'BinaryExpression',
         BreakStatement: 'BreakStatement',
         CallExpression: 'CallExpression',
         CatchClause: 'CatchClause',
+        ClassBody: 'ClassBody',
+        ClassDeclaration: 'ClassDeclaration',
+        ClassExpression: 'ClassExpression',
         ConditionalExpression: 'ConditionalExpression',
         ContinueStatement: 'ContinueStatement',
         DoWhileStatement: 'DoWhileStatement',
@@ -3122,10 +1471,12 @@ parseStatement: true, parseSourceElement: true */
         LabeledStatement: 'LabeledStatement',
         LogicalExpression: 'LogicalExpression',
         MemberExpression: 'MemberExpression',
+        MethodDefinition: 'MethodDefinition',
         NewExpression: 'NewExpression',
         ObjectExpression: 'ObjectExpression',
         Program: 'Program',
         Property: 'Property',
+        RestElement: 'RestElement',
         ReturnStatement: 'ReturnStatement',
         SequenceExpression: 'SequenceExpression',
         SwitchStatement: 'SwitchStatement',
@@ -3141,53 +1492,55 @@ parseStatement: true, parseSourceElement: true */
         WithStatement: 'WithStatement'
     };
 
-    PropertyKind = {
-        Data: 1,
-        Get: 2,
-        Set: 4
+    PlaceHolders = {
+        ArrowParameterPlaceHolder: 'ArrowParameterPlaceHolder'
     };
 
     // Error messages should be identical to V8.
     Messages = {
-        UnexpectedToken:  'Unexpected token %0',
-        UnexpectedNumber:  'Unexpected number',
-        UnexpectedString:  'Unexpected string',
-        UnexpectedIdentifier:  'Unexpected identifier',
-        UnexpectedReserved:  'Unexpected reserved word',
-        UnexpectedEOS:  'Unexpected end of input',
-        NewlineAfterThrow:  'Illegal newline after throw',
+        UnexpectedToken: 'Unexpected token %0',
+        UnexpectedNumber: 'Unexpected number',
+        UnexpectedString: 'Unexpected string',
+        UnexpectedIdentifier: 'Unexpected identifier',
+        UnexpectedReserved: 'Unexpected reserved word',
+        UnexpectedEOS: 'Unexpected end of input',
+        NewlineAfterThrow: 'Illegal newline after throw',
         InvalidRegExp: 'Invalid regular expression',
-        UnterminatedRegExp:  'Invalid regular expression: missing /',
-        InvalidLHSInAssignment:  'Invalid left-hand side in assignment',
-        InvalidLHSInForIn:  'Invalid left-hand side in for-in',
+        UnterminatedRegExp: 'Invalid regular expression: missing /',
+        InvalidLHSInAssignment: 'Invalid left-hand side in assignment',
+        InvalidLHSInForIn: 'Invalid left-hand side in for-in',
         MultipleDefaultsInSwitch: 'More than one default clause in switch statement',
-        NoCatchOrFinally:  'Missing catch or finally after try',
+        NoCatchOrFinally: 'Missing catch or finally after try',
         UnknownLabel: 'Undefined label \'%0\'',
         Redeclaration: '%0 \'%1\' has already been declared',
         IllegalContinue: 'Illegal continue statement',
         IllegalBreak: 'Illegal break statement',
         IllegalReturn: 'Illegal return statement',
-        StrictModeWith:  'Strict mode code may not include a with statement',
-        StrictCatchVariable:  'Catch variable may not be eval or arguments in strict mode',
-        StrictVarName:  'Variable name may not be eval or arguments in strict mode',
-        StrictParamName:  'Parameter name eval or arguments is not allowed in strict mode',
+        StrictModeWith: 'Strict mode code may not include a with statement',
+        StrictCatchVariable: 'Catch variable may not be eval or arguments in strict mode',
+        StrictVarName: 'Variable name may not be eval or arguments in strict mode',
+        StrictParamName: 'Parameter name eval or arguments is not allowed in strict mode',
         StrictParamDupe: 'Strict mode function may not have duplicate parameter names',
-        StrictFunctionName:  'Function name may not be eval or arguments in strict mode',
-        StrictOctalLiteral:  'Octal literals are not allowed in strict mode.',
-        StrictDelete:  'Delete of an unqualified identifier in strict mode.',
-        StrictDuplicateProperty:  'Duplicate data property in object literal not allowed in strict mode',
-        AccessorDataProperty:  'Object literal may not have data and accessor property with the same name',
-        AccessorGetSet:  'Object literal may not have multiple get/set accessors with the same name',
-        StrictLHSAssignment:  'Assignment to eval or arguments is not allowed in strict mode',
-        StrictLHSPostfix:  'Postfix increment/decrement may not have eval or arguments operand in strict mode',
-        StrictLHSPrefix:  'Prefix increment/decrement may not have eval or arguments operand in strict mode',
-        StrictReservedWord:  'Use of future reserved word in strict mode'
+        StrictFunctionName: 'Function name may not be eval or arguments in strict mode',
+        StrictOctalLiteral: 'Octal literals are not allowed in strict mode.',
+        StrictDelete: 'Delete of an unqualified identifier in strict mode.',
+        StrictLHSAssignment: 'Assignment to eval or arguments is not allowed in strict mode',
+        StrictLHSPostfix: 'Postfix increment/decrement may not have eval or arguments operand in strict mode',
+        StrictLHSPrefix: 'Prefix increment/decrement may not have eval or arguments operand in strict mode',
+        StrictReservedWord: 'Use of future reserved word in strict mode',
+        ParameterAfterRestParameter: 'Rest parameter must be last formal parameter',
+        DefaultRestParameter: 'Unexpected token =',
+        ObjectPatternAsRestParameter: 'Unexpected token {',
+        DuplicateProtoProperty: 'Duplicate __proto__ fields are not allowed in object literals',
+        ConstructorSpecialMethod: 'Class constructor may not be an accessor',
+        DuplicateConstructor: 'A class may only have one constructor',
+        StaticPrototype: 'Classes may not have static property named prototype'
     };
 
     // See also tools/generate-unicode-regex.py.
     Regex = {
-        NonAsciiIdentifierStart: new RegExp('[\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EC\u02EE\u0370-\u0374\u0376\u0377\u037A-\u037D\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03F5\u03F7-\u0481\u048A-\u0527\u0531-\u0556\u0559\u0561-\u0587\u05D0-\u05EA\u05F0-\u05F2\u0620-\u064A\u066E\u066F\u0671-\u06D3\u06D5\u06E5\u06E6\u06EE\u06EF\u06FA-\u06FC\u06FF\u0710\u0712-\u072F\u074D-\u07A5\u07B1\u07CA-\u07EA\u07F4\u07F5\u07FA\u0800-\u0815\u081A\u0824\u0828\u0840-\u0858\u08A0\u08A2-\u08AC\u0904-\u0939\u093D\u0950\u0958-\u0961\u0971-\u0977\u0979-\u097F\u0985-\u098C\u098F\u0990\u0993-\u09A8\u09AA-\u09B0\u09B2\u09B6-\u09B9\u09BD\u09CE\u09DC\u09DD\u09DF-\u09E1\u09F0\u09F1\u0A05-\u0A0A\u0A0F\u0A10\u0A13-\u0A28\u0A2A-\u0A30\u0A32\u0A33\u0A35\u0A36\u0A38\u0A39\u0A59-\u0A5C\u0A5E\u0A72-\u0A74\u0A85-\u0A8D\u0A8F-\u0A91\u0A93-\u0AA8\u0AAA-\u0AB0\u0AB2\u0AB3\u0AB5-\u0AB9\u0ABD\u0AD0\u0AE0\u0AE1\u0B05-\u0B0C\u0B0F\u0B10\u0B13-\u0B28\u0B2A-\u0B30\u0B32\u0B33\u0B35-\u0B39\u0B3D\u0B5C\u0B5D\u0B5F-\u0B61\u0B71\u0B83\u0B85-\u0B8A\u0B8E-\u0B90\u0B92-\u0B95\u0B99\u0B9A\u0B9C\u0B9E\u0B9F\u0BA3\u0BA4\u0BA8-\u0BAA\u0BAE-\u0BB9\u0BD0\u0C05-\u0C0C\u0C0E-\u0C10\u0C12-\u0C28\u0C2A-\u0C33\u0C35-\u0C39\u0C3D\u0C58\u0C59\u0C60\u0C61\u0C85-\u0C8C\u0C8E-\u0C90\u0C92-\u0CA8\u0CAA-\u0CB3\u0CB5-\u0CB9\u0CBD\u0CDE\u0CE0\u0CE1\u0CF1\u0CF2\u0D05-\u0D0C\u0D0E-\u0D10\u0D12-\u0D3A\u0D3D\u0D4E\u0D60\u0D61\u0D7A-\u0D7F\u0D85-\u0D96\u0D9A-\u0DB1\u0DB3-\u0DBB\u0DBD\u0DC0-\u0DC6\u0E01-\u0E30\u0E32\u0E33\u0E40-\u0E46\u0E81\u0E82\u0E84\u0E87\u0E88\u0E8A\u0E8D\u0E94-\u0E97\u0E99-\u0E9F\u0EA1-\u0EA3\u0EA5\u0EA7\u0EAA\u0EAB\u0EAD-\u0EB0\u0EB2\u0EB3\u0EBD\u0EC0-\u0EC4\u0EC6\u0EDC-\u0EDF\u0F00\u0F40-\u0F47\u0F49-\u0F6C\u0F88-\u0F8C\u1000-\u102A\u103F\u1050-\u1055\u105A-\u105D\u1061\u1065\u1066\u106E-\u1070\u1075-\u1081\u108E\u10A0-\u10C5\u10C7\u10CD\u10D0-\u10FA\u10FC-\u1248\u124A-\u124D\u1250-\u1256\u1258\u125A-\u125D\u1260-\u1288\u128A-\u128D\u1290-\u12B0\u12B2-\u12B5\u12B8-\u12BE\u12C0\u12C2-\u12C5\u12C8-\u12D6\u12D8-\u1310\u1312-\u1315\u1318-\u135A\u1380-\u138F\u13A0-\u13F4\u1401-\u166C\u166F-\u167F\u1681-\u169A\u16A0-\u16EA\u16EE-\u16F0\u1700-\u170C\u170E-\u1711\u1720-\u1731\u1740-\u1751\u1760-\u176C\u176E-\u1770\u1780-\u17B3\u17D7\u17DC\u1820-\u1877\u1880-\u18A8\u18AA\u18B0-\u18F5\u1900-\u191C\u1950-\u196D\u1970-\u1974\u1980-\u19AB\u19C1-\u19C7\u1A00-\u1A16\u1A20-\u1A54\u1AA7\u1B05-\u1B33\u1B45-\u1B4B\u1B83-\u1BA0\u1BAE\u1BAF\u1BBA-\u1BE5\u1C00-\u1C23\u1C4D-\u1C4F\u1C5A-\u1C7D\u1CE9-\u1CEC\u1CEE-\u1CF1\u1CF5\u1CF6\u1D00-\u1DBF\u1E00-\u1F15\u1F18-\u1F1D\u1F20-\u1F45\u1F48-\u1F4D\u1F50-\u1F57\u1F59\u1F5B\u1F5D\u1F5F-\u1F7D\u1F80-\u1FB4\u1FB6-\u1FBC\u1FBE\u1FC2-\u1FC4\u1FC6-\u1FCC\u1FD0-\u1FD3\u1FD6-\u1FDB\u1FE0-\u1FEC\u1FF2-\u1FF4\u1FF6-\u1FFC\u2071\u207F\u2090-\u209C\u2102\u2107\u210A-\u2113\u2115\u2119-\u211D\u2124\u2126\u2128\u212A-\u212D\u212F-\u2139\u213C-\u213F\u2145-\u2149\u214E\u2160-\u2188\u2C00-\u2C2E\u2C30-\u2C5E\u2C60-\u2CE4\u2CEB-\u2CEE\u2CF2\u2CF3\u2D00-\u2D25\u2D27\u2D2D\u2D30-\u2D67\u2D6F\u2D80-\u2D96\u2DA0-\u2DA6\u2DA8-\u2DAE\u2DB0-\u2DB6\u2DB8-\u2DBE\u2DC0-\u2DC6\u2DC8-\u2DCE\u2DD0-\u2DD6\u2DD8-\u2DDE\u2E2F\u3005-\u3007\u3021-\u3029\u3031-\u3035\u3038-\u303C\u3041-\u3096\u309D-\u309F\u30A1-\u30FA\u30FC-\u30FF\u3105-\u312D\u3131-\u318E\u31A0-\u31BA\u31F0-\u31FF\u3400-\u4DB5\u4E00-\u9FCC\uA000-\uA48C\uA4D0-\uA4FD\uA500-\uA60C\uA610-\uA61F\uA62A\uA62B\uA640-\uA66E\uA67F-\uA697\uA6A0-\uA6EF\uA717-\uA71F\uA722-\uA788\uA78B-\uA78E\uA790-\uA793\uA7A0-\uA7AA\uA7F8-\uA801\uA803-\uA805\uA807-\uA80A\uA80C-\uA822\uA840-\uA873\uA882-\uA8B3\uA8F2-\uA8F7\uA8FB\uA90A-\uA925\uA930-\uA946\uA960-\uA97C\uA984-\uA9B2\uA9CF\uAA00-\uAA28\uAA40-\uAA42\uAA44-\uAA4B\uAA60-\uAA76\uAA7A\uAA80-\uAAAF\uAAB1\uAAB5\uAAB6\uAAB9-\uAABD\uAAC0\uAAC2\uAADB-\uAADD\uAAE0-\uAAEA\uAAF2-\uAAF4\uAB01-\uAB06\uAB09-\uAB0E\uAB11-\uAB16\uAB20-\uAB26\uAB28-\uAB2E\uABC0-\uABE2\uAC00-\uD7A3\uD7B0-\uD7C6\uD7CB-\uD7FB\uF900-\uFA6D\uFA70-\uFAD9\uFB00-\uFB06\uFB13-\uFB17\uFB1D\uFB1F-\uFB28\uFB2A-\uFB36\uFB38-\uFB3C\uFB3E\uFB40\uFB41\uFB43\uFB44\uFB46-\uFBB1\uFBD3-\uFD3D\uFD50-\uFD8F\uFD92-\uFDC7\uFDF0-\uFDFB\uFE70-\uFE74\uFE76-\uFEFC\uFF21-\uFF3A\uFF41-\uFF5A\uFF66-\uFFBE\uFFC2-\uFFC7\uFFCA-\uFFCF\uFFD2-\uFFD7\uFFDA-\uFFDC]'),
-        NonAsciiIdentifierPart: new RegExp('[\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EC\u02EE\u0300-\u0374\u0376\u0377\u037A-\u037D\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03F5\u03F7-\u0481\u0483-\u0487\u048A-\u0527\u0531-\u0556\u0559\u0561-\u0587\u0591-\u05BD\u05BF\u05C1\u05C2\u05C4\u05C5\u05C7\u05D0-\u05EA\u05F0-\u05F2\u0610-\u061A\u0620-\u0669\u066E-\u06D3\u06D5-\u06DC\u06DF-\u06E8\u06EA-\u06FC\u06FF\u0710-\u074A\u074D-\u07B1\u07C0-\u07F5\u07FA\u0800-\u082D\u0840-\u085B\u08A0\u08A2-\u08AC\u08E4-\u08FE\u0900-\u0963\u0966-\u096F\u0971-\u0977\u0979-\u097F\u0981-\u0983\u0985-\u098C\u098F\u0990\u0993-\u09A8\u09AA-\u09B0\u09B2\u09B6-\u09B9\u09BC-\u09C4\u09C7\u09C8\u09CB-\u09CE\u09D7\u09DC\u09DD\u09DF-\u09E3\u09E6-\u09F1\u0A01-\u0A03\u0A05-\u0A0A\u0A0F\u0A10\u0A13-\u0A28\u0A2A-\u0A30\u0A32\u0A33\u0A35\u0A36\u0A38\u0A39\u0A3C\u0A3E-\u0A42\u0A47\u0A48\u0A4B-\u0A4D\u0A51\u0A59-\u0A5C\u0A5E\u0A66-\u0A75\u0A81-\u0A83\u0A85-\u0A8D\u0A8F-\u0A91\u0A93-\u0AA8\u0AAA-\u0AB0\u0AB2\u0AB3\u0AB5-\u0AB9\u0ABC-\u0AC5\u0AC7-\u0AC9\u0ACB-\u0ACD\u0AD0\u0AE0-\u0AE3\u0AE6-\u0AEF\u0B01-\u0B03\u0B05-\u0B0C\u0B0F\u0B10\u0B13-\u0B28\u0B2A-\u0B30\u0B32\u0B33\u0B35-\u0B39\u0B3C-\u0B44\u0B47\u0B48\u0B4B-\u0B4D\u0B56\u0B57\u0B5C\u0B5D\u0B5F-\u0B63\u0B66-\u0B6F\u0B71\u0B82\u0B83\u0B85-\u0B8A\u0B8E-\u0B90\u0B92-\u0B95\u0B99\u0B9A\u0B9C\u0B9E\u0B9F\u0BA3\u0BA4\u0BA8-\u0BAA\u0BAE-\u0BB9\u0BBE-\u0BC2\u0BC6-\u0BC8\u0BCA-\u0BCD\u0BD0\u0BD7\u0BE6-\u0BEF\u0C01-\u0C03\u0C05-\u0C0C\u0C0E-\u0C10\u0C12-\u0C28\u0C2A-\u0C33\u0C35-\u0C39\u0C3D-\u0C44\u0C46-\u0C48\u0C4A-\u0C4D\u0C55\u0C56\u0C58\u0C59\u0C60-\u0C63\u0C66-\u0C6F\u0C82\u0C83\u0C85-\u0C8C\u0C8E-\u0C90\u0C92-\u0CA8\u0CAA-\u0CB3\u0CB5-\u0CB9\u0CBC-\u0CC4\u0CC6-\u0CC8\u0CCA-\u0CCD\u0CD5\u0CD6\u0CDE\u0CE0-\u0CE3\u0CE6-\u0CEF\u0CF1\u0CF2\u0D02\u0D03\u0D05-\u0D0C\u0D0E-\u0D10\u0D12-\u0D3A\u0D3D-\u0D44\u0D46-\u0D48\u0D4A-\u0D4E\u0D57\u0D60-\u0D63\u0D66-\u0D6F\u0D7A-\u0D7F\u0D82\u0D83\u0D85-\u0D96\u0D9A-\u0DB1\u0DB3-\u0DBB\u0DBD\u0DC0-\u0DC6\u0DCA\u0DCF-\u0DD4\u0DD6\u0DD8-\u0DDF\u0DF2\u0DF3\u0E01-\u0E3A\u0E40-\u0E4E\u0E50-\u0E59\u0E81\u0E82\u0E84\u0E87\u0E88\u0E8A\u0E8D\u0E94-\u0E97\u0E99-\u0E9F\u0EA1-\u0EA3\u0EA5\u0EA7\u0EAA\u0EAB\u0EAD-\u0EB9\u0EBB-\u0EBD\u0EC0-\u0EC4\u0EC6\u0EC8-\u0ECD\u0ED0-\u0ED9\u0EDC-\u0EDF\u0F00\u0F18\u0F19\u0F20-\u0F29\u0F35\u0F37\u0F39\u0F3E-\u0F47\u0F49-\u0F6C\u0F71-\u0F84\u0F86-\u0F97\u0F99-\u0FBC\u0FC6\u1000-\u1049\u1050-\u109D\u10A0-\u10C5\u10C7\u10CD\u10D0-\u10FA\u10FC-\u1248\u124A-\u124D\u1250-\u1256\u1258\u125A-\u125D\u1260-\u1288\u128A-\u128D\u1290-\u12B0\u12B2-\u12B5\u12B8-\u12BE\u12C0\u12C2-\u12C5\u12C8-\u12D6\u12D8-\u1310\u1312-\u1315\u1318-\u135A\u135D-\u135F\u1380-\u138F\u13A0-\u13F4\u1401-\u166C\u166F-\u167F\u1681-\u169A\u16A0-\u16EA\u16EE-\u16F0\u1700-\u170C\u170E-\u1714\u1720-\u1734\u1740-\u1753\u1760-\u176C\u176E-\u1770\u1772\u1773\u1780-\u17D3\u17D7\u17DC\u17DD\u17E0-\u17E9\u180B-\u180D\u1810-\u1819\u1820-\u1877\u1880-\u18AA\u18B0-\u18F5\u1900-\u191C\u1920-\u192B\u1930-\u193B\u1946-\u196D\u1970-\u1974\u1980-\u19AB\u19B0-\u19C9\u19D0-\u19D9\u1A00-\u1A1B\u1A20-\u1A5E\u1A60-\u1A7C\u1A7F-\u1A89\u1A90-\u1A99\u1AA7\u1B00-\u1B4B\u1B50-\u1B59\u1B6B-\u1B73\u1B80-\u1BF3\u1C00-\u1C37\u1C40-\u1C49\u1C4D-\u1C7D\u1CD0-\u1CD2\u1CD4-\u1CF6\u1D00-\u1DE6\u1DFC-\u1F15\u1F18-\u1F1D\u1F20-\u1F45\u1F48-\u1F4D\u1F50-\u1F57\u1F59\u1F5B\u1F5D\u1F5F-\u1F7D\u1F80-\u1FB4\u1FB6-\u1FBC\u1FBE\u1FC2-\u1FC4\u1FC6-\u1FCC\u1FD0-\u1FD3\u1FD6-\u1FDB\u1FE0-\u1FEC\u1FF2-\u1FF4\u1FF6-\u1FFC\u200C\u200D\u203F\u2040\u2054\u2071\u207F\u2090-\u209C\u20D0-\u20DC\u20E1\u20E5-\u20F0\u2102\u2107\u210A-\u2113\u2115\u2119-\u211D\u2124\u2126\u2128\u212A-\u212D\u212F-\u2139\u213C-\u213F\u2145-\u2149\u214E\u2160-\u2188\u2C00-\u2C2E\u2C30-\u2C5E\u2C60-\u2CE4\u2CEB-\u2CF3\u2D00-\u2D25\u2D27\u2D2D\u2D30-\u2D67\u2D6F\u2D7F-\u2D96\u2DA0-\u2DA6\u2DA8-\u2DAE\u2DB0-\u2DB6\u2DB8-\u2DBE\u2DC0-\u2DC6\u2DC8-\u2DCE\u2DD0-\u2DD6\u2DD8-\u2DDE\u2DE0-\u2DFF\u2E2F\u3005-\u3007\u3021-\u302F\u3031-\u3035\u3038-\u303C\u3041-\u3096\u3099\u309A\u309D-\u309F\u30A1-\u30FA\u30FC-\u30FF\u3105-\u312D\u3131-\u318E\u31A0-\u31BA\u31F0-\u31FF\u3400-\u4DB5\u4E00-\u9FCC\uA000-\uA48C\uA4D0-\uA4FD\uA500-\uA60C\uA610-\uA62B\uA640-\uA66F\uA674-\uA67D\uA67F-\uA697\uA69F-\uA6F1\uA717-\uA71F\uA722-\uA788\uA78B-\uA78E\uA790-\uA793\uA7A0-\uA7AA\uA7F8-\uA827\uA840-\uA873\uA880-\uA8C4\uA8D0-\uA8D9\uA8E0-\uA8F7\uA8FB\uA900-\uA92D\uA930-\uA953\uA960-\uA97C\uA980-\uA9C0\uA9CF-\uA9D9\uAA00-\uAA36\uAA40-\uAA4D\uAA50-\uAA59\uAA60-\uAA76\uAA7A\uAA7B\uAA80-\uAAC2\uAADB-\uAADD\uAAE0-\uAAEF\uAAF2-\uAAF6\uAB01-\uAB06\uAB09-\uAB0E\uAB11-\uAB16\uAB20-\uAB26\uAB28-\uAB2E\uABC0-\uABEA\uABEC\uABED\uABF0-\uABF9\uAC00-\uD7A3\uD7B0-\uD7C6\uD7CB-\uD7FB\uF900-\uFA6D\uFA70-\uFAD9\uFB00-\uFB06\uFB13-\uFB17\uFB1D-\uFB28\uFB2A-\uFB36\uFB38-\uFB3C\uFB3E\uFB40\uFB41\uFB43\uFB44\uFB46-\uFBB1\uFBD3-\uFD3D\uFD50-\uFD8F\uFD92-\uFDC7\uFDF0-\uFDFB\uFE00-\uFE0F\uFE20-\uFE26\uFE33\uFE34\uFE4D-\uFE4F\uFE70-\uFE74\uFE76-\uFEFC\uFF10-\uFF19\uFF21-\uFF3A\uFF3F\uFF41-\uFF5A\uFF66-\uFFBE\uFFC2-\uFFC7\uFFCA-\uFFCF\uFFD2-\uFFD7\uFFDA-\uFFDC]')
+        NonAsciiIdentifierStart: new RegExp('[\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EC\u02EE\u0370-\u0374\u0376\u0377\u037A-\u037D\u037F\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03F5\u03F7-\u0481\u048A-\u052F\u0531-\u0556\u0559\u0561-\u0587\u05D0-\u05EA\u05F0-\u05F2\u0620-\u064A\u066E\u066F\u0671-\u06D3\u06D5\u06E5\u06E6\u06EE\u06EF\u06FA-\u06FC\u06FF\u0710\u0712-\u072F\u074D-\u07A5\u07B1\u07CA-\u07EA\u07F4\u07F5\u07FA\u0800-\u0815\u081A\u0824\u0828\u0840-\u0858\u08A0-\u08B2\u0904-\u0939\u093D\u0950\u0958-\u0961\u0971-\u0980\u0985-\u098C\u098F\u0990\u0993-\u09A8\u09AA-\u09B0\u09B2\u09B6-\u09B9\u09BD\u09CE\u09DC\u09DD\u09DF-\u09E1\u09F0\u09F1\u0A05-\u0A0A\u0A0F\u0A10\u0A13-\u0A28\u0A2A-\u0A30\u0A32\u0A33\u0A35\u0A36\u0A38\u0A39\u0A59-\u0A5C\u0A5E\u0A72-\u0A74\u0A85-\u0A8D\u0A8F-\u0A91\u0A93-\u0AA8\u0AAA-\u0AB0\u0AB2\u0AB3\u0AB5-\u0AB9\u0ABD\u0AD0\u0AE0\u0AE1\u0B05-\u0B0C\u0B0F\u0B10\u0B13-\u0B28\u0B2A-\u0B30\u0B32\u0B33\u0B35-\u0B39\u0B3D\u0B5C\u0B5D\u0B5F-\u0B61\u0B71\u0B83\u0B85-\u0B8A\u0B8E-\u0B90\u0B92-\u0B95\u0B99\u0B9A\u0B9C\u0B9E\u0B9F\u0BA3\u0BA4\u0BA8-\u0BAA\u0BAE-\u0BB9\u0BD0\u0C05-\u0C0C\u0C0E-\u0C10\u0C12-\u0C28\u0C2A-\u0C39\u0C3D\u0C58\u0C59\u0C60\u0C61\u0C85-\u0C8C\u0C8E-\u0C90\u0C92-\u0CA8\u0CAA-\u0CB3\u0CB5-\u0CB9\u0CBD\u0CDE\u0CE0\u0CE1\u0CF1\u0CF2\u0D05-\u0D0C\u0D0E-\u0D10\u0D12-\u0D3A\u0D3D\u0D4E\u0D60\u0D61\u0D7A-\u0D7F\u0D85-\u0D96\u0D9A-\u0DB1\u0DB3-\u0DBB\u0DBD\u0DC0-\u0DC6\u0E01-\u0E30\u0E32\u0E33\u0E40-\u0E46\u0E81\u0E82\u0E84\u0E87\u0E88\u0E8A\u0E8D\u0E94-\u0E97\u0E99-\u0E9F\u0EA1-\u0EA3\u0EA5\u0EA7\u0EAA\u0EAB\u0EAD-\u0EB0\u0EB2\u0EB3\u0EBD\u0EC0-\u0EC4\u0EC6\u0EDC-\u0EDF\u0F00\u0F40-\u0F47\u0F49-\u0F6C\u0F88-\u0F8C\u1000-\u102A\u103F\u1050-\u1055\u105A-\u105D\u1061\u1065\u1066\u106E-\u1070\u1075-\u1081\u108E\u10A0-\u10C5\u10C7\u10CD\u10D0-\u10FA\u10FC-\u1248\u124A-\u124D\u1250-\u1256\u1258\u125A-\u125D\u1260-\u1288\u128A-\u128D\u1290-\u12B0\u12B2-\u12B5\u12B8-\u12BE\u12C0\u12C2-\u12C5\u12C8-\u12D6\u12D8-\u1310\u1312-\u1315\u1318-\u135A\u1380-\u138F\u13A0-\u13F4\u1401-\u166C\u166F-\u167F\u1681-\u169A\u16A0-\u16EA\u16EE-\u16F8\u1700-\u170C\u170E-\u1711\u1720-\u1731\u1740-\u1751\u1760-\u176C\u176E-\u1770\u1780-\u17B3\u17D7\u17DC\u1820-\u1877\u1880-\u18A8\u18AA\u18B0-\u18F5\u1900-\u191E\u1950-\u196D\u1970-\u1974\u1980-\u19AB\u19C1-\u19C7\u1A00-\u1A16\u1A20-\u1A54\u1AA7\u1B05-\u1B33\u1B45-\u1B4B\u1B83-\u1BA0\u1BAE\u1BAF\u1BBA-\u1BE5\u1C00-\u1C23\u1C4D-\u1C4F\u1C5A-\u1C7D\u1CE9-\u1CEC\u1CEE-\u1CF1\u1CF5\u1CF6\u1D00-\u1DBF\u1E00-\u1F15\u1F18-\u1F1D\u1F20-\u1F45\u1F48-\u1F4D\u1F50-\u1F57\u1F59\u1F5B\u1F5D\u1F5F-\u1F7D\u1F80-\u1FB4\u1FB6-\u1FBC\u1FBE\u1FC2-\u1FC4\u1FC6-\u1FCC\u1FD0-\u1FD3\u1FD6-\u1FDB\u1FE0-\u1FEC\u1FF2-\u1FF4\u1FF6-\u1FFC\u2071\u207F\u2090-\u209C\u2102\u2107\u210A-\u2113\u2115\u2119-\u211D\u2124\u2126\u2128\u212A-\u212D\u212F-\u2139\u213C-\u213F\u2145-\u2149\u214E\u2160-\u2188\u2C00-\u2C2E\u2C30-\u2C5E\u2C60-\u2CE4\u2CEB-\u2CEE\u2CF2\u2CF3\u2D00-\u2D25\u2D27\u2D2D\u2D30-\u2D67\u2D6F\u2D80-\u2D96\u2DA0-\u2DA6\u2DA8-\u2DAE\u2DB0-\u2DB6\u2DB8-\u2DBE\u2DC0-\u2DC6\u2DC8-\u2DCE\u2DD0-\u2DD6\u2DD8-\u2DDE\u2E2F\u3005-\u3007\u3021-\u3029\u3031-\u3035\u3038-\u303C\u3041-\u3096\u309D-\u309F\u30A1-\u30FA\u30FC-\u30FF\u3105-\u312D\u3131-\u318E\u31A0-\u31BA\u31F0-\u31FF\u3400-\u4DB5\u4E00-\u9FCC\uA000-\uA48C\uA4D0-\uA4FD\uA500-\uA60C\uA610-\uA61F\uA62A\uA62B\uA640-\uA66E\uA67F-\uA69D\uA6A0-\uA6EF\uA717-\uA71F\uA722-\uA788\uA78B-\uA78E\uA790-\uA7AD\uA7B0\uA7B1\uA7F7-\uA801\uA803-\uA805\uA807-\uA80A\uA80C-\uA822\uA840-\uA873\uA882-\uA8B3\uA8F2-\uA8F7\uA8FB\uA90A-\uA925\uA930-\uA946\uA960-\uA97C\uA984-\uA9B2\uA9CF\uA9E0-\uA9E4\uA9E6-\uA9EF\uA9FA-\uA9FE\uAA00-\uAA28\uAA40-\uAA42\uAA44-\uAA4B\uAA60-\uAA76\uAA7A\uAA7E-\uAAAF\uAAB1\uAAB5\uAAB6\uAAB9-\uAABD\uAAC0\uAAC2\uAADB-\uAADD\uAAE0-\uAAEA\uAAF2-\uAAF4\uAB01-\uAB06\uAB09-\uAB0E\uAB11-\uAB16\uAB20-\uAB26\uAB28-\uAB2E\uAB30-\uAB5A\uAB5C-\uAB5F\uAB64\uAB65\uABC0-\uABE2\uAC00-\uD7A3\uD7B0-\uD7C6\uD7CB-\uD7FB\uF900-\uFA6D\uFA70-\uFAD9\uFB00-\uFB06\uFB13-\uFB17\uFB1D\uFB1F-\uFB28\uFB2A-\uFB36\uFB38-\uFB3C\uFB3E\uFB40\uFB41\uFB43\uFB44\uFB46-\uFBB1\uFBD3-\uFD3D\uFD50-\uFD8F\uFD92-\uFDC7\uFDF0-\uFDFB\uFE70-\uFE74\uFE76-\uFEFC\uFF21-\uFF3A\uFF41-\uFF5A\uFF66-\uFFBE\uFFC2-\uFFC7\uFFCA-\uFFCF\uFFD2-\uFFD7\uFFDA-\uFFDC]'),
+        NonAsciiIdentifierPart: new RegExp('[\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EC\u02EE\u0300-\u0374\u0376\u0377\u037A-\u037D\u037F\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03F5\u03F7-\u0481\u0483-\u0487\u048A-\u052F\u0531-\u0556\u0559\u0561-\u0587\u0591-\u05BD\u05BF\u05C1\u05C2\u05C4\u05C5\u05C7\u05D0-\u05EA\u05F0-\u05F2\u0610-\u061A\u0620-\u0669\u066E-\u06D3\u06D5-\u06DC\u06DF-\u06E8\u06EA-\u06FC\u06FF\u0710-\u074A\u074D-\u07B1\u07C0-\u07F5\u07FA\u0800-\u082D\u0840-\u085B\u08A0-\u08B2\u08E4-\u0963\u0966-\u096F\u0971-\u0983\u0985-\u098C\u098F\u0990\u0993-\u09A8\u09AA-\u09B0\u09B2\u09B6-\u09B9\u09BC-\u09C4\u09C7\u09C8\u09CB-\u09CE\u09D7\u09DC\u09DD\u09DF-\u09E3\u09E6-\u09F1\u0A01-\u0A03\u0A05-\u0A0A\u0A0F\u0A10\u0A13-\u0A28\u0A2A-\u0A30\u0A32\u0A33\u0A35\u0A36\u0A38\u0A39\u0A3C\u0A3E-\u0A42\u0A47\u0A48\u0A4B-\u0A4D\u0A51\u0A59-\u0A5C\u0A5E\u0A66-\u0A75\u0A81-\u0A83\u0A85-\u0A8D\u0A8F-\u0A91\u0A93-\u0AA8\u0AAA-\u0AB0\u0AB2\u0AB3\u0AB5-\u0AB9\u0ABC-\u0AC5\u0AC7-\u0AC9\u0ACB-\u0ACD\u0AD0\u0AE0-\u0AE3\u0AE6-\u0AEF\u0B01-\u0B03\u0B05-\u0B0C\u0B0F\u0B10\u0B13-\u0B28\u0B2A-\u0B30\u0B32\u0B33\u0B35-\u0B39\u0B3C-\u0B44\u0B47\u0B48\u0B4B-\u0B4D\u0B56\u0B57\u0B5C\u0B5D\u0B5F-\u0B63\u0B66-\u0B6F\u0B71\u0B82\u0B83\u0B85-\u0B8A\u0B8E-\u0B90\u0B92-\u0B95\u0B99\u0B9A\u0B9C\u0B9E\u0B9F\u0BA3\u0BA4\u0BA8-\u0BAA\u0BAE-\u0BB9\u0BBE-\u0BC2\u0BC6-\u0BC8\u0BCA-\u0BCD\u0BD0\u0BD7\u0BE6-\u0BEF\u0C00-\u0C03\u0C05-\u0C0C\u0C0E-\u0C10\u0C12-\u0C28\u0C2A-\u0C39\u0C3D-\u0C44\u0C46-\u0C48\u0C4A-\u0C4D\u0C55\u0C56\u0C58\u0C59\u0C60-\u0C63\u0C66-\u0C6F\u0C81-\u0C83\u0C85-\u0C8C\u0C8E-\u0C90\u0C92-\u0CA8\u0CAA-\u0CB3\u0CB5-\u0CB9\u0CBC-\u0CC4\u0CC6-\u0CC8\u0CCA-\u0CCD\u0CD5\u0CD6\u0CDE\u0CE0-\u0CE3\u0CE6-\u0CEF\u0CF1\u0CF2\u0D01-\u0D03\u0D05-\u0D0C\u0D0E-\u0D10\u0D12-\u0D3A\u0D3D-\u0D44\u0D46-\u0D48\u0D4A-\u0D4E\u0D57\u0D60-\u0D63\u0D66-\u0D6F\u0D7A-\u0D7F\u0D82\u0D83\u0D85-\u0D96\u0D9A-\u0DB1\u0DB3-\u0DBB\u0DBD\u0DC0-\u0DC6\u0DCA\u0DCF-\u0DD4\u0DD6\u0DD8-\u0DDF\u0DE6-\u0DEF\u0DF2\u0DF3\u0E01-\u0E3A\u0E40-\u0E4E\u0E50-\u0E59\u0E81\u0E82\u0E84\u0E87\u0E88\u0E8A\u0E8D\u0E94-\u0E97\u0E99-\u0E9F\u0EA1-\u0EA3\u0EA5\u0EA7\u0EAA\u0EAB\u0EAD-\u0EB9\u0EBB-\u0EBD\u0EC0-\u0EC4\u0EC6\u0EC8-\u0ECD\u0ED0-\u0ED9\u0EDC-\u0EDF\u0F00\u0F18\u0F19\u0F20-\u0F29\u0F35\u0F37\u0F39\u0F3E-\u0F47\u0F49-\u0F6C\u0F71-\u0F84\u0F86-\u0F97\u0F99-\u0FBC\u0FC6\u1000-\u1049\u1050-\u109D\u10A0-\u10C5\u10C7\u10CD\u10D0-\u10FA\u10FC-\u1248\u124A-\u124D\u1250-\u1256\u1258\u125A-\u125D\u1260-\u1288\u128A-\u128D\u1290-\u12B0\u12B2-\u12B5\u12B8-\u12BE\u12C0\u12C2-\u12C5\u12C8-\u12D6\u12D8-\u1310\u1312-\u1315\u1318-\u135A\u135D-\u135F\u1380-\u138F\u13A0-\u13F4\u1401-\u166C\u166F-\u167F\u1681-\u169A\u16A0-\u16EA\u16EE-\u16F8\u1700-\u170C\u170E-\u1714\u1720-\u1734\u1740-\u1753\u1760-\u176C\u176E-\u1770\u1772\u1773\u1780-\u17D3\u17D7\u17DC\u17DD\u17E0-\u17E9\u180B-\u180D\u1810-\u1819\u1820-\u1877\u1880-\u18AA\u18B0-\u18F5\u1900-\u191E\u1920-\u192B\u1930-\u193B\u1946-\u196D\u1970-\u1974\u1980-\u19AB\u19B0-\u19C9\u19D0-\u19D9\u1A00-\u1A1B\u1A20-\u1A5E\u1A60-\u1A7C\u1A7F-\u1A89\u1A90-\u1A99\u1AA7\u1AB0-\u1ABD\u1B00-\u1B4B\u1B50-\u1B59\u1B6B-\u1B73\u1B80-\u1BF3\u1C00-\u1C37\u1C40-\u1C49\u1C4D-\u1C7D\u1CD0-\u1CD2\u1CD4-\u1CF6\u1CF8\u1CF9\u1D00-\u1DF5\u1DFC-\u1F15\u1F18-\u1F1D\u1F20-\u1F45\u1F48-\u1F4D\u1F50-\u1F57\u1F59\u1F5B\u1F5D\u1F5F-\u1F7D\u1F80-\u1FB4\u1FB6-\u1FBC\u1FBE\u1FC2-\u1FC4\u1FC6-\u1FCC\u1FD0-\u1FD3\u1FD6-\u1FDB\u1FE0-\u1FEC\u1FF2-\u1FF4\u1FF6-\u1FFC\u200C\u200D\u203F\u2040\u2054\u2071\u207F\u2090-\u209C\u20D0-\u20DC\u20E1\u20E5-\u20F0\u2102\u2107\u210A-\u2113\u2115\u2119-\u211D\u2124\u2126\u2128\u212A-\u212D\u212F-\u2139\u213C-\u213F\u2145-\u2149\u214E\u2160-\u2188\u2C00-\u2C2E\u2C30-\u2C5E\u2C60-\u2CE4\u2CEB-\u2CF3\u2D00-\u2D25\u2D27\u2D2D\u2D30-\u2D67\u2D6F\u2D7F-\u2D96\u2DA0-\u2DA6\u2DA8-\u2DAE\u2DB0-\u2DB6\u2DB8-\u2DBE\u2DC0-\u2DC6\u2DC8-\u2DCE\u2DD0-\u2DD6\u2DD8-\u2DDE\u2DE0-\u2DFF\u2E2F\u3005-\u3007\u3021-\u302F\u3031-\u3035\u3038-\u303C\u3041-\u3096\u3099\u309A\u309D-\u309F\u30A1-\u30FA\u30FC-\u30FF\u3105-\u312D\u3131-\u318E\u31A0-\u31BA\u31F0-\u31FF\u3400-\u4DB5\u4E00-\u9FCC\uA000-\uA48C\uA4D0-\uA4FD\uA500-\uA60C\uA610-\uA62B\uA640-\uA66F\uA674-\uA67D\uA67F-\uA69D\uA69F-\uA6F1\uA717-\uA71F\uA722-\uA788\uA78B-\uA78E\uA790-\uA7AD\uA7B0\uA7B1\uA7F7-\uA827\uA840-\uA873\uA880-\uA8C4\uA8D0-\uA8D9\uA8E0-\uA8F7\uA8FB\uA900-\uA92D\uA930-\uA953\uA960-\uA97C\uA980-\uA9C0\uA9CF-\uA9D9\uA9E0-\uA9FE\uAA00-\uAA36\uAA40-\uAA4D\uAA50-\uAA59\uAA60-\uAA76\uAA7A-\uAAC2\uAADB-\uAADD\uAAE0-\uAAEF\uAAF2-\uAAF6\uAB01-\uAB06\uAB09-\uAB0E\uAB11-\uAB16\uAB20-\uAB26\uAB28-\uAB2E\uAB30-\uAB5A\uAB5C-\uAB5F\uAB64\uAB65\uABC0-\uABEA\uABEC\uABED\uABF0-\uABF9\uAC00-\uD7A3\uD7B0-\uD7C6\uD7CB-\uD7FB\uF900-\uFA6D\uFA70-\uFAD9\uFB00-\uFB06\uFB13-\uFB17\uFB1D-\uFB28\uFB2A-\uFB36\uFB38-\uFB3C\uFB3E\uFB40\uFB41\uFB43\uFB44\uFB46-\uFBB1\uFBD3-\uFD3D\uFD50-\uFD8F\uFD92-\uFDC7\uFDF0-\uFDFB\uFE00-\uFE0F\uFE20-\uFE2D\uFE33\uFE34\uFE4D-\uFE4F\uFE70-\uFE74\uFE76-\uFEFC\uFF10-\uFF19\uFF21-\uFF3A\uFF3F\uFF41-\uFF5A\uFF66-\uFFBE\uFFC2-\uFFC7\uFFCA-\uFFCF\uFFD2-\uFFD7\uFFDA-\uFFDC]')
     };
 
     // Ensure the condition is true, otherwise throw an error.
@@ -3203,7 +1556,7 @@ parseStatement: true, parseSourceElement: true */
     }
 
     function isDecimalDigit(ch) {
-        return (ch >= 48 && ch <= 57);   // 0..9
+        return (ch >= 0x30 && ch <= 0x39);   // 0..9
     }
 
     function isHexDigit(ch) {
@@ -3251,10 +1604,8 @@ parseStatement: true, parseSourceElement: true */
 
     function isFutureReservedWord(id) {
         switch (id) {
-        case 'class':
         case 'enum':
         case 'export':
-        case 'extends':
         case 'import':
         case 'super':
             return true;
@@ -3262,6 +1613,8 @@ parseStatement: true, parseSourceElement: true */
             return false;
         }
     }
+
+    // 11.6.2.2 Future Reserved Words
 
     function isStrictModeReservedWord(id) {
         switch (id) {
@@ -3292,7 +1645,7 @@ parseStatement: true, parseSourceElement: true */
         }
 
         // 'const' is specialized as Keyword in V8.
-        // 'yield' and 'let' are for compatiblity with SpiderMonkey and ES.next.
+        // 'yield' and 'let' are for compatibility with SpiderMonkey and ES.next.
         // Some others are from future reserved words.
 
         switch (id.length) {
@@ -3325,17 +1678,10 @@ parseStatement: true, parseSourceElement: true */
     // 7.4 Comments
 
     function addComment(type, value, start, end, loc) {
-        var comment, attacher;
+        var comment;
 
         assert(typeof start === 'number', 'Comment must have valid position');
 
-        // Because the way the actual token is scanned, often the comments
-        // (if any) are skipped twice during the lexical analysis.
-        // Thus, we need to skip adding a comment if the comment array already
-        // handled it.
-        if (state.lastCommentStart >= start) {
-            return;
-        }
         state.lastCommentStart = start;
 
         comment = {
@@ -3370,6 +1716,7 @@ parseStatement: true, parseSourceElement: true */
             ch = source.charCodeAt(index);
             ++index;
             if (isLineTerminator(ch)) {
+                hasLineTerminator = true;
                 if (extra.comments) {
                     comment = source.slice(start + offset, index - 1);
                     loc.end = {
@@ -3416,12 +1763,10 @@ parseStatement: true, parseSourceElement: true */
                 if (ch === 0x0D && source.charCodeAt(index + 1) === 0x0A) {
                     ++index;
                 }
+                hasLineTerminator = true;
                 ++lineNumber;
                 ++index;
                 lineStart = index;
-                if (index >= length) {
-                    throwError({}, Messages.UnexpectedToken, 'ILLEGAL');
-                }
             } else if (ch === 0x2A) {
                 // Block comment ends with '*/'.
                 if (source.charCodeAt(index + 1) === 0x2F) {
@@ -3443,11 +1788,25 @@ parseStatement: true, parseSourceElement: true */
             }
         }
 
-        throwError({}, Messages.UnexpectedToken, 'ILLEGAL');
+        if (extra.errors && index >= length) {
+            //ran off the end of the file - the whole thing is a comment
+            if (extra.comments) {
+                loc.end = {
+                    line: lineNumber,
+                    column: index - lineStart
+                };
+                comment = source.slice(start + 2, index);
+                addComment('Block', comment, start, index, loc);
+            }
+            tolerateUnexpectedToken();
+        } else {
+            throwUnexpectedToken();
+        }
     }
 
     function skipComment() {
         var ch, start;
+        hasLineTerminator = false;
 
         start = (index === 0);
         while (index < length) {
@@ -3456,6 +1815,7 @@ parseStatement: true, parseSourceElement: true */
             if (isWhiteSpace(ch)) {
                 ++index;
             } else if (isLineTerminator(ch)) {
+                hasLineTerminator = true;
                 ++index;
                 if (ch === 0x0D && source.charCodeAt(index) === 0x0A) {
                     ++index;
@@ -3517,6 +1877,38 @@ parseStatement: true, parseSourceElement: true */
         return String.fromCharCode(code);
     }
 
+    function scanUnicodeCodePointEscape() {
+        var ch, code, cu1, cu2;
+
+        ch = source[index];
+        code = 0;
+
+        // At least, one hex digit is required.
+        if (ch === '}') {
+            throwUnexpectedToken();
+        }
+
+        while (index < length) {
+            ch = source[index++];
+            if (!isHexDigit(ch)) {
+                break;
+            }
+            code = code * 16 + '0123456789abcdef'.indexOf(ch.toLowerCase());
+        }
+
+        if (code > 0x10FFFF || ch !== '}') {
+            throwUnexpectedToken();
+        }
+
+        // UTF-16 Encoding
+        if (code <= 0xFFFF) {
+            return String.fromCharCode(code);
+        }
+        cu1 = ((code - 0x10000) >> 10) + 0xD800;
+        cu2 = ((code - 0x10000) & 1023) + 0xDC00;
+        return String.fromCharCode(cu1, cu2);
+    }
+
     function getEscapedIdentifier() {
         var ch, id;
 
@@ -3526,12 +1918,12 @@ parseStatement: true, parseSourceElement: true */
         // '\u' (U+005C, U+0075) denotes an escaped character.
         if (ch === 0x5C) {
             if (source.charCodeAt(index) !== 0x75) {
-                throwError({}, Messages.UnexpectedToken, 'ILLEGAL');
+                throwUnexpectedToken();
             }
             ++index;
             ch = scanHexEscape('u');
             if (!ch || ch === '\\' || !isIdentifierStart(ch.charCodeAt(0))) {
-                throwError({}, Messages.UnexpectedToken, 'ILLEGAL');
+                throwUnexpectedToken();
             }
             id = ch;
         }
@@ -3548,12 +1940,12 @@ parseStatement: true, parseSourceElement: true */
             if (ch === 0x5C) {
                 id = id.substr(0, id.length - 1);
                 if (source.charCodeAt(index) !== 0x75) {
-                    throwError({}, Messages.UnexpectedToken, 'ILLEGAL');
+                    throwUnexpectedToken();
                 }
                 ++index;
                 ch = scanHexEscape('u');
                 if (!ch || ch === '\\' || !isIdentifierPart(ch.charCodeAt(0))) {
-                    throwError({}, Messages.UnexpectedToken, 'ILLEGAL');
+                    throwUnexpectedToken();
                 }
                 id += ch;
             }
@@ -3619,153 +2011,97 @@ parseStatement: true, parseSourceElement: true */
     // 7.7 Punctuators
 
     function scanPunctuator() {
-        var start = index,
-            code = source.charCodeAt(index),
-            code2,
-            ch1 = source[index],
-            ch2,
-            ch3,
-            ch4;
+        var token, str;
 
-        switch (code) {
+        token = {
+            type: Token.Punctuator,
+            value: '',
+            lineNumber: lineNumber,
+            lineStart: lineStart,
+            start: index,
+            end: index
+        };
 
         // Check for most common single-character punctuators.
-        case 0x2E:  // . dot
-        case 0x28:  // ( open bracket
-        case 0x29:  // ) close bracket
-        case 0x3B:  // ; semicolon
-        case 0x2C:  // , comma
-        case 0x7B:  // { open curly brace
-        case 0x7D:  // } close curly brace
-        case 0x5B:  // [
-        case 0x5D:  // ]
-        case 0x3A:  // :
-        case 0x3F:  // ?
-        case 0x7E:  // ~
-            ++index;
+        str = source[index];
+        switch (str) {
+
+        case '(':
             if (extra.tokenize) {
-                if (code === 0x28) {
-                    extra.openParenToken = extra.tokens.length;
-                } else if (code === 0x7B) {
-                    extra.openCurlyToken = extra.tokens.length;
-                }
+                extra.openParenToken = extra.tokens.length;
             }
-            return {
-                type: Token.Punctuator,
-                value: String.fromCharCode(code),
-                lineNumber: lineNumber,
-                lineStart: lineStart,
-                start: start,
-                end: index
-            };
+            ++index;
+            break;
+
+        case '{':
+            if (extra.tokenize) {
+                extra.openCurlyToken = extra.tokens.length;
+            }
+            ++index;
+            break;
+
+        case '.':
+            ++index;
+            if (source[index] === '.' && source[index + 1] === '.') {
+                // Spread operator: ...
+                index += 2;
+                str = '...';
+            }
+            break;
+
+        case ')':
+        case ';':
+        case ',':
+        case '}':
+        case '[':
+        case ']':
+        case ':':
+        case '?':
+        case '~':
+            ++index;
+            break;
 
         default:
-            code2 = source.charCodeAt(index + 1);
+            // 4-character punctuator.
+            str = source.substr(index, 4);
+            if (str === '>>>=') {
+                index += 4;
+            } else {
 
-            // '=' (U+003D) marks an assignment or comparison operator.
-            if (code2 === 0x3D) {
-                switch (code) {
-                case 0x2B:  // +
-                case 0x2D:  // -
-                case 0x2F:  // /
-                case 0x3C:  // <
-                case 0x3E:  // >
-                case 0x5E:  // ^
-                case 0x7C:  // |
-                case 0x25:  // %
-                case 0x26:  // &
-                case 0x2A:  // *
-                    index += 2;
-                    return {
-                        type: Token.Punctuator,
-                        value: String.fromCharCode(code) + String.fromCharCode(code2),
-                        lineNumber: lineNumber,
-                        lineStart: lineStart,
-                        start: start,
-                        end: index
-                    };
+                // 3-character punctuators.
+                str = str.substr(0, 3);
+                if (str === '===' || str === '!==' || str === '>>>' ||
+                    str === '<<=' || str === '>>=') {
+                    index += 3;
+                } else {
 
-                case 0x21: // !
-                case 0x3D: // =
-                    index += 2;
+                    // 2-character punctuators.
+                    str = str.substr(0, 2);
+                    if (str === '&&' || str === '||' || str === '==' || str === '!=' ||
+                        str === '+=' || str === '-=' || str === '*=' || str === '/=' ||
+                        str === '++' || str === '--' || str === '<<' || str === '>>' ||
+                        str === '&=' || str === '|=' || str === '^=' || str === '%=' ||
+                        str === '<=' || str === '>=' || str === '=>') {
+                        index += 2;
+                    } else {
 
-                    // !== and ===
-                    if (source.charCodeAt(index) === 0x3D) {
-                        ++index;
+                        // 1-character punctuators.
+                        str = source[index];
+                        if ('<>=!+-*%&|^/'.indexOf(str) >= 0) {
+                            ++index;
+                        }
                     }
-                    return {
-                        type: Token.Punctuator,
-                        value: source.slice(start, index),
-                        lineNumber: lineNumber,
-                        lineStart: lineStart,
-                        start: start,
-                        end: index
-                    };
                 }
             }
         }
 
-        // 4-character punctuator: >>>=
-
-        ch4 = source.substr(index, 4);
-
-        if (ch4 === '>>>=') {
-            index += 4;
-            return {
-                type: Token.Punctuator,
-                value: ch4,
-                lineNumber: lineNumber,
-                lineStart: lineStart,
-                start: start,
-                end: index
-            };
+        if (index === token.start) {
+            throwUnexpectedToken();
         }
 
-        // 3-character punctuators: === !== >>> <<= >>=
-
-        ch3 = ch4.substr(0, 3);
-
-        if (ch3 === '>>>' || ch3 === '<<=' || ch3 === '>>=') {
-            index += 3;
-            return {
-                type: Token.Punctuator,
-                value: ch3,
-                lineNumber: lineNumber,
-                lineStart: lineStart,
-                start: start,
-                end: index
-            };
-        }
-
-        // Other 2-character punctuators: ++ -- << >> && ||
-        ch2 = ch3.substr(0, 2);
-
-        if ((ch1 === ch2[1] && ('+-<>&|'.indexOf(ch1) >= 0)) || ch2 === '=>') {
-            index += 2;
-            return {
-                type: Token.Punctuator,
-                value: ch2,
-                lineNumber: lineNumber,
-                lineStart: lineStart,
-                start: start,
-                end: index
-            };
-        }
-
-        // 1-character punctuators: < > = ! + - * % & | ^ /
-        if ('<>=!+-*%&|^/'.indexOf(ch1) >= 0) {
-            ++index;
-            return {
-                type: Token.Punctuator,
-                value: ch1,
-                lineNumber: lineNumber,
-                lineStart: lineStart,
-                start: start,
-                end: index
-            };
-        }
-
-        throwError({}, Messages.UnexpectedToken, 'ILLEGAL');
+        token.end = index;
+        token.value = str;
+        return token;
     }
 
     // 7.8.3 Numeric Literals
@@ -3781,11 +2117,11 @@ parseStatement: true, parseSourceElement: true */
         }
 
         if (number.length === 0) {
-            throwError({}, Messages.UnexpectedToken, 'ILLEGAL');
+            throwUnexpectedToken();
         }
 
         if (isIdentifierStart(source.charCodeAt(index))) {
-            throwError({}, Messages.UnexpectedToken, 'ILLEGAL');
+            throwUnexpectedToken();
         }
 
         return {
@@ -3798,8 +2134,54 @@ parseStatement: true, parseSourceElement: true */
         };
     }
 
-    function scanOctalLiteral(start) {
-        var number = '0' + source[index++];
+    function scanBinaryLiteral(start) {
+        var ch, number;
+
+        number = '';
+
+        while (index < length) {
+            ch = source[index];
+            if (ch !== '0' && ch !== '1') {
+                break;
+            }
+            number += source[index++];
+        }
+
+        if (number.length === 0) {
+            // only 0b or 0B
+            throwUnexpectedToken();
+        }
+
+        if (index < length) {
+            ch = source.charCodeAt(index);
+            /* istanbul ignore else */
+            if (isIdentifierStart(ch) || isDecimalDigit(ch)) {
+                throwUnexpectedToken();
+            }
+        }
+
+        return {
+            type: Token.NumericLiteral,
+            value: parseInt(number, 2),
+            lineNumber: lineNumber,
+            lineStart: lineStart,
+            start: start,
+            end: index
+        };
+    }
+
+    function scanOctalLiteral(prefix, start) {
+        var number, octal;
+
+        if (isOctalDigit(prefix)) {
+            octal = true;
+            number = '0' + source[index++];
+        } else {
+            octal = false;
+            ++index;
+            number = '';
+        }
+
         while (index < length) {
             if (!isOctalDigit(source[index])) {
                 break;
@@ -3807,14 +2189,19 @@ parseStatement: true, parseSourceElement: true */
             number += source[index++];
         }
 
+        if (!octal && number.length === 0) {
+            // only 0o or 0O
+            throwUnexpectedToken();
+        }
+
         if (isIdentifierStart(source.charCodeAt(index)) || isDecimalDigit(source.charCodeAt(index))) {
-            throwError({}, Messages.UnexpectedToken, 'ILLEGAL');
+            throwUnexpectedToken();
         }
 
         return {
             type: Token.NumericLiteral,
             value: parseInt(number, 8),
-            octal: true,
+            octal: octal,
             lineNumber: lineNumber,
             lineStart: lineStart,
             start: start,
@@ -3855,14 +2242,24 @@ parseStatement: true, parseSourceElement: true */
 
             // Hex number starts with '0x'.
             // Octal number starts with '0'.
+            // Octal number in ES6 starts with '0o'.
+            // Binary number in ES6 starts with '0b'.
             if (number === '0') {
                 if (ch === 'x' || ch === 'X') {
                     ++index;
                     return scanHexLiteral(start);
                 }
+                if (ch === 'b' || ch === 'B') {
+                    ++index;
+                    return scanBinaryLiteral(start);
+                }
+                if (ch === 'o' || ch === 'O') {
+                    return scanOctalLiteral(ch, start);
+                }
+
                 if (isOctalDigit(ch)) {
                     if (isImplicitOctalLiteral()) {
-                        return scanOctalLiteral(start);
+                        return scanOctalLiteral(ch, start);
                     }
                 }
             }
@@ -3893,12 +2290,12 @@ parseStatement: true, parseSourceElement: true */
                     number += source[index++];
                 }
             } else {
-                throwError({}, Messages.UnexpectedToken, 'ILLEGAL');
+                throwUnexpectedToken();
             }
         }
 
         if (isIdentifierStart(source.charCodeAt(index))) {
-            throwError({}, Messages.UnexpectedToken, 'ILLEGAL');
+            throwUnexpectedToken();
         }
 
         return {
@@ -3914,9 +2311,7 @@ parseStatement: true, parseSourceElement: true */
     // 7.8.4 String Literals
 
     function scanStringLiteral() {
-        var str = '', quote, start, ch, code, unescaped, restore, octal = false, startLineNumber, startLineStart;
-        startLineNumber = lineNumber;
-        startLineStart = lineStart;
+        var str = '', quote, start, ch, code, unescaped, restore, octal = false;
 
         quote = source[index];
         assert((quote === '\'' || quote === '"'),
@@ -3937,13 +2332,18 @@ parseStatement: true, parseSourceElement: true */
                     switch (ch) {
                     case 'u':
                     case 'x':
-                        restore = index;
-                        unescaped = scanHexEscape(ch);
-                        if (unescaped) {
-                            str += unescaped;
+                        if (source[index] === '{') {
+                            ++index;
+                            str += scanUnicodeCodePointEscape();
                         } else {
-                            index = restore;
-                            str += ch;
+                            restore = index;
+                            unescaped = scanHexEscape(ch);
+                            if (unescaped) {
+                                str += unescaped;
+                            } else {
+                                index = restore;
+                                str += ch;
+                            }
                         }
                         break;
                     case 'n':
@@ -3994,7 +2394,7 @@ parseStatement: true, parseSourceElement: true */
                     }
                 } else {
                     ++lineNumber;
-                    if (ch ===  '\r' && source[index] === '\n') {
+                    if (ch === '\r' && source[index] === '\n') {
                         ++index;
                     }
                     lineStart = index;
@@ -4007,30 +2407,57 @@ parseStatement: true, parseSourceElement: true */
         }
 
         if (quote !== '') {
-            throwError({}, Messages.UnexpectedToken, 'ILLEGAL');
+            throwUnexpectedToken();
         }
 
         return {
             type: Token.StringLiteral,
             value: str,
             octal: octal,
-            startLineNumber: startLineNumber,
-            startLineStart: startLineStart,
-            lineNumber: lineNumber,
-            lineStart: lineStart,
+            lineNumber: startLineNumber,
+            lineStart: startLineStart,
             start: start,
             end: index
         };
     }
 
     function testRegExp(pattern, flags) {
-        var value;
-        try {
-            value = new RegExp(pattern, flags);
-        } catch (e) {
-            throwError({}, Messages.InvalidRegExp);
+        var tmp = pattern;
+
+        if (flags.indexOf('u') >= 0) {
+            // Replace each astral symbol and every Unicode code point
+            // escape sequence with a single ASCII symbol to avoid throwing on
+            // regular expressions that are only valid in combination with the
+            // `/u` flag.
+            // Note: replacing with the ASCII symbol `x` might cause false
+            // negatives in unlikely scenarios. For example, `[\u{61}-b]` is a
+            // perfectly valid pattern that is equivalent to `[a-b]`, but it
+            // would be replaced by `[x-b]` which throws an error.
+            tmp = tmp
+                .replace(/\\u\{([0-9a-fA-F]+)\}/g, function ($0, $1) {
+                    if (parseInt($1, 16) <= 0x10FFFF) {
+                        return 'x';
+                    }
+                    throwUnexpectedToken(null, Messages.InvalidRegExp);
+                })
+                .replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, 'x');
         }
-        return value;
+
+        // First, detect invalid regular expressions.
+        try {
+            RegExp(tmp);
+        } catch (e) {
+            throwUnexpectedToken(null, Messages.InvalidRegExp);
+        }
+
+        // Return a regular expression object for this pattern-flag pair, or
+        // `null` in case the current environment doesn't support the flags it
+        // uses.
+        try {
+            return new RegExp(pattern, flags);
+        } catch (exception) {
+            return null;
+        }
     }
 
     function scanRegExpBody() {
@@ -4049,11 +2476,11 @@ parseStatement: true, parseSourceElement: true */
                 ch = source[index++];
                 // ECMA-262 7.8.5
                 if (isLineTerminator(ch.charCodeAt(0))) {
-                    throwError({}, Messages.UnterminatedRegExp);
+                    throwUnexpectedToken(null, Messages.UnterminatedRegExp);
                 }
                 str += ch;
             } else if (isLineTerminator(ch.charCodeAt(0))) {
-                throwError({}, Messages.UnterminatedRegExp);
+                throwUnexpectedToken(null, Messages.UnterminatedRegExp);
             } else if (classMarker) {
                 if (ch === ']') {
                     classMarker = false;
@@ -4069,7 +2496,7 @@ parseStatement: true, parseSourceElement: true */
         }
 
         if (!terminated) {
-            throwError({}, Messages.UnterminatedRegExp);
+            throwUnexpectedToken(null, Messages.UnterminatedRegExp);
         }
 
         // Exclude leading and trailing slash.
@@ -4108,10 +2535,10 @@ parseStatement: true, parseSourceElement: true */
                         flags += 'u';
                         str += '\\u';
                     }
-                    throwErrorTolerant({}, Messages.UnexpectedToken, 'ILLEGAL');
+                    tolerateUnexpectedToken();
                 } else {
                     str += '\\';
-                    throwErrorTolerant({}, Messages.UnexpectedToken, 'ILLEGAL');
+                    tolerateUnexpectedToken();
                 }
             } else {
                 flags += ch;
@@ -4126,7 +2553,8 @@ parseStatement: true, parseSourceElement: true */
     }
 
     function scanRegExp() {
-        var start, body, flags, pattern, value;
+        scanning = true;
+        var start, body, flags, value;
 
         lookahead = null;
         skipComment();
@@ -4135,11 +2563,15 @@ parseStatement: true, parseSourceElement: true */
         body = scanRegExpBody();
         flags = scanRegExpFlags();
         value = testRegExp(body.value, flags.value);
-
+        scanning = false;
         if (extra.tokenize) {
             return {
                 type: Token.RegularExpression,
                 value: value,
+                regex: {
+                    pattern: body.value,
+                    flags: flags.value
+                },
                 lineNumber: lineNumber,
                 lineStart: lineStart,
                 start: start,
@@ -4150,6 +2582,10 @@ parseStatement: true, parseSourceElement: true */
         return {
             literal: body.literal + flags.literal,
             value: value,
+            regex: {
+                pattern: body.value,
+                flags: flags.value
+            },
             start: start,
             end: index
         };
@@ -4169,6 +2605,7 @@ parseStatement: true, parseSourceElement: true */
         };
 
         regex = scanRegExp();
+
         loc.end = {
             line: lineNumber,
             column: index - lineStart
@@ -4189,6 +2626,7 @@ parseStatement: true, parseSourceElement: true */
             extra.tokens.push({
                 type: 'RegularExpression',
                 value: regex.literal,
+                regex: regex.regex,
                 range: [pos, index],
                 loc: loc
             });
@@ -4270,8 +2708,6 @@ parseStatement: true, parseSourceElement: true */
     function advance() {
         var ch;
 
-        skipComment();
-
         if (index >= length) {
             return {
                 type: Token.EOF,
@@ -4321,9 +2757,8 @@ parseStatement: true, parseSourceElement: true */
     }
 
     function collectToken() {
-        var loc, token, range, value;
+        var loc, token, value, entry;
 
-        skipComment();
         loc = {
             start: {
                 line: lineNumber,
@@ -4339,12 +2774,19 @@ parseStatement: true, parseSourceElement: true */
 
         if (token.type !== Token.EOF) {
             value = source.slice(token.start, token.end);
-            extra.tokens.push({
+            entry = {
                 type: TokenName[token.type],
                 value: value,
                 range: [token.start, token.end],
                 loc: loc
-            });
+            };
+            if (token.regex) {
+                entry.regex = {
+                    pattern: token.regex.pattern,
+                    flags: token.regex.flags
+                };
+            }
+            extra.tokens.push(entry);
         }
 
         return token;
@@ -4352,542 +2794,643 @@ parseStatement: true, parseSourceElement: true */
 
     function lex() {
         var token;
+        scanning = true;
+
+        lastIndex = index;
+        lastLineNumber = lineNumber;
+        lastLineStart = lineStart;
+
+        skipComment();
 
         token = lookahead;
-        index = token.end;
-        lineNumber = token.lineNumber;
-        lineStart = token.lineStart;
+
+        startIndex = index;
+        startLineNumber = lineNumber;
+        startLineStart = lineStart;
 
         lookahead = (typeof extra.tokens !== 'undefined') ? collectToken() : advance();
-
-        index = token.end;
-        lineNumber = token.lineNumber;
-        lineStart = token.lineStart;
-
+        scanning = false;
         return token;
     }
 
     function peek() {
-        var pos, line, start;
+        scanning = true;
 
-        pos = index;
-        line = lineNumber;
-        start = lineStart;
+        skipComment();
+
+        lastIndex = index;
+        lastLineNumber = lineNumber;
+        lastLineStart = lineStart;
+
+        startIndex = index;
+        startLineNumber = lineNumber;
+        startLineStart = lineStart;
+
         lookahead = (typeof extra.tokens !== 'undefined') ? collectToken() : advance();
-        index = pos;
-        lineNumber = line;
-        lineStart = start;
+        scanning = false;
     }
 
-    function Position(line, column) {
-        this.line = line;
-        this.column = column;
+    function Position() {
+        this.line = startLineNumber;
+        this.column = startIndex - startLineStart;
     }
 
-    function SourceLocation(startLine, startColumn, line, column) {
-        this.start = new Position(startLine, startColumn);
-        this.end = new Position(line, column);
+    function SourceLocation() {
+        this.start = new Position();
+        this.end = null;
     }
 
-    SyntaxTreeDelegate = {
+    function WrappingSourceLocation(startToken) {
+        this.start = {
+            line: startToken.lineNumber,
+            column: startToken.start - startToken.lineStart
+        };
+        this.end = null;
+    }
 
-        name: 'SyntaxTree',
+    function Node() {
+        if (extra.range) {
+            this.range = [startIndex, 0];
+        }
+        if (extra.loc) {
+            this.loc = new SourceLocation();
+        }
+    }
 
-        processComment: function (node) {
-            var lastChild, trailingComments;
+    function WrappingNode(startToken) {
+        if (extra.range) {
+            this.range = [startToken.start, 0];
+        }
+        if (extra.loc) {
+            this.loc = new WrappingSourceLocation(startToken);
+        }
+    }
 
-            if (node.type === Syntax.Program) {
-                if (node.body.length > 0) {
+    WrappingNode.prototype = Node.prototype = {
+
+        processComment: function () {
+            var lastChild,
+                leadingComments,
+                trailingComments,
+                bottomRight = extra.bottomRightStack,
+                i,
+                comment,
+                last = bottomRight[bottomRight.length - 1];
+
+            if (this.type === Syntax.Program) {
+                if (this.body.length > 0) {
                     return;
                 }
             }
 
             if (extra.trailingComments.length > 0) {
-                if (extra.trailingComments[0].range[0] >= node.range[1]) {
-                    trailingComments = extra.trailingComments;
-                    extra.trailingComments = [];
-                } else {
-                    extra.trailingComments.length = 0;
+                trailingComments = [];
+                for (i = extra.trailingComments.length - 1; i >= 0; --i) {
+                    comment = extra.trailingComments[i];
+                    if (comment.range[0] >= this.range[1]) {
+                        trailingComments.unshift(comment);
+                        extra.trailingComments.splice(i, 1);
+                    }
                 }
+                extra.trailingComments = [];
             } else {
-                if (extra.bottomRightStack.length > 0 &&
-                        extra.bottomRightStack[extra.bottomRightStack.length - 1].trailingComments &&
-                        extra.bottomRightStack[extra.bottomRightStack.length - 1].trailingComments[0].range[0] >= node.range[1]) {
-                    trailingComments = extra.bottomRightStack[extra.bottomRightStack.length - 1].trailingComments;
-                    delete extra.bottomRightStack[extra.bottomRightStack.length - 1].trailingComments;
+                if (last && last.trailingComments && last.trailingComments[0].range[0] >= this.range[1]) {
+                    trailingComments = last.trailingComments;
+                    delete last.trailingComments;
                 }
             }
 
             // Eating the stack.
-            while (extra.bottomRightStack.length > 0 && extra.bottomRightStack[extra.bottomRightStack.length - 1].range[0] >= node.range[0]) {
-                lastChild = extra.bottomRightStack.pop();
+            if (last) {
+                while (last && last.range[0] >= this.range[0]) {
+                    lastChild = last;
+                    last = bottomRight.pop();
+                }
             }
 
             if (lastChild) {
-                if (lastChild.leadingComments && lastChild.leadingComments[lastChild.leadingComments.length - 1].range[1] <= node.range[0]) {
-                    node.leadingComments = lastChild.leadingComments;
-                    delete lastChild.leadingComments;
+                if (lastChild.leadingComments && lastChild.leadingComments[lastChild.leadingComments.length - 1].range[1] <= this.range[0]) {
+                    this.leadingComments = lastChild.leadingComments;
+                    lastChild.leadingComments = undefined;
                 }
-            } else if (extra.leadingComments.length > 0 && extra.leadingComments[extra.leadingComments.length - 1].range[1] <= node.range[0]) {
-                node.leadingComments = extra.leadingComments;
-                extra.leadingComments = [];
+            } else if (extra.leadingComments.length > 0) {
+                leadingComments = [];
+                for (i = extra.leadingComments.length - 1; i >= 0; --i) {
+                    comment = extra.leadingComments[i];
+                    if (comment.range[1] <= this.range[0]) {
+                        leadingComments.unshift(comment);
+                        extra.leadingComments.splice(i, 1);
+                    }
+                }
             }
 
 
-            if (trailingComments) {
-                node.trailingComments = trailingComments;
+            if (leadingComments && leadingComments.length > 0) {
+                this.leadingComments = leadingComments;
+            }
+            if (trailingComments && trailingComments.length > 0) {
+                this.trailingComments = trailingComments;
             }
 
-            extra.bottomRightStack.push(node);
+            bottomRight.push(this);
         },
 
-        markEnd: function (node, startToken) {
+        finish: function () {
             if (extra.range) {
-                node.range = [startToken.start, index];
+                this.range[1] = lastIndex;
             }
             if (extra.loc) {
-                node.loc = new SourceLocation(
-                    startToken.startLineNumber === undefined ?  startToken.lineNumber : startToken.startLineNumber,
-                    startToken.start - (startToken.startLineStart === undefined ?  startToken.lineStart : startToken.startLineStart),
-                    lineNumber,
-                    index - lineStart
-                );
-                this.postProcess(node);
+                this.loc.end = {
+                    line: lastLineNumber,
+                    column: lastIndex - lastLineStart
+                };
+                if (extra.source) {
+                    this.loc.source = extra.source;
+                }
             }
 
             if (extra.attachComment) {
-                this.processComment(node);
+                this.processComment();
             }
-            return node;
         },
 
-        postProcess: function (node) {
-            if (extra.source) {
-                node.loc.source = extra.source;
+        finishArrayExpression: function (elements) {
+            this.type = Syntax.ArrayExpression;
+            this.elements = elements;
+            this.finish();
+            return this;
+        },
+
+        finishArrowFunctionExpression: function (params, defaults, body, expression) {
+            this.type = Syntax.ArrowFunctionExpression;
+            this.id = null;
+            this.params = params;
+            this.defaults = defaults;
+            this.body = body;
+            this.generator = false;
+            this.expression = expression;
+            this.finish();
+            return this;
+        },
+
+        finishAssignmentExpression: function (operator, left, right) {
+            this.type = Syntax.AssignmentExpression;
+            this.operator = operator;
+            this.left = left;
+            this.right = right;
+            this.finish();
+            return this;
+        },
+
+        finishBinaryExpression: function (operator, left, right) {
+            this.type = (operator === '||' || operator === '&&') ? Syntax.LogicalExpression : Syntax.BinaryExpression;
+            this.operator = operator;
+            this.left = left;
+            this.right = right;
+            this.finish();
+            return this;
+        },
+
+        finishBlockStatement: function (body) {
+            this.type = Syntax.BlockStatement;
+            this.body = body;
+            this.finish();
+            return this;
+        },
+
+        finishBreakStatement: function (label) {
+            this.type = Syntax.BreakStatement;
+            this.label = label;
+            this.finish();
+            return this;
+        },
+
+        finishCallExpression: function (callee, args) {
+            this.type = Syntax.CallExpression;
+            this.callee = callee;
+            this.arguments = args;
+            this.finish();
+            return this;
+        },
+
+        finishCatchClause: function (param, body) {
+            this.type = Syntax.CatchClause;
+            this.param = param;
+            this.body = body;
+            this.finish();
+            return this;
+        },
+
+        finishClassBody: function (body) {
+            this.type = Syntax.ClassBody;
+            this.body = body;
+            this.finish();
+            return this;
+        },
+
+        finishClassDeclaration: function (id, superClass, body) {
+            this.type = Syntax.ClassDeclaration;
+            this.id = id;
+            this.superClass = superClass;
+            this.body = body;
+            this.finish();
+            return this;
+        },
+
+        finishClassExpression: function (id, superClass, body) {
+            this.type = Syntax.ClassExpression;
+            this.id = id;
+            this.superClass = superClass;
+            this.body = body;
+            this.finish();
+            return this;
+        },
+
+        finishConditionalExpression: function (test, consequent, alternate) {
+            this.type = Syntax.ConditionalExpression;
+            this.test = test;
+            this.consequent = consequent;
+            this.alternate = alternate;
+            this.finish();
+            return this;
+        },
+
+        finishContinueStatement: function (label) {
+            this.type = Syntax.ContinueStatement;
+            this.label = label;
+            this.finish();
+            return this;
+        },
+
+        finishDebuggerStatement: function () {
+            this.type = Syntax.DebuggerStatement;
+            this.finish();
+            return this;
+        },
+
+        finishDoWhileStatement: function (body, test) {
+            this.type = Syntax.DoWhileStatement;
+            this.body = body;
+            this.test = test;
+            this.finish();
+            return this;
+        },
+
+        finishEmptyStatement: function () {
+            this.type = Syntax.EmptyStatement;
+            this.finish();
+            return this;
+        },
+
+        finishExpressionStatement: function (expression) {
+            this.type = Syntax.ExpressionStatement;
+            this.expression = expression;
+            this.finish();
+            return this;
+        },
+
+        finishForStatement: function (init, test, update, body) {
+            this.type = Syntax.ForStatement;
+            this.init = init;
+            this.test = test;
+            this.update = update;
+            this.body = body;
+            this.finish();
+            return this;
+        },
+
+        finishForInStatement: function (left, right, body) {
+            this.type = Syntax.ForInStatement;
+            this.left = left;
+            this.right = right;
+            this.body = body;
+            this.each = false;
+            this.finish();
+            return this;
+        },
+
+        finishFunctionDeclaration: function (id, params, defaults, body) {
+            this.type = Syntax.FunctionDeclaration;
+            this.id = id;
+            this.params = params;
+            this.defaults = defaults;
+            this.body = body;
+            this.generator = false;
+            this.expression = false;
+            this.finish();
+            return this;
+        },
+
+        finishFunctionExpression: function (id, params, defaults, body) {
+            this.type = Syntax.FunctionExpression;
+            this.id = id;
+            this.params = params;
+            this.defaults = defaults;
+            this.body = body;
+            this.generator = false;
+            this.expression = false;
+            this.finish();
+            return this;
+        },
+
+        finishIdentifier: function (name) {
+            this.type = Syntax.Identifier;
+            this.name = name;
+            this.finish();
+            return this;
+        },
+
+        finishIfStatement: function (test, consequent, alternate) {
+            this.type = Syntax.IfStatement;
+            this.test = test;
+            this.consequent = consequent;
+            this.alternate = alternate;
+            this.finish();
+            return this;
+        },
+
+        finishLabeledStatement: function (label, body) {
+            this.type = Syntax.LabeledStatement;
+            this.label = label;
+            this.body = body;
+            this.finish();
+            return this;
+        },
+
+        finishLiteral: function (token) {
+            this.type = Syntax.Literal;
+            this.value = token.value;
+            this.raw = source.slice(token.start, token.end);
+            if (token.regex) {
+                this.regex = token.regex;
             }
-            return node;
+            this.finish();
+            return this;
         },
 
-        createArrayExpression: function (elements) {
-            return {
-                type: Syntax.ArrayExpression,
-                elements: elements
-            };
+        finishMemberExpression: function (accessor, object, property) {
+            this.type = Syntax.MemberExpression;
+            this.computed = accessor === '[';
+            this.object = object;
+            this.property = property;
+            this.finish();
+            return this;
         },
 
-        createAssignmentExpression: function (operator, left, right) {
-            return {
-                type: Syntax.AssignmentExpression,
-                operator: operator,
-                left: left,
-                right: right
-            };
+        finishNewExpression: function (callee, args) {
+            this.type = Syntax.NewExpression;
+            this.callee = callee;
+            this.arguments = args;
+            this.finish();
+            return this;
         },
 
-        createBinaryExpression: function (operator, left, right) {
-            var type = (operator === '||' || operator === '&&') ? Syntax.LogicalExpression :
-                        Syntax.BinaryExpression;
-            return {
-                type: type,
-                operator: operator,
-                left: left,
-                right: right
-            };
+        finishObjectExpression: function (properties) {
+            this.type = Syntax.ObjectExpression;
+            this.properties = properties;
+            this.finish();
+            return this;
         },
 
-        createBlockStatement: function (body) {
-            return {
-                type: Syntax.BlockStatement,
-                body: body
-            };
+        finishPostfixExpression: function (operator, argument) {
+            this.type = Syntax.UpdateExpression;
+            this.operator = operator;
+            this.argument = argument;
+            this.prefix = false;
+            this.finish();
+            return this;
         },
 
-        createBreakStatement: function (label) {
-            return {
-                type: Syntax.BreakStatement,
-                label: label
-            };
+        finishProgram: function (body) {
+            this.type = Syntax.Program;
+            this.body = body;
+            this.finish();
+            return this;
         },
 
-        createCallExpression: function (callee, args) {
-            return {
-                type: Syntax.CallExpression,
-                callee: callee,
-                'arguments': args
-            };
+        finishProperty: function (kind, key, computed, value, method, shorthand) {
+            this.type = Syntax.Property;
+            this.key = key;
+            this.computed = computed;
+            this.value = value;
+            this.kind = kind;
+            this.method = method;
+            this.shorthand = shorthand;
+            this.finish();
+            return this;
         },
 
-        createCatchClause: function (param, body) {
-            return {
-                type: Syntax.CatchClause,
-                param: param,
-                body: body
-            };
+        finishRestElement: function (argument) {
+            this.type = Syntax.RestElement;
+            this.argument = argument;
+            this.finish();
+            return this;
         },
 
-        createConditionalExpression: function (test, consequent, alternate) {
-            return {
-                type: Syntax.ConditionalExpression,
-                test: test,
-                consequent: consequent,
-                alternate: alternate
-            };
+        finishReturnStatement: function (argument) {
+            this.type = Syntax.ReturnStatement;
+            this.argument = argument;
+            this.finish();
+            return this;
         },
 
-        createContinueStatement: function (label) {
-            return {
-                type: Syntax.ContinueStatement,
-                label: label
-            };
+        finishSequenceExpression: function (expressions) {
+            this.type = Syntax.SequenceExpression;
+            this.expressions = expressions;
+            this.finish();
+            return this;
         },
 
-        createDebuggerStatement: function () {
-            return {
-                type: Syntax.DebuggerStatement
-            };
+        finishSwitchCase: function (test, consequent) {
+            this.type = Syntax.SwitchCase;
+            this.test = test;
+            this.consequent = consequent;
+            this.finish();
+            return this;
         },
 
-        createDoWhileStatement: function (body, test) {
-            return {
-                type: Syntax.DoWhileStatement,
-                body: body,
-                test: test
-            };
+        finishSwitchStatement: function (discriminant, cases) {
+            this.type = Syntax.SwitchStatement;
+            this.discriminant = discriminant;
+            this.cases = cases;
+            this.finish();
+            return this;
         },
 
-        createEmptyStatement: function () {
-            return {
-                type: Syntax.EmptyStatement
-            };
+        finishThisExpression: function () {
+            this.type = Syntax.ThisExpression;
+            this.finish();
+            return this;
         },
 
-        createExpressionStatement: function (expression) {
-            return {
-                type: Syntax.ExpressionStatement,
-                expression: expression
-            };
+        finishThrowStatement: function (argument) {
+            this.type = Syntax.ThrowStatement;
+            this.argument = argument;
+            this.finish();
+            return this;
         },
 
-        createForStatement: function (init, test, update, body) {
-            return {
-                type: Syntax.ForStatement,
-                init: init,
-                test: test,
-                update: update,
-                body: body
-            };
+        finishTryStatement: function (block, handler, finalizer) {
+            this.type = Syntax.TryStatement;
+            this.block = block;
+            this.guardedHandlers = [];
+            this.handlers = handler ? [ handler ] : [];
+            this.handler = handler;
+            this.finalizer = finalizer;
+            this.finish();
+            return this;
         },
 
-        createForInStatement: function (left, right, body) {
-            return {
-                type: Syntax.ForInStatement,
-                left: left,
-                right: right,
-                body: body,
-                each: false
-            };
+        finishUnaryExpression: function (operator, argument) {
+            this.type = (operator === '++' || operator === '--') ? Syntax.UpdateExpression : Syntax.UnaryExpression;
+            this.operator = operator;
+            this.argument = argument;
+            this.prefix = true;
+            this.finish();
+            return this;
         },
 
-        createFunctionDeclaration: function (id, params, defaults, body) {
-            return {
-                type: Syntax.FunctionDeclaration,
-                id: id,
-                params: params,
-                defaults: defaults,
-                body: body,
-                rest: null,
-                generator: false,
-                expression: false
-            };
+        finishVariableDeclaration: function (declarations) {
+            this.type = Syntax.VariableDeclaration;
+            this.declarations = declarations;
+            this.kind = 'var';
+            this.finish();
+            return this;
         },
 
-        createFunctionExpression: function (id, params, defaults, body) {
-            return {
-                type: Syntax.FunctionExpression,
-                id: id,
-                params: params,
-                defaults: defaults,
-                body: body,
-                rest: null,
-                generator: false,
-                expression: false
-            };
+        finishLexicalDeclaration: function (declarations, kind) {
+            this.type = Syntax.VariableDeclaration;
+            this.declarations = declarations;
+            this.kind = kind;
+            this.finish();
+            return this;
         },
 
-        createIdentifier: function (name) {
-            return {
-                type: Syntax.Identifier,
-                name: name
-            };
+        finishVariableDeclarator: function (id, init) {
+            this.type = Syntax.VariableDeclarator;
+            this.id = id;
+            this.init = init;
+            this.finish();
+            return this;
         },
 
-        createIfStatement: function (test, consequent, alternate) {
-            return {
-                type: Syntax.IfStatement,
-                test: test,
-                consequent: consequent,
-                alternate: alternate
-            };
+        finishWhileStatement: function (test, body) {
+            this.type = Syntax.WhileStatement;
+            this.test = test;
+            this.body = body;
+            this.finish();
+            return this;
         },
 
-        createLabeledStatement: function (label, body) {
-            return {
-                type: Syntax.LabeledStatement,
-                label: label,
-                body: body
-            };
-        },
-
-        createLiteral: function (token) {
-            return {
-                type: Syntax.Literal,
-                value: token.value,
-                raw: source.slice(token.start, token.end)
-            };
-        },
-
-        createMemberExpression: function (accessor, object, property) {
-            return {
-                type: Syntax.MemberExpression,
-                computed: accessor === '[',
-                object: object,
-                property: property
-            };
-        },
-
-        createNewExpression: function (callee, args) {
-            return {
-                type: Syntax.NewExpression,
-                callee: callee,
-                'arguments': args
-            };
-        },
-
-        createObjectExpression: function (properties) {
-            return {
-                type: Syntax.ObjectExpression,
-                properties: properties
-            };
-        },
-
-        createPostfixExpression: function (operator, argument) {
-            return {
-                type: Syntax.UpdateExpression,
-                operator: operator,
-                argument: argument,
-                prefix: false
-            };
-        },
-
-        createProgram: function (body) {
-            return {
-                type: Syntax.Program,
-                body: body
-            };
-        },
-
-        createProperty: function (kind, key, value) {
-            return {
-                type: Syntax.Property,
-                key: key,
-                value: value,
-                kind: kind
-            };
-        },
-
-        createReturnStatement: function (argument) {
-            return {
-                type: Syntax.ReturnStatement,
-                argument: argument
-            };
-        },
-
-        createSequenceExpression: function (expressions) {
-            return {
-                type: Syntax.SequenceExpression,
-                expressions: expressions
-            };
-        },
-
-        createSwitchCase: function (test, consequent) {
-            return {
-                type: Syntax.SwitchCase,
-                test: test,
-                consequent: consequent
-            };
-        },
-
-        createSwitchStatement: function (discriminant, cases) {
-            return {
-                type: Syntax.SwitchStatement,
-                discriminant: discriminant,
-                cases: cases
-            };
-        },
-
-        createThisExpression: function () {
-            return {
-                type: Syntax.ThisExpression
-            };
-        },
-
-        createThrowStatement: function (argument) {
-            return {
-                type: Syntax.ThrowStatement,
-                argument: argument
-            };
-        },
-
-        createTryStatement: function (block, guardedHandlers, handlers, finalizer) {
-            return {
-                type: Syntax.TryStatement,
-                block: block,
-                guardedHandlers: guardedHandlers,
-                handlers: handlers,
-                finalizer: finalizer
-            };
-        },
-
-        createUnaryExpression: function (operator, argument) {
-            if (operator === '++' || operator === '--') {
-                return {
-                    type: Syntax.UpdateExpression,
-                    operator: operator,
-                    argument: argument,
-                    prefix: true
-                };
-            }
-            return {
-                type: Syntax.UnaryExpression,
-                operator: operator,
-                argument: argument,
-                prefix: true
-            };
-        },
-
-        createVariableDeclaration: function (declarations, kind) {
-            return {
-                type: Syntax.VariableDeclaration,
-                declarations: declarations,
-                kind: kind
-            };
-        },
-
-        createVariableDeclarator: function (id, init) {
-            return {
-                type: Syntax.VariableDeclarator,
-                id: id,
-                init: init
-            };
-        },
-
-        createWhileStatement: function (test, body) {
-            return {
-                type: Syntax.WhileStatement,
-                test: test,
-                body: body
-            };
-        },
-
-        createWithStatement: function (object, body) {
-            return {
-                type: Syntax.WithStatement,
-                object: object,
-                body: body
-            };
+        finishWithStatement: function (object, body) {
+            this.type = Syntax.WithStatement;
+            this.object = object;
+            this.body = body;
+            this.finish();
+            return this;
         }
     };
 
-    // Return true if there is a line terminator before the next token.
 
-    function peekLineTerminator() {
-        var pos, line, start, found;
+    function recordError(error) {
+        var e, existing;
 
-        pos = index;
-        line = lineNumber;
-        start = lineStart;
-        skipComment();
-        found = lineNumber !== line;
-        index = pos;
-        lineNumber = line;
-        lineStart = start;
+        for (e = 0; e < extra.errors.length; e++) {
+            existing = extra.errors[e];
+            // Prevent duplicated error.
+            /* istanbul ignore next */
+            if (existing.index === error.index && existing.message === error.message) {
+                return;
+            }
+        }
 
-        return found;
+        extra.errors.push(error);
+    }
+
+    function createError(line, pos, description) {
+        var error = new Error('Line ' + line + ': ' + description);
+        error.index = pos;
+        error.lineNumber = line;
+        error.column = pos - (scanning ? lineStart : lastLineStart) + 1;
+        error.description = description;
+        return error;
     }
 
     // Throw an exception
 
-    function throwError(token, messageFormat) {
-        var error,
-            args = Array.prototype.slice.call(arguments, 2),
-            msg = messageFormat.replace(
-                /%(\d)/g,
-                function (whole, index) {
-                    assert(index < args.length, 'Message reference must be in range');
-                    return args[index];
-                }
-            );
+    function throwError(messageFormat) {
+        var args, msg;
 
-        if (typeof token.lineNumber === 'number') {
-            error = new Error('Line ' + token.lineNumber + ': ' + msg);
-            error.index = token.start;
-            error.lineNumber = token.lineNumber;
-            error.column = token.start - lineStart + 1;
-        } else {
-            error = new Error('Line ' + lineNumber + ': ' + msg);
-            error.index = index;
-            error.lineNumber = lineNumber;
-            error.column = index - lineStart + 1;
-        }
-
-        error.description = msg;
-        throw error;
-    }
-
-    function throwErrorTolerant() {
-        try {
-            throwError.apply(null, arguments);
-        } catch (e) {
-            if (extra.errors) {
-                extra.errors.push(e);
-            } else {
-                throw e;
+        args = Array.prototype.slice.call(arguments, 1);
+        msg = messageFormat.replace(/%(\d)/g,
+            function (whole, idx) {
+                assert(idx < args.length, 'Message reference must be in range');
+                return args[idx];
             }
-        }
+        );
+
+        throw createError(lastLineNumber, lastIndex, msg);
     }
 
+    function tolerateError(messageFormat) {
+        var args, msg, error;
+
+        args = Array.prototype.slice.call(arguments, 1);
+        /* istanbul ignore next */
+        msg = messageFormat.replace(/%(\d)/g,
+            function (whole, idx) {
+                assert(idx < args.length, 'Message reference must be in range');
+                return args[idx];
+            }
+        );
+
+        error = createError(lineNumber, lastIndex, msg);
+        if (extra.errors) {
+            recordError(error);
+        } else {
+            throw error;
+        }
+    }
 
     // Throw an exception because of the token.
 
-    function throwUnexpected(token) {
-        if (token.type === Token.EOF) {
-            throwError(token, Messages.UnexpectedEOS);
-        }
+    function unexpectedTokenError(token, message) {
+        var msg = message || Messages.UnexpectedToken;
 
-        if (token.type === Token.NumericLiteral) {
-            throwError(token, Messages.UnexpectedNumber);
-        }
+        if (token && !message) {
+            msg = (token.type === Token.EOF) ? Messages.UnexpectedEOS :
+                (token.type === Token.Identifier) ? Messages.UnexpectedIdentifier :
+                (token.type === Token.NumericLiteral) ? Messages.UnexpectedNumber :
+                (token.type === Token.StringLiteral) ? Messages.UnexpectedString :
+                Messages.UnexpectedToken;
 
-        if (token.type === Token.StringLiteral) {
-            throwError(token, Messages.UnexpectedString);
-        }
-
-        if (token.type === Token.Identifier) {
-            throwError(token, Messages.UnexpectedIdentifier);
-        }
-
-        if (token.type === Token.Keyword) {
-            if (isFutureReservedWord(token.value)) {
-                throwError(token, Messages.UnexpectedReserved);
-            } else if (strict && isStrictModeReservedWord(token.value)) {
-                throwErrorTolerant(token, Messages.StrictReservedWord);
-                return;
+            if (token.type === Token.Keyword) {
+                if (isFutureReservedWord(token.value)) {
+                    msg = Messages.UnexpectedReserved;
+                } else if (strict && isStrictModeReservedWord(token.value)) {
+                    msg = Messages.StrictReservedWord;
+                }
             }
-            throwError(token, Messages.UnexpectedToken, token.value);
         }
 
-        // BooleanLiteral, NullLiteral, or Punctuator.
-        throwError(token, Messages.UnexpectedToken, token.value);
+        msg = msg.replace('%0', token ? token.value : 'ILLEGAL');
+
+        return (token && typeof token.lineNumber === 'number') ?
+            createError(token.lineNumber, token.start, msg) :
+            createError(scanning ? lineNumber : lastLineNumber, scanning ? index : lastIndex, msg);
+    }
+
+    function throwUnexpectedToken(token, message) {
+        throw unexpectedTokenError(token, message);
+    }
+
+    function tolerateUnexpectedToken(token, message) {
+        var error = unexpectedTokenError(token, message);
+        if (extra.errors) {
+            recordError(error);
+        } else {
+            throw error;
+        }
     }
 
     // Expect the next token to match the specified punctuator.
@@ -4896,7 +3439,31 @@ parseStatement: true, parseSourceElement: true */
     function expect(value) {
         var token = lex();
         if (token.type !== Token.Punctuator || token.value !== value) {
-            throwUnexpected(token);
+            throwUnexpectedToken(token);
+        }
+    }
+
+    /**
+     * @name expectCommaSeparator
+     * @description Quietly expect a comma when in tolerant mode, otherwise delegates
+     * to <code>expect(value)</code>
+     * @since 2.0
+     */
+    function expectCommaSeparator() {
+        var token;
+
+        if (extra.errors) {
+            token = lookahead;
+            if (token.type === Token.Punctuator && token.value === ',') {
+                lex();
+            } else if (token.type === Token.Punctuator && token.value === ';') {
+                lex();
+                tolerateUnexpectedToken(token);
+            } else {
+                tolerateUnexpectedToken(token, Messages.UnexpectedToken);
+            }
+        } else {
+            expect(',');
         }
     }
 
@@ -4906,7 +3473,7 @@ parseStatement: true, parseSourceElement: true */
     function expectKeyword(keyword) {
         var token = lex();
         if (token.type !== Token.Keyword || token.value !== keyword) {
-            throwUnexpected(token);
+            throwUnexpectedToken(token);
         }
     }
 
@@ -4946,27 +3513,23 @@ parseStatement: true, parseSourceElement: true */
     }
 
     function consumeSemicolon() {
-        var line, oldIndex = index, oldLineNumber = lineNumber,
-            oldLineStart = lineStart, oldLookahead = lookahead;
-
         // Catch the very common case first: immediately a semicolon (U+003B).
-        if (source.charCodeAt(index) === 0x3B || match(';')) {
+        if (source.charCodeAt(startIndex) === 0x3B || match(';')) {
             lex();
             return;
         }
 
-        line = lineNumber;
-        skipComment();
-        if (lineNumber !== line) {
-            index = oldIndex;
-            lineNumber = oldLineNumber;
-            lineStart = oldLineStart;
-            lookahead = oldLookahead;
+        if (hasLineTerminator) {
             return;
         }
 
+        // FIXME(ikarienator): this is seemingly an issue in the previous location info convention.
+        lastIndex = startIndex;
+        lastLineNumber = startLineNumber;
+        lastLineStart = startLineStart;
+
         if (lookahead.type !== Token.EOF && !match('}')) {
-            throwUnexpected(lookahead);
+            throwUnexpectedToken(lookahead);
         }
     }
 
@@ -4979,9 +3542,8 @@ parseStatement: true, parseSourceElement: true */
     // 11.1.4 Array Initialiser
 
     function parseArrayInitialiser() {
-        var elements = [], startToken;
+        var elements = [], node = new Node();
 
-        startToken = lookahead;
         expect('[');
 
         while (!match(']')) {
@@ -4999,150 +3561,281 @@ parseStatement: true, parseSourceElement: true */
 
         lex();
 
-        return delegate.markEnd(delegate.createArrayExpression(elements), startToken);
+        return node.finishArrayExpression(elements);
     }
 
     // 11.1.5 Object Initialiser
 
-    function parsePropertyFunction(param, first) {
-        var previousStrict, body, startToken;
+    function parsePropertyFunction(node, paramInfo) {
+        var previousStrict, body;
 
         previousStrict = strict;
-        startToken = lookahead;
         body = parseFunctionSourceElements();
-        if (first && strict && isRestrictedWord(param[0].name)) {
-            throwErrorTolerant(first, Messages.StrictParamName);
+
+        if (strict && paramInfo.firstRestricted) {
+            tolerateUnexpectedToken(paramInfo.firstRestricted, paramInfo.message);
         }
+        if (strict && paramInfo.stricted) {
+            tolerateUnexpectedToken(paramInfo.stricted, paramInfo.message);
+        }
+
         strict = previousStrict;
-        return delegate.markEnd(delegate.createFunctionExpression(null, param, [], body), startToken);
+        return node.finishFunctionExpression(null, paramInfo.params, paramInfo.defaults, body);
     }
 
-    function parseObjectPropertyKey() {
-        var token, startToken;
+    function parsePropertyMethodFunction() {
+        var params, method, node = new Node();
 
-        startToken = lookahead;
+        params = parseParams();
+        method = parsePropertyFunction(node, params);
+
+        return method;
+    }
+
+    // This function returns a tuple `[PropertyName, boolean]` where the PropertyName is the key being consumed and the second
+    // element indicate whether its a computed PropertyName or a static PropertyName.
+    function parseObjectPropertyKey() {
+        var token, node = new Node(), expr;
+
         token = lex();
 
         // Note: This function is called only from parseObjectProperty(), where
         // EOF and Punctuator tokens are already filtered out.
 
-        if (token.type === Token.StringLiteral || token.type === Token.NumericLiteral) {
+        switch (token.type) {
+        case Token.StringLiteral:
+        case Token.NumericLiteral:
             if (strict && token.octal) {
-                throwErrorTolerant(token, Messages.StrictOctalLiteral);
+                tolerateUnexpectedToken(token, Messages.StrictOctalLiteral);
             }
-            return delegate.markEnd(delegate.createLiteral(token), startToken);
+            return node.finishLiteral(token);
+        case Token.Identifier:
+        case Token.BooleanLiteral:
+        case Token.NullLiteral:
+        case Token.Keyword:
+            return node.finishIdentifier(token.value);
+        case Token.Punctuator:
+            if (token.value === '[') {
+                expr = parseAssignmentExpression();
+                expect(']');
+                return expr;
+            }
+            break;
         }
-
-        return delegate.markEnd(delegate.createIdentifier(token.value), startToken);
+        throwUnexpectedToken(token);
     }
 
-    function parseObjectProperty() {
-        var token, key, id, value, param, startToken;
+    function lookaheadPropertyName() {
+        switch (lookahead.type) {
+        case Token.Identifier:
+        case Token.StringLiteral:
+        case Token.BooleanLiteral:
+        case Token.NullLiteral:
+        case Token.NumericLiteral:
+        case Token.Keyword:
+            return true;
+        case Token.Punctuator:
+            return lookahead.value === '[';
+        }
+        return false;
+    }
 
-        token = lookahead;
-        startToken = lookahead;
+    // This function is to try to parse a MethodDefinition as defined in 14.3. But in the case of object literals,
+    // it might be called at a position where there is in fact a short hand identifier pattern or a data property.
+    // This can only be determined after we consumed up to the left parentheses.
+    //
+    // In order to avoid back tracking, it returns `null` if the position is not a MethodDefinition and the caller
+    // is responsible to visit other options.
+    function tryParseMethodDefinition(token, key, computed, node) {
+        var value, options, methodNode;
 
         if (token.type === Token.Identifier) {
+            // check for `get` and `set`;
 
-            id = parseObjectPropertyKey();
-
-            // Property Assignment: Getter and Setter.
-
-            if (token.value === 'get' && !match(':')) {
+            if (token.value === 'get' && lookaheadPropertyName()) {
+                computed = match('[');
                 key = parseObjectPropertyKey();
+                methodNode = new Node();
                 expect('(');
                 expect(')');
-                value = parsePropertyFunction([]);
-                return delegate.markEnd(delegate.createProperty('get', key, value), startToken);
-            }
-            if (token.value === 'set' && !match(':')) {
+                value = parsePropertyFunction(methodNode, {
+                    params: [],
+                    defaults: [],
+                    stricted: null,
+                    firstRestricted: null,
+                    message: null
+                });
+                return node.finishProperty('get', key, computed, value, false, false);
+            } else if (token.value === 'set' && lookaheadPropertyName()) {
+                computed = match('[');
                 key = parseObjectPropertyKey();
+                methodNode = new Node();
                 expect('(');
-                token = lookahead;
-                if (token.type !== Token.Identifier) {
-                    expect(')');
-                    throwErrorTolerant(token, Messages.UnexpectedToken, token.value);
-                    value = parsePropertyFunction([]);
+
+                options = {
+                    params: [],
+                    defaultCount: 0,
+                    defaults: [],
+                    firstRestricted: null,
+                    paramSet: {}
+                };
+                if (match(')')) {
+                    tolerateUnexpectedToken(lookahead);
                 } else {
-                    param = [ parseVariableIdentifier() ];
-                    expect(')');
-                    value = parsePropertyFunction(param, token);
+                    parseParam(options);
+                    if (options.defaultCount === 0) {
+                        options.defaults = [];
+                    }
                 }
-                return delegate.markEnd(delegate.createProperty('set', key, value), startToken);
+                expect(')');
+
+                value = parsePropertyFunction(methodNode, options);
+                return node.finishProperty('set', key, computed, value, false, false);
             }
-            expect(':');
-            value = parseAssignmentExpression();
-            return delegate.markEnd(delegate.createProperty('init', id, value), startToken);
         }
-        if (token.type === Token.EOF || token.type === Token.Punctuator) {
-            throwUnexpected(token);
-        } else {
-            key = parseObjectPropertyKey();
-            expect(':');
-            value = parseAssignmentExpression();
-            return delegate.markEnd(delegate.createProperty('init', key, value), startToken);
+
+        if (match('(')) {
+            value = parsePropertyMethodFunction();
+            return node.finishProperty('init', key, computed, value, true, false);
         }
+
+        // Not a MethodDefinition.
+        return null;
+    }
+
+    function checkProto(key, computed, hasProto) {
+        if (computed === false && (key.type === Syntax.Identifier && key.name === '__proto__' ||
+            key.type === Syntax.Literal && key.value === '__proto__')) {
+            if (hasProto.value) {
+                tolerateError(Messages.DuplicateProtoProperty);
+            } else {
+                hasProto.value = true;
+            }
+        }
+    }
+
+    function parseObjectProperty(hasProto) {
+        var token = lookahead, node = new Node(), computed, key, maybeMethod, value;
+
+        computed = match('[');
+        key = parseObjectPropertyKey();
+        maybeMethod = tryParseMethodDefinition(token, key, computed, node);
+
+        if (maybeMethod) {
+            checkProto(maybeMethod.key, maybeMethod.computed, hasProto);
+            // finished
+            return maybeMethod;
+        }
+
+        // init property or short hand property.
+        checkProto(key, computed, hasProto);
+
+        if (match(':')) {
+            lex();
+            value = parseAssignmentExpression();
+            return node.finishProperty('init', key, computed, value, false, false);
+        }
+
+        if (token.type === Token.Identifier) {
+            return node.finishProperty('init', key, computed, key, false, true);
+        }
+
+        throwUnexpectedToken(lookahead);
     }
 
     function parseObjectInitialiser() {
-        var properties = [], property, name, key, kind, map = {}, toString = String, startToken;
-
-        startToken = lookahead;
+        var properties = [], hasProto = {value: false}, node = new Node();
 
         expect('{');
 
         while (!match('}')) {
-            property = parseObjectProperty();
-
-            if (property.key.type === Syntax.Identifier) {
-                name = property.key.name;
-            } else {
-                name = toString(property.key.value);
-            }
-            kind = (property.kind === 'init') ? PropertyKind.Data : (property.kind === 'get') ? PropertyKind.Get : PropertyKind.Set;
-
-            key = '$' + name;
-            if (Object.prototype.hasOwnProperty.call(map, key)) {
-                if (map[key] === PropertyKind.Data) {
-                    if (strict && kind === PropertyKind.Data) {
-                        throwErrorTolerant({}, Messages.StrictDuplicateProperty);
-                    } else if (kind !== PropertyKind.Data) {
-                        throwErrorTolerant({}, Messages.AccessorDataProperty);
-                    }
-                } else {
-                    if (kind === PropertyKind.Data) {
-                        throwErrorTolerant({}, Messages.AccessorDataProperty);
-                    } else if (map[key] & kind) {
-                        throwErrorTolerant({}, Messages.AccessorGetSet);
-                    }
-                }
-                map[key] |= kind;
-            } else {
-                map[key] = kind;
-            }
-
-            properties.push(property);
+            properties.push(parseObjectProperty(hasProto));
 
             if (!match('}')) {
-                expect(',');
+                expectCommaSeparator();
             }
         }
 
         expect('}');
 
-        return delegate.markEnd(delegate.createObjectExpression(properties), startToken);
+        return node.finishObjectExpression(properties);
     }
 
     // 11.1.6 The Grouping Operator
 
     function parseGroupExpression() {
-        var expr;
+        var expr, expressions, startToken, isValidArrowParameter = true;
 
         expect('(');
 
-        expr = parseExpression();
+        if (match(')')) {
+            lex();
+            if (!match('=>')) {
+                expect('=>');
+            }
+            return {
+                type: PlaceHolders.ArrowParameterPlaceHolder,
+                params: []
+            };
+        }
+
+        startToken = lookahead;
+        if (match('...')) {
+            expr = parseRestElement();
+            expect(')');
+            if (!match('=>')) {
+                expect('=>');
+            }
+            return {
+                type: PlaceHolders.ArrowParameterPlaceHolder,
+                params: [expr]
+            };
+        }
+
+        if (match('(')) {
+            isValidArrowParameter = false;
+        }
+
+        expr = parseAssignmentExpression();
+
+        if (match(',')) {
+            expressions = [expr];
+
+            while (startIndex < length) {
+                if (!match(',')) {
+                    break;
+                }
+                lex();
+
+                if (match('...')) {
+                    if (!isValidArrowParameter) {
+                        throwUnexpectedToken(lookahead);
+                    }
+                    expressions.push(parseRestElement());
+                    expect(')');
+                    if (!match('=>')) {
+                        expect('=>');
+                    }
+                    return {
+                        type: PlaceHolders.ArrowParameterPlaceHolder,
+                        params: expressions
+                    };
+                } else if (match('(')) {
+                    isValidArrowParameter = false;
+                }
+
+                expressions.push(parseAssignmentExpression());
+            }
+
+            expr = new WrappingNode(startToken).finishSequenceExpression(expressions);
+        }
+
 
         expect(')');
+
+        if (match('=>') && !isValidArrowParameter) {
+            throwUnexpectedToken(lookahead);
+        }
 
         return expr;
     }
@@ -5151,7 +3844,7 @@ parseStatement: true, parseSourceElement: true */
     // 11.1 Primary Expressions
 
     function parsePrimaryExpression() {
-        var type, token, expr, startToken;
+        var type, token, expr, node;
 
         if (match('(')) {
             return parseGroupExpression();
@@ -5166,45 +3859,50 @@ parseStatement: true, parseSourceElement: true */
         }
 
         type = lookahead.type;
-        startToken = lookahead;
+        node = new Node();
 
         if (type === Token.Identifier) {
-            expr =  delegate.createIdentifier(lex().value);
+            expr = node.finishIdentifier(lex().value);
         } else if (type === Token.StringLiteral || type === Token.NumericLiteral) {
             if (strict && lookahead.octal) {
-                throwErrorTolerant(lookahead, Messages.StrictOctalLiteral);
+                tolerateUnexpectedToken(lookahead, Messages.StrictOctalLiteral);
             }
-            expr = delegate.createLiteral(lex());
+            expr = node.finishLiteral(lex());
         } else if (type === Token.Keyword) {
             if (matchKeyword('function')) {
                 return parseFunctionExpression();
             }
             if (matchKeyword('this')) {
                 lex();
-                expr = delegate.createThisExpression();
-            } else {
-                throwUnexpected(lex());
+                return node.finishThisExpression();
             }
+            if (matchKeyword('class')) {
+                return parseClassExpression();
+            }
+            throwUnexpectedToken(lex());
         } else if (type === Token.BooleanLiteral) {
             token = lex();
             token.value = (token.value === 'true');
-            expr = delegate.createLiteral(token);
+            expr = node.finishLiteral(token);
         } else if (type === Token.NullLiteral) {
             token = lex();
             token.value = null;
-            expr = delegate.createLiteral(token);
+            expr = node.finishLiteral(token);
         } else if (match('/') || match('/=')) {
+            index = startIndex;
+
             if (typeof extra.tokens !== 'undefined') {
-                expr = delegate.createLiteral(collectRegex());
+                token = collectRegex();
             } else {
-                expr = delegate.createLiteral(scanRegExp());
+                token = scanRegExp();
             }
-            peek();
+            lex();
+            expr = node.finishLiteral(token);
         } else {
-            throwUnexpected(lex());
+            throwUnexpectedToken(lex());
         }
 
-        return delegate.markEnd(expr, startToken);
+        return expr;
     }
 
     // 11.2 Left-Hand-Side Expressions
@@ -5215,12 +3913,12 @@ parseStatement: true, parseSourceElement: true */
         expect('(');
 
         if (!match(')')) {
-            while (index < length) {
+            while (startIndex < length) {
                 args.push(parseAssignmentExpression());
                 if (match(')')) {
                     break;
                 }
-                expect(',');
+                expectCommaSeparator();
             }
         }
 
@@ -5230,16 +3928,15 @@ parseStatement: true, parseSourceElement: true */
     }
 
     function parseNonComputedProperty() {
-        var token, startToken;
+        var token, node = new Node();
 
-        startToken = lookahead;
         token = lex();
 
         if (!isIdentifierName(token)) {
-            throwUnexpected(token);
+            throwUnexpectedToken(token);
         }
 
-        return delegate.markEnd(delegate.createIdentifier(token.value), startToken);
+        return node.finishIdentifier(token.value);
     }
 
     function parseNonComputedMember() {
@@ -5261,14 +3958,13 @@ parseStatement: true, parseSourceElement: true */
     }
 
     function parseNewExpression() {
-        var callee, args, startToken;
+        var callee, args, node = new Node();
 
-        startToken = lookahead;
         expectKeyword('new');
         callee = parseLeftHandSideExpression();
         args = match('(') ? parseArguments() : [];
 
-        return delegate.markEnd(delegate.createNewExpression(callee, args), startToken);
+        return node.finishNewExpression(callee, args);
     }
 
     function parseLeftHandSideExpressionAllowCall() {
@@ -5281,17 +3977,16 @@ parseStatement: true, parseSourceElement: true */
         for (;;) {
             if (match('.')) {
                 property = parseNonComputedMember();
-                expr = delegate.createMemberExpression('.', expr, property);
+                expr = new WrappingNode(startToken).finishMemberExpression('.', expr, property);
             } else if (match('(')) {
                 args = parseArguments();
-                expr = delegate.createCallExpression(expr, args);
+                expr = new WrappingNode(startToken).finishCallExpression(expr, args);
             } else if (match('[')) {
                 property = parseComputedMember();
-                expr = delegate.createMemberExpression('[', expr, property);
+                expr = new WrappingNode(startToken).finishMemberExpression('[', expr, property);
             } else {
                 break;
             }
-            delegate.markEnd(expr, startToken);
         }
         state.allowIn = previousAllowIn;
 
@@ -5306,15 +4001,16 @@ parseStatement: true, parseSourceElement: true */
 
         expr = matchKeyword('new') ? parseNewExpression() : parsePrimaryExpression();
 
-        while (match('.') || match('[')) {
+        for (;;) {
             if (match('[')) {
                 property = parseComputedMember();
-                expr = delegate.createMemberExpression('[', expr, property);
-            } else {
+                expr = new WrappingNode(startToken).finishMemberExpression('[', expr, property);
+            } else if (match('.')) {
                 property = parseNonComputedMember();
-                expr = delegate.createMemberExpression('.', expr, property);
+                expr = new WrappingNode(startToken).finishMemberExpression('.', expr, property);
+            } else {
+                break;
             }
-            delegate.markEnd(expr, startToken);
         }
         return expr;
     }
@@ -5326,19 +4022,19 @@ parseStatement: true, parseSourceElement: true */
 
         expr = parseLeftHandSideExpressionAllowCall();
 
-        if (lookahead.type === Token.Punctuator) {
-            if ((match('++') || match('--')) && !peekLineTerminator()) {
+        if (!hasLineTerminator && lookahead.type === Token.Punctuator) {
+            if (match('++') || match('--')) {
                 // 11.3.1, 11.3.2
                 if (strict && expr.type === Syntax.Identifier && isRestrictedWord(expr.name)) {
-                    throwErrorTolerant({}, Messages.StrictLHSPostfix);
+                    tolerateError(Messages.StrictLHSPostfix);
                 }
 
                 if (!isLeftHandSide(expr)) {
-                    throwErrorTolerant({}, Messages.InvalidLHSInAssignment);
+                    tolerateError(Messages.InvalidLHSInAssignment);
                 }
 
                 token = lex();
-                expr = delegate.markEnd(delegate.createPostfixExpression(token.value, expr), startToken);
+                expr = new WrappingNode(startToken).finishPostfixExpression(token.value, expr);
             }
         }
 
@@ -5358,29 +4054,26 @@ parseStatement: true, parseSourceElement: true */
             expr = parseUnaryExpression();
             // 11.4.4, 11.4.5
             if (strict && expr.type === Syntax.Identifier && isRestrictedWord(expr.name)) {
-                throwErrorTolerant({}, Messages.StrictLHSPrefix);
+                tolerateError(Messages.StrictLHSPrefix);
             }
 
             if (!isLeftHandSide(expr)) {
-                throwErrorTolerant({}, Messages.InvalidLHSInAssignment);
+                tolerateError(Messages.InvalidLHSInAssignment);
             }
 
-            expr = delegate.createUnaryExpression(token.value, expr);
-            expr = delegate.markEnd(expr, startToken);
+            expr = new WrappingNode(startToken).finishUnaryExpression(token.value, expr);
         } else if (match('+') || match('-') || match('~') || match('!')) {
             startToken = lookahead;
             token = lex();
             expr = parseUnaryExpression();
-            expr = delegate.createUnaryExpression(token.value, expr);
-            expr = delegate.markEnd(expr, startToken);
+            expr = new WrappingNode(startToken).finishUnaryExpression(token.value, expr);
         } else if (matchKeyword('delete') || matchKeyword('void') || matchKeyword('typeof')) {
             startToken = lookahead;
             token = lex();
             expr = parseUnaryExpression();
-            expr = delegate.createUnaryExpression(token.value, expr);
-            expr = delegate.markEnd(expr, startToken);
+            expr = new WrappingNode(startToken).finishUnaryExpression(token.value, expr);
             if (strict && expr.operator === 'delete' && expr.argument.type === Syntax.Identifier) {
-                throwErrorTolerant({}, Messages.StrictDelete);
+                tolerateError(Messages.StrictDelete);
             }
         } else {
             expr = parsePostfixExpression();
@@ -5494,10 +4187,8 @@ parseStatement: true, parseSourceElement: true */
                 right = stack.pop();
                 operator = stack.pop().value;
                 left = stack.pop();
-                expr = delegate.createBinaryExpression(operator, left, right);
                 markers.pop();
-                marker = markers[markers.length - 1];
-                delegate.markEnd(expr, marker);
+                expr = new WrappingNode(markers[markers.length - 1]).finishBinaryExpression(operator, left, right);
                 stack.push(expr);
             }
 
@@ -5515,10 +4206,8 @@ parseStatement: true, parseSourceElement: true */
         expr = stack[i];
         markers.pop();
         while (i > 1) {
-            expr = delegate.createBinaryExpression(stack[i - 1].value, stack[i - 2], expr);
+            expr = new WrappingNode(markers.pop()).finishBinaryExpression(stack[i - 1].value, stack[i - 2], expr);
             i -= 2;
-            marker = markers.pop();
-            delegate.markEnd(expr, marker);
         }
 
         return expr;
@@ -5533,7 +4222,6 @@ parseStatement: true, parseSourceElement: true */
         startToken = lookahead;
 
         expr = parseBinaryExpression();
-
         if (match('?')) {
             lex();
             previousAllowIn = state.allowIn;
@@ -5543,61 +4231,160 @@ parseStatement: true, parseSourceElement: true */
             expect(':');
             alternate = parseAssignmentExpression();
 
-            expr = delegate.createConditionalExpression(expr, consequent, alternate);
-            delegate.markEnd(expr, startToken);
+            expr = new WrappingNode(startToken).finishConditionalExpression(expr, consequent, alternate);
         }
 
         return expr;
     }
 
+    // [ES6] 14.2 Arrow Function
+
+    function parseConciseBody() {
+        if (match('{')) {
+            return parseFunctionSourceElements();
+        }
+        return parseAssignmentExpression();
+    }
+
+    function reinterpretAsCoverFormalsList(expr) {
+        var i, len, param, params, defaults, defaultCount, options, token;
+
+        defaults = [];
+        defaultCount = 0;
+        params = [expr];
+
+        switch (expr.type) {
+        case Syntax.Identifier:
+        case Syntax.AssignmentExpression:
+            break;
+        case Syntax.SequenceExpression:
+            params = expr.expressions;
+            break;
+        case PlaceHolders.ArrowParameterPlaceHolder:
+            params = expr.params;
+            break;
+        default:
+            return null;
+        }
+
+        options = {
+            paramSet: {}
+        };
+
+        for (i = 0, len = params.length; i < len; i += 1) {
+            param = params[i];
+            if (param.type === Syntax.Identifier) {
+                params[i] = param;
+                defaults.push(null);
+                validateParam(options, param, param.name);
+            } else if (param.type === Syntax.RestElement) {
+                params[i] = param;
+                defaults.push(null);
+                validateParam(options, param.argument, param.argument.name);
+            } else if (param.type === Syntax.AssignmentExpression) {
+                params[i] = param.left;
+                defaults.push(param.right);
+                ++defaultCount;
+                validateParam(options, param.left, param.left.name);
+            } else {
+                return null;
+            }
+        }
+
+        if (options.message === Messages.StrictParamDupe) {
+            token = strict ? options.stricted : options.firstRestricted;
+            throwUnexpectedToken(token, options.message);
+        }
+
+        if (defaultCount === 0) {
+            defaults = [];
+        }
+
+        return {
+            params: params,
+            defaults: defaults,
+            stricted: options.stricted,
+            firstRestricted: options.firstRestricted,
+            message: options.message
+        };
+    }
+
+    function parseArrowFunctionExpression(options, node) {
+        var previousStrict, body;
+
+        expect('=>');
+        previousStrict = strict;
+
+        body = parseConciseBody();
+
+        if (strict && options.firstRestricted) {
+            throwUnexpectedToken(options.firstRestricted, options.message);
+        }
+        if (strict && options.stricted) {
+            tolerateUnexpectedToken(options.stricted, options.message);
+        }
+
+        strict = previousStrict;
+
+        return node.finishArrowFunctionExpression(options.params, options.defaults, body, body.type !== Syntax.BlockStatement);
+    }
+
     // 11.13 Assignment Operators
 
     function parseAssignmentExpression() {
-        var token, left, right, node, startToken;
+        var token, expr, right, list, startToken;
 
-        token = lookahead;
         startToken = lookahead;
+        token = lookahead;
 
-        node = left = parseConditionalExpression();
+        expr = parseConditionalExpression();
+
+        if (expr.type === PlaceHolders.ArrowParameterPlaceHolder || match('=>')) {
+            list = reinterpretAsCoverFormalsList(expr);
+
+            if (list) {
+                return parseArrowFunctionExpression(list, new WrappingNode(startToken));
+            }
+        }
 
         if (matchAssign()) {
             // LeftHandSideExpression
-            if (!isLeftHandSide(left)) {
-                throwErrorTolerant({}, Messages.InvalidLHSInAssignment);
+            if (!isLeftHandSide(expr)) {
+                tolerateError(Messages.InvalidLHSInAssignment);
             }
 
             // 11.13.1
-            if (strict && left.type === Syntax.Identifier && isRestrictedWord(left.name)) {
-                throwErrorTolerant(token, Messages.StrictLHSAssignment);
+            if (strict && expr.type === Syntax.Identifier && isRestrictedWord(expr.name)) {
+                tolerateUnexpectedToken(token, Messages.StrictLHSAssignment);
             }
 
             token = lex();
             right = parseAssignmentExpression();
-            node = delegate.markEnd(delegate.createAssignmentExpression(token.value, left, right), startToken);
+            expr = new WrappingNode(startToken).finishAssignmentExpression(token.value, expr, right);
         }
 
-        return node;
+        return expr;
     }
 
     // 11.14 Comma Operator
 
     function parseExpression() {
-        var expr, startToken = lookahead;
+        var expr, startToken = lookahead, expressions;
 
         expr = parseAssignmentExpression();
 
         if (match(',')) {
-            expr = delegate.createSequenceExpression([ expr ]);
+            expressions = [expr];
 
-            while (index < length) {
+            while (startIndex < length) {
                 if (!match(',')) {
                     break;
                 }
                 lex();
-                expr.expressions.push(parseAssignmentExpression());
+                expressions.push(parseAssignmentExpression());
             }
 
-            delegate.markEnd(expr, startToken);
+            expr = new WrappingNode(startToken).finishSequenceExpression(expressions);
         }
 
         return expr;
@@ -5605,89 +4392,97 @@ parseStatement: true, parseSourceElement: true */
 
     // 12.1 Block
 
-    function parseStatementList() {
-        var list = [],
-            statement;
+    function parseStatementListItem() {
+        if (lookahead.type === Token.Keyword) {
+            switch (lookahead.value) {
+            case 'const':
+            case 'let':
+                return parseLexicalDeclaration();
+            case 'function':
+                return parseFunctionDeclaration(new Node());
+            case 'class':
+                return parseClassDeclaration();
+            }
+        }
 
-        while (index < length) {
+        return parseStatement();
+    }
+
+    function parseStatementList() {
+        var list = [];
+        while (startIndex < length) {
             if (match('}')) {
                 break;
             }
-            statement = parseSourceElement();
-            if (typeof statement === 'undefined') {
-                break;
-            }
-            list.push(statement);
+            list.push(parseStatementListItem());
         }
 
         return list;
     }
 
     function parseBlock() {
-        var block, startToken;
+        var block, node = new Node();
 
-        startToken = lookahead;
         expect('{');
 
         block = parseStatementList();
 
         expect('}');
 
-        return delegate.markEnd(delegate.createBlockStatement(block), startToken);
+        return node.finishBlockStatement(block);
     }
 
     // 12.2 Variable Statement
 
     function parseVariableIdentifier() {
-        var token, startToken;
+        var token, node = new Node();
 
-        startToken = lookahead;
         token = lex();
 
         if (token.type !== Token.Identifier) {
-            throwUnexpected(token);
+            if (strict && token.type === Token.Keyword && isStrictModeReservedWord(token.value)) {
+                tolerateUnexpectedToken(token, Messages.StrictReservedWord);
+            } else {
+                throwUnexpectedToken(token);
+            }
         }
 
-        return delegate.markEnd(delegate.createIdentifier(token.value), startToken);
+        return node.finishIdentifier(token.value);
     }
 
-    function parseVariableDeclaration(kind) {
-        var init = null, id, startToken;
+    function parseVariableDeclaration() {
+        var init = null, id, node = new Node();
 
-        startToken = lookahead;
         id = parseVariableIdentifier();
 
         // 12.2.1
         if (strict && isRestrictedWord(id.name)) {
-            throwErrorTolerant({}, Messages.StrictVarName);
+            tolerateError(Messages.StrictVarName);
         }
 
-        if (kind === 'const') {
-            expect('=');
-            init = parseAssignmentExpression();
-        } else if (match('=')) {
+        if (match('=')) {
             lex();
             init = parseAssignmentExpression();
         }
 
-        return delegate.markEnd(delegate.createVariableDeclarator(id, init), startToken);
+        return node.finishVariableDeclarator(id, init);
     }
 
-    function parseVariableDeclarationList(kind) {
+    function parseVariableDeclarationList() {
         var list = [];
 
         do {
-            list.push(parseVariableDeclaration(kind));
+            list.push(parseVariableDeclaration());
             if (!match(',')) {
                 break;
             }
             lex();
-        } while (index < length);
+        } while (startIndex < length);
 
         return list;
     }
 
-    function parseVariableStatement() {
+    function parseVariableStatement(node) {
         var declarations;
 
         expectKeyword('var');
@@ -5696,45 +4491,99 @@ parseStatement: true, parseSourceElement: true */
 
         consumeSemicolon();
 
-        return delegate.createVariableDeclaration(declarations, 'var');
+        return node.finishVariableDeclaration(declarations);
     }
 
-    // kind may be `const` or `let`
-    // Both are experimental and not in the specification yet.
-    // see http://wiki.ecmascript.org/doku.php?id=harmony:const
-    // and http://wiki.ecmascript.org/doku.php?id=harmony:let
-    function parseConstLetDeclaration(kind) {
-        var declarations, startToken;
+    function parseLexicalBinding(kind) {
+        var init = null, id, node = new Node();
 
-        startToken = lookahead;
+        id = parseVariableIdentifier();
 
-        expectKeyword(kind);
+        // 12.2.1
+        if (strict && isRestrictedWord(id.name)) {
+            tolerateError(Messages.StrictVarName);
+        }
 
-        declarations = parseVariableDeclarationList(kind);
+        if (kind === 'const') {
+            if (!matchKeyword('in')) {
+                expect('=');
+                init = parseAssignmentExpression();
+            }
+        } else if (match('=')) {
+            lex();
+            init = parseAssignmentExpression();
+        }
+
+        return node.finishVariableDeclarator(id, init);
+    }
+
+    function parseBindingList(kind) {
+        var list = [];
+
+        do {
+            list.push(parseLexicalBinding(kind));
+            if (!match(',')) {
+                break;
+            }
+            lex();
+        } while (startIndex < length);
+
+        return list;
+    }
+
+    function parseLexicalDeclaration() {
+        var kind, declarations, node = new Node();
+
+        kind = lex().value;
+        assert(kind === 'let' || kind === 'const', 'Lexical declaration must be either let or const');
+
+        declarations = parseBindingList(kind);
 
         consumeSemicolon();
 
-        return delegate.markEnd(delegate.createVariableDeclaration(declarations, kind), startToken);
+        return node.finishLexicalDeclaration(declarations, kind);
+    }
+
+    function parseRestElement() {
+        var param, node = new Node();
+
+        lex();
+
+        if (match('{')) {
+            throwError(Messages.ObjectPatternAsRestParameter);
+        }
+
+        param = parseVariableIdentifier();
+
+        if (match('=')) {
+            throwError(Messages.DefaultRestParameter);
+        }
+
+        if (!match(')')) {
+            throwError(Messages.ParameterAfterRestParameter);
+        }
+
+        return node.finishRestElement(param);
     }
 
     // 12.3 Empty Statement
 
-    function parseEmptyStatement() {
+    function parseEmptyStatement(node) {
         expect(';');
-        return delegate.createEmptyStatement();
+        return node.finishEmptyStatement();
     }
 
     // 12.4 Expression Statement
 
-    function parseExpressionStatement() {
+    function parseExpressionStatement(node) {
         var expr = parseExpression();
         consumeSemicolon();
-        return delegate.createExpressionStatement(expr);
+        return node.finishExpressionStatement(expr);
     }
 
     // 12.5 If statement
 
-    function parseIfStatement() {
+    function parseIfStatement(node) {
         var test, consequent, alternate;
 
         expectKeyword('if');
@@ -5754,12 +4603,12 @@ parseStatement: true, parseSourceElement: true */
             alternate = null;
         }
 
-        return delegate.createIfStatement(test, consequent, alternate);
+        return node.finishIfStatement(test, consequent, alternate);
     }
 
     // 12.6 Iteration Statements
 
-    function parseDoWhileStatement() {
+    function parseDoWhileStatement(node) {
         var body, test, oldInIteration;
 
         expectKeyword('do');
@@ -5783,10 +4632,10 @@ parseStatement: true, parseSourceElement: true */
             lex();
         }
 
-        return delegate.createDoWhileStatement(body, test);
+        return node.finishDoWhileStatement(body, test);
     }
 
-    function parseWhileStatement() {
+    function parseWhileStatement(node) {
         var test, body, oldInIteration;
 
         expectKeyword('while');
@@ -5804,21 +4653,12 @@ parseStatement: true, parseSourceElement: true */
 
         state.inIteration = oldInIteration;
 
-        return delegate.createWhileStatement(test, body);
+        return node.finishWhileStatement(test, body);
     }
 
-    function parseForVariableDeclaration() {
-        var token, declarations, startToken;
-
-        startToken = lookahead;
-        token = lex();
-        declarations = parseVariableDeclarationList();
-
-        return delegate.markEnd(delegate.createVariableDeclaration(declarations, token.value), startToken);
-    }
-
-    function parseForStatement() {
-        var init, test, update, left, right, body, oldInIteration, previousAllowIn = state.allowIn;
+    function parseForStatement(node) {
+        var init, test, update, left, right, kind, declarations,
+            body, oldInIteration, previousAllowIn = state.allowIn;
 
         init = test = update = null;
 
@@ -5829,9 +4669,12 @@ parseStatement: true, parseSourceElement: true */
         if (match(';')) {
             lex();
         } else {
-            if (matchKeyword('var') || matchKeyword('let')) {
+            if (matchKeyword('var')) {
+                init = new Node();
+                lex();
+
                 state.allowIn = false;
-                init = parseForVariableDeclaration();
+                init = init.finishVariableDeclaration(parseVariableDeclarationList());
                 state.allowIn = previousAllowIn;
 
                 if (init.declarations.length === 1 && matchKeyword('in')) {
@@ -5839,6 +4682,26 @@ parseStatement: true, parseSourceElement: true */
                     left = init;
                     right = parseExpression();
                     init = null;
+                } else {
+                    expect(';');
+                }
+            } else if (matchKeyword('const') || matchKeyword('let')) {
+                init = new Node();
+                kind = lex().value;
+
+                state.allowIn = false;
+                declarations = parseBindingList(kind);
+                state.allowIn = previousAllowIn;
+
+                if (declarations.length === 1 && declarations[0].init === null && matchKeyword('in')) {
+                    init = init.finishLexicalDeclaration(declarations, kind);
+                    lex();
+                    left = init;
+                    right = parseExpression();
+                    init = null;
+                } else {
+                    consumeSemicolon();
+                    init = init.finishLexicalDeclaration(declarations, kind);
                 }
             } else {
                 state.allowIn = false;
@@ -5848,18 +4711,16 @@ parseStatement: true, parseSourceElement: true */
                 if (matchKeyword('in')) {
                     // LeftHandSideExpression
                     if (!isLeftHandSide(init)) {
-                        throwErrorTolerant({}, Messages.InvalidLHSInForIn);
+                        tolerateError(Messages.InvalidLHSInForIn);
                     }
 
                     lex();
                     left = init;
                     right = parseExpression();
                     init = null;
+                } else {
+                    expect(';');
                 }
-            }
-
-            if (typeof left === 'undefined') {
-                expect(';');
             }
         }
 
@@ -5885,34 +4746,34 @@ parseStatement: true, parseSourceElement: true */
         state.inIteration = oldInIteration;
 
         return (typeof left === 'undefined') ?
-                delegate.createForStatement(init, test, update, body) :
-                delegate.createForInStatement(left, right, body);
+                node.finishForStatement(init, test, update, body) :
+                node.finishForInStatement(left, right, body);
     }
 
     // 12.7 The continue statement
 
-    function parseContinueStatement() {
+    function parseContinueStatement(node) {
         var label = null, key;
 
         expectKeyword('continue');
 
         // Optimize the most common form: 'continue;'.
-        if (source.charCodeAt(index) === 0x3B) {
+        if (source.charCodeAt(startIndex) === 0x3B) {
             lex();
 
             if (!state.inIteration) {
-                throwError({}, Messages.IllegalContinue);
+                throwError(Messages.IllegalContinue);
             }
 
-            return delegate.createContinueStatement(null);
+            return node.finishContinueStatement(null);
         }
 
-        if (peekLineTerminator()) {
+        if (hasLineTerminator) {
             if (!state.inIteration) {
-                throwError({}, Messages.IllegalContinue);
+                throwError(Messages.IllegalContinue);
             }
 
-            return delegate.createContinueStatement(null);
+            return node.finishContinueStatement(null);
         }
 
         if (lookahead.type === Token.Identifier) {
@@ -5920,43 +4781,43 @@ parseStatement: true, parseSourceElement: true */
 
             key = '$' + label.name;
             if (!Object.prototype.hasOwnProperty.call(state.labelSet, key)) {
-                throwError({}, Messages.UnknownLabel, label.name);
+                throwError(Messages.UnknownLabel, label.name);
             }
         }
 
         consumeSemicolon();
 
         if (label === null && !state.inIteration) {
-            throwError({}, Messages.IllegalContinue);
+            throwError(Messages.IllegalContinue);
         }
 
-        return delegate.createContinueStatement(label);
+        return node.finishContinueStatement(label);
     }
 
     // 12.8 The break statement
 
-    function parseBreakStatement() {
+    function parseBreakStatement(node) {
         var label = null, key;
 
         expectKeyword('break');
 
         // Catch the very common case first: immediately a semicolon (U+003B).
-        if (source.charCodeAt(index) === 0x3B) {
+        if (source.charCodeAt(lastIndex) === 0x3B) {
             lex();
 
             if (!(state.inIteration || state.inSwitch)) {
-                throwError({}, Messages.IllegalBreak);
+                throwError(Messages.IllegalBreak);
             }
 
-            return delegate.createBreakStatement(null);
+            return node.finishBreakStatement(null);
         }
 
-        if (peekLineTerminator()) {
+        if (hasLineTerminator) {
             if (!(state.inIteration || state.inSwitch)) {
-                throwError({}, Messages.IllegalBreak);
+                throwError(Messages.IllegalBreak);
             }
 
-            return delegate.createBreakStatement(null);
+            return node.finishBreakStatement(null);
         }
 
         if (lookahead.type === Token.Identifier) {
@@ -5964,41 +4825,42 @@ parseStatement: true, parseSourceElement: true */
 
             key = '$' + label.name;
             if (!Object.prototype.hasOwnProperty.call(state.labelSet, key)) {
-                throwError({}, Messages.UnknownLabel, label.name);
+                throwError(Messages.UnknownLabel, label.name);
             }
         }
 
         consumeSemicolon();
 
         if (label === null && !(state.inIteration || state.inSwitch)) {
-            throwError({}, Messages.IllegalBreak);
+            throwError(Messages.IllegalBreak);
         }
 
-        return delegate.createBreakStatement(label);
+        return node.finishBreakStatement(label);
     }
 
     // 12.9 The return statement
 
-    function parseReturnStatement() {
+    function parseReturnStatement(node) {
         var argument = null;
 
         expectKeyword('return');
 
         if (!state.inFunctionBody) {
-            throwErrorTolerant({}, Messages.IllegalReturn);
+            tolerateError(Messages.IllegalReturn);
         }
 
         // 'return' followed by a space and an identifier is very common.
-        if (source.charCodeAt(index) === 0x20) {
-            if (isIdentifierStart(source.charCodeAt(index + 1))) {
+        if (source.charCodeAt(lastIndex) === 0x20) {
+            if (isIdentifierStart(source.charCodeAt(lastIndex + 1))) {
                 argument = parseExpression();
                 consumeSemicolon();
-                return delegate.createReturnStatement(argument);
+                return node.finishReturnStatement(argument);
             }
         }
 
-        if (peekLineTerminator()) {
-            return delegate.createReturnStatement(null);
+        if (hasLineTerminator) {
+            // HACK
+            return node.finishReturnStatement(null);
         }
 
         if (!match(';')) {
@@ -6009,18 +4871,16 @@ parseStatement: true, parseSourceElement: true */
 
         consumeSemicolon();
 
-        return delegate.createReturnStatement(argument);
+        return node.finishReturnStatement(argument);
     }
 
     // 12.10 The with statement
 
-    function parseWithStatement() {
+    function parseWithStatement(node) {
         var object, body;
 
         if (strict) {
-            // TODO(ikarienator): Should we update the test cases instead?
-            skipComment();
-            throwErrorTolerant({}, Messages.StrictModeWith);
+            tolerateError(Messages.StrictModeWith);
         }
 
         expectKeyword('with');
@@ -6033,15 +4893,14 @@ parseStatement: true, parseSourceElement: true */
 
         body = parseStatement();
 
-        return delegate.createWithStatement(object, body);
+        return node.finishWithStatement(object, body);
     }
 
     // 12.10 The swith statement
 
     function parseSwitchCase() {
-        var test, consequent = [], statement, startToken;
+        var test, consequent = [], statement, node = new Node();
 
-        startToken = lookahead;
         if (matchKeyword('default')) {
             lex();
             test = null;
@@ -6051,18 +4910,18 @@ parseStatement: true, parseSourceElement: true */
         }
         expect(':');
 
-        while (index < length) {
+        while (startIndex < length) {
             if (match('}') || matchKeyword('default') || matchKeyword('case')) {
                 break;
             }
-            statement = parseStatement();
+            statement = parseStatementListItem();
             consequent.push(statement);
         }
 
-        return delegate.markEnd(delegate.createSwitchCase(test, consequent), startToken);
+        return node.finishSwitchCase(test, consequent);
     }
 
-    function parseSwitchStatement() {
+    function parseSwitchStatement(node) {
         var discriminant, cases, clause, oldInSwitch, defaultFound;
 
         expectKeyword('switch');
@@ -6079,21 +4938,21 @@ parseStatement: true, parseSourceElement: true */
 
         if (match('}')) {
             lex();
-            return delegate.createSwitchStatement(discriminant, cases);
+            return node.finishSwitchStatement(discriminant, cases);
         }
 
         oldInSwitch = state.inSwitch;
         state.inSwitch = true;
         defaultFound = false;
 
-        while (index < length) {
+        while (startIndex < length) {
             if (match('}')) {
                 break;
             }
             clause = parseSwitchCase();
             if (clause.test === null) {
                 if (defaultFound) {
-                    throwError({}, Messages.MultipleDefaultsInSwitch);
+                    throwError(Messages.MultipleDefaultsInSwitch);
                 }
                 defaultFound = true;
             }
@@ -6104,60 +4963,59 @@ parseStatement: true, parseSourceElement: true */
 
         expect('}');
 
-        return delegate.createSwitchStatement(discriminant, cases);
+        return node.finishSwitchStatement(discriminant, cases);
     }
 
     // 12.13 The throw statement
 
-    function parseThrowStatement() {
+    function parseThrowStatement(node) {
         var argument;
 
         expectKeyword('throw');
 
-        if (peekLineTerminator()) {
-            throwError({}, Messages.NewlineAfterThrow);
+        if (hasLineTerminator) {
+            throwError(Messages.NewlineAfterThrow);
         }
 
         argument = parseExpression();
 
         consumeSemicolon();
 
-        return delegate.createThrowStatement(argument);
+        return node.finishThrowStatement(argument);
     }
 
     // 12.14 The try statement
 
     function parseCatchClause() {
-        var param, body, startToken;
+        var param, body, node = new Node();
 
-        startToken = lookahead;
         expectKeyword('catch');
 
         expect('(');
         if (match(')')) {
-            throwUnexpected(lookahead);
+            throwUnexpectedToken(lookahead);
         }
 
         param = parseVariableIdentifier();
         // 12.14.1
         if (strict && isRestrictedWord(param.name)) {
-            throwErrorTolerant({}, Messages.StrictCatchVariable);
+            tolerateError(Messages.StrictCatchVariable);
         }
 
         expect(')');
         body = parseBlock();
-        return delegate.markEnd(delegate.createCatchClause(param, body), startToken);
+        return node.finishCatchClause(param, body);
     }
 
-    function parseTryStatement() {
-        var block, handlers = [], finalizer = null;
+    function parseTryStatement(node) {
+        var block, handler = null, finalizer = null;
 
         expectKeyword('try');
 
         block = parseBlock();
 
         if (matchKeyword('catch')) {
-            handlers.push(parseCatchClause());
+            handler = parseCatchClause();
         }
 
         if (matchKeyword('finally')) {
@@ -6165,21 +5023,21 @@ parseStatement: true, parseSourceElement: true */
             finalizer = parseBlock();
         }
 
-        if (handlers.length === 0 && !finalizer) {
-            throwError({}, Messages.NoCatchOrFinally);
+        if (!handler && !finalizer) {
+            throwError(Messages.NoCatchOrFinally);
         }
 
-        return delegate.createTryStatement(block, [], handlers, finalizer);
+        return node.finishTryStatement(block, handler, finalizer);
     }
 
     // 12.15 The debugger statement
 
-    function parseDebuggerStatement() {
+    function parseDebuggerStatement(node) {
         expectKeyword('debugger');
 
         consumeSemicolon();
 
-        return delegate.createDebuggerStatement();
+        return node.finishDebuggerStatement();
     }
 
     // 12 Statements
@@ -6189,59 +5047,57 @@ parseStatement: true, parseSourceElement: true */
             expr,
             labeledBody,
             key,
-            startToken;
+            node;
 
         if (type === Token.EOF) {
-            throwUnexpected(lookahead);
+            throwUnexpectedToken(lookahead);
         }
 
         if (type === Token.Punctuator && lookahead.value === '{') {
             return parseBlock();
         }
 
-        startToken = lookahead;
+        node = new Node();
 
         if (type === Token.Punctuator) {
             switch (lookahead.value) {
             case ';':
-                return delegate.markEnd(parseEmptyStatement(), startToken);
+                return parseEmptyStatement(node);
             case '(':
-                return delegate.markEnd(parseExpressionStatement(), startToken);
+                return parseExpressionStatement(node);
             default:
                 break;
             }
-        }
-
-        if (type === Token.Keyword) {
+        } else if (type === Token.Keyword) {
             switch (lookahead.value) {
             case 'break':
-                return delegate.markEnd(parseBreakStatement(), startToken);
+                return parseBreakStatement(node);
             case 'continue':
-                return delegate.markEnd(parseContinueStatement(), startToken);
+                return parseContinueStatement(node);
             case 'debugger':
-                return delegate.markEnd(parseDebuggerStatement(), startToken);
+                return parseDebuggerStatement(node);
             case 'do':
-                return delegate.markEnd(parseDoWhileStatement(), startToken);
+                return parseDoWhileStatement(node);
             case 'for':
-                return delegate.markEnd(parseForStatement(), startToken);
+                return parseForStatement(node);
             case 'function':
-                return delegate.markEnd(parseFunctionDeclaration(), startToken);
+                return parseFunctionDeclaration(node);
             case 'if':
-                return delegate.markEnd(parseIfStatement(), startToken);
+                return parseIfStatement(node);
             case 'return':
-                return delegate.markEnd(parseReturnStatement(), startToken);
+                return parseReturnStatement(node);
             case 'switch':
-                return delegate.markEnd(parseSwitchStatement(), startToken);
+                return parseSwitchStatement(node);
             case 'throw':
-                return delegate.markEnd(parseThrowStatement(), startToken);
+                return parseThrowStatement(node);
             case 'try':
-                return delegate.markEnd(parseTryStatement(), startToken);
+                return parseTryStatement(node);
             case 'var':
-                return delegate.markEnd(parseVariableStatement(), startToken);
+                return parseVariableStatement(node);
             case 'while':
-                return delegate.markEnd(parseWhileStatement(), startToken);
+                return parseWhileStatement(node);
             case 'with':
-                return delegate.markEnd(parseWithStatement(), startToken);
+                return parseWithStatement(node);
             default:
                 break;
             }
@@ -6255,38 +5111,38 @@ parseStatement: true, parseSourceElement: true */
 
             key = '$' + expr.name;
             if (Object.prototype.hasOwnProperty.call(state.labelSet, key)) {
-                throwError({}, Messages.Redeclaration, 'Label', expr.name);
+                throwError(Messages.Redeclaration, 'Label', expr.name);
             }
 
             state.labelSet[key] = true;
             labeledBody = parseStatement();
             delete state.labelSet[key];
-            return delegate.markEnd(delegate.createLabeledStatement(expr, labeledBody), startToken);
+            return node.finishLabeledStatement(expr, labeledBody);
         }
 
         consumeSemicolon();
 
-        return delegate.markEnd(delegate.createExpressionStatement(expr), startToken);
+        return node.finishExpressionStatement(expr);
     }
 
     // 13 Function Definition
 
     function parseFunctionSourceElements() {
-        var sourceElement, sourceElements = [], token, directive, firstRestricted,
-            oldLabelSet, oldInIteration, oldInSwitch, oldInFunctionBody, startToken;
+        var statement, body = [], token, directive, firstRestricted,
+            oldLabelSet, oldInIteration, oldInSwitch, oldInFunctionBody, oldParenthesisCount,
+            node = new Node();
 
-        startToken = lookahead;
         expect('{');
 
-        while (index < length) {
+        while (startIndex < length) {
             if (lookahead.type !== Token.StringLiteral) {
                 break;
             }
             token = lookahead;
 
-            sourceElement = parseSourceElement();
-            sourceElements.push(sourceElement);
-            if (sourceElement.expression.type !== Syntax.Literal) {
+            statement = parseStatementListItem();
+            body.push(statement);
+            if (statement.expression.type !== Syntax.Literal) {
                 // this is not directive
                 break;
             }
@@ -6294,7 +5150,7 @@ parseStatement: true, parseSourceElement: true */
             if (directive === 'use strict') {
                 strict = true;
                 if (firstRestricted) {
-                    throwErrorTolerant(firstRestricted, Messages.StrictOctalLiteral);
+                    tolerateUnexpectedToken(firstRestricted, Messages.StrictOctalLiteral);
                 }
             } else {
                 if (!firstRestricted && token.octal) {
@@ -6307,21 +5163,19 @@ parseStatement: true, parseSourceElement: true */
         oldInIteration = state.inIteration;
         oldInSwitch = state.inSwitch;
         oldInFunctionBody = state.inFunctionBody;
+        oldParenthesisCount = state.parenthesizedCount;
 
         state.labelSet = {};
         state.inIteration = false;
         state.inSwitch = false;
         state.inFunctionBody = true;
+        state.parenthesizedCount = 0;
 
-        while (index < length) {
+        while (startIndex < length) {
             if (match('}')) {
                 break;
             }
-            sourceElement = parseSourceElement();
-            if (typeof sourceElement === 'undefined') {
-                break;
-            }
-            sourceElements.push(sourceElement);
+            body.push(parseStatementListItem());
         }
 
         expect('}');
@@ -6330,44 +5184,80 @@ parseStatement: true, parseSourceElement: true */
         state.inIteration = oldInIteration;
         state.inSwitch = oldInSwitch;
         state.inFunctionBody = oldInFunctionBody;
+        state.parenthesizedCount = oldParenthesisCount;
 
-        return delegate.markEnd(delegate.createBlockStatement(sourceElements), startToken);
+        return node.finishBlockStatement(body);
+    }
+
+    function validateParam(options, param, name) {
+        var key = '$' + name;
+        if (strict) {
+            if (isRestrictedWord(name)) {
+                options.stricted = param;
+                options.message = Messages.StrictParamName;
+            }
+            if (Object.prototype.hasOwnProperty.call(options.paramSet, key)) {
+                options.stricted = param;
+                options.message = Messages.StrictParamDupe;
+            }
+        } else if (!options.firstRestricted) {
+            if (isRestrictedWord(name)) {
+                options.firstRestricted = param;
+                options.message = Messages.StrictParamName;
+            } else if (isStrictModeReservedWord(name)) {
+                options.firstRestricted = param;
+                options.message = Messages.StrictReservedWord;
+            } else if (Object.prototype.hasOwnProperty.call(options.paramSet, key)) {
+                options.firstRestricted = param;
+                options.message = Messages.StrictParamDupe;
+            }
+        }
+        options.paramSet[key] = true;
+    }
+
+    function parseParam(options) {
+        var token, param, def;
+
+        token = lookahead;
+        if (token.value === '...') {
+            param = parseRestElement();
+            validateParam(options, param.argument, param.argument.name);
+            options.params.push(param);
+            options.defaults.push(null);
+            return false;
+        }
+
+        param = parseVariableIdentifier();
+        validateParam(options, token, token.value);
+
+        if (match('=')) {
+            lex();
+            def = parseAssignmentExpression();
+            ++options.defaultCount;
+        }
+
+        options.params.push(param);
+        options.defaults.push(def);
+
+        return !match(')');
     }
 
     function parseParams(firstRestricted) {
-        var param, params = [], token, stricted, paramSet, key, message;
+        var options;
+
+        options = {
+            params: [],
+            defaultCount: 0,
+            defaults: [],
+            firstRestricted: firstRestricted
+        };
+
         expect('(');
 
         if (!match(')')) {
-            paramSet = {};
-            while (index < length) {
-                token = lookahead;
-                param = parseVariableIdentifier();
-                key = '$' + token.value;
-                if (strict) {
-                    if (isRestrictedWord(token.value)) {
-                        stricted = token;
-                        message = Messages.StrictParamName;
-                    }
-                    if (Object.prototype.hasOwnProperty.call(paramSet, key)) {
-                        stricted = token;
-                        message = Messages.StrictParamDupe;
-                    }
-                } else if (!firstRestricted) {
-                    if (isRestrictedWord(token.value)) {
-                        firstRestricted = token;
-                        message = Messages.StrictParamName;
-                    } else if (isStrictModeReservedWord(token.value)) {
-                        firstRestricted = token;
-                        message = Messages.StrictReservedWord;
-                    } else if (Object.prototype.hasOwnProperty.call(paramSet, key)) {
-                        firstRestricted = token;
-                        message = Messages.StrictParamDupe;
-                    }
-                }
-                params.push(param);
-                paramSet[key] = true;
-                if (match(')')) {
+            options.paramSet = {};
+            while (startIndex < length) {
+                if (!parseParam(options)) {
                     break;
                 }
                 expect(',');
@@ -6376,25 +5266,28 @@ parseStatement: true, parseSourceElement: true */
 
         expect(')');
 
+        if (options.defaultCount === 0) {
+            options.defaults = [];
+        }
+
         return {
-            params: params,
-            stricted: stricted,
-            firstRestricted: firstRestricted,
-            message: message
+            params: options.params,
+            defaults: options.defaults,
+            stricted: options.stricted,
+            firstRestricted: options.firstRestricted,
+            message: options.message
         };
     }
 
-    function parseFunctionDeclaration() {
-        var id, params = [], body, token, stricted, tmp, firstRestricted, message, previousStrict, startToken;
-
-        startToken = lookahead;
+    function parseFunctionDeclaration(node) {
+        var id, params = [], defaults = [], body, token, stricted, tmp, firstRestricted, message, previousStrict;
 
         expectKeyword('function');
         token = lookahead;
         id = parseVariableIdentifier();
         if (strict) {
             if (isRestrictedWord(token.value)) {
-                throwErrorTolerant(token, Messages.StrictFunctionName);
+                tolerateUnexpectedToken(token, Messages.StrictFunctionName);
             }
         } else {
             if (isRestrictedWord(token.value)) {
@@ -6408,6 +5301,7 @@ parseStatement: true, parseSourceElement: true */
 
         tmp = parseParams(firstRestricted);
         params = tmp.params;
+        defaults = tmp.defaults;
         stricted = tmp.stricted;
         firstRestricted = tmp.firstRestricted;
         if (tmp.message) {
@@ -6417,20 +5311,20 @@ parseStatement: true, parseSourceElement: true */
         previousStrict = strict;
         body = parseFunctionSourceElements();
         if (strict && firstRestricted) {
-            throwError(firstRestricted, message);
+            throwUnexpectedToken(firstRestricted, message);
         }
         if (strict && stricted) {
-            throwErrorTolerant(stricted, message);
+            tolerateUnexpectedToken(stricted, message);
         }
         strict = previousStrict;
 
-        return delegate.markEnd(delegate.createFunctionDeclaration(id, params, [], body), startToken);
+        return node.finishFunctionDeclaration(id, params, defaults, body);
     }
 
     function parseFunctionExpression() {
-        var token, id = null, stricted, firstRestricted, message, tmp, params = [], body, previousStrict, startToken;
+        var token, id = null, stricted, firstRestricted, message, tmp,
+            params = [], defaults = [], body, previousStrict, node = new Node();
 
-        startToken = lookahead;
         expectKeyword('function');
 
         if (!match('(')) {
@@ -6438,7 +5332,7 @@ parseStatement: true, parseSourceElement: true */
             id = parseVariableIdentifier();
             if (strict) {
                 if (isRestrictedWord(token.value)) {
-                    throwErrorTolerant(token, Messages.StrictFunctionName);
+                    tolerateUnexpectedToken(token, Messages.StrictFunctionName);
                 }
             } else {
                 if (isRestrictedWord(token.value)) {
@@ -6453,6 +5347,7 @@ parseStatement: true, parseSourceElement: true */
 
         tmp = parseParams(firstRestricted);
         params = tmp.params;
+        defaults = tmp.defaults;
         stricted = tmp.stricted;
         firstRestricted = tmp.firstRestricted;
         if (tmp.message) {
@@ -6462,48 +5357,127 @@ parseStatement: true, parseSourceElement: true */
         previousStrict = strict;
         body = parseFunctionSourceElements();
         if (strict && firstRestricted) {
-            throwError(firstRestricted, message);
+            throwUnexpectedToken(firstRestricted, message);
         }
         if (strict && stricted) {
-            throwErrorTolerant(stricted, message);
+            tolerateUnexpectedToken(stricted, message);
         }
         strict = previousStrict;
 
-        return delegate.markEnd(delegate.createFunctionExpression(id, params, [], body), startToken);
+        return node.finishFunctionExpression(id, params, defaults, body);
+    }
+
+
+    function parseClassBody() {
+        var classBody, token, isStatic, hasConstructor = false, body, method, computed, key;
+
+        classBody = new Node();
+
+        expect('{');
+        body = [];
+        while (!match('}')) {
+            if (match(';')) {
+                lex();
+            } else {
+                method = new Node();
+                token = lookahead;
+                isStatic = false;
+                computed = match('[');
+                key = parseObjectPropertyKey();
+                if (key.name === 'static' && lookaheadPropertyName()) {
+                    token = lookahead;
+                    isStatic = true;
+                    computed = match('[');
+                    key = parseObjectPropertyKey();
+                }
+                method = tryParseMethodDefinition(token, key, computed, method);
+                if (method) {
+                    method["static"] = isStatic;
+                    if (method.kind === 'init') {
+                        method.kind = 'method';
+                    }
+                    if (!isStatic) {
+                        if (!method.computed && (method.key.name || method.key.value.toString()) === 'constructor') {
+                            if (method.kind !== 'method' || !method.method || method.value.generator) {
+                                throwUnexpectedToken(token, Messages.ConstructorSpecialMethod);
+                            }
+                            if (hasConstructor) {
+                                throwUnexpectedToken(token, Messages.DuplicateConstructor);
+                            } else {
+                                hasConstructor = true;
+                            }
+                            method.kind = 'constructor';
+                        }
+                    } else {
+                        if (!method.computed && (method.key.name || method.key.value.toString()) === 'prototype') {
+                            throwUnexpectedToken(token, Messages.StaticPrototype);
+                        }
+                    }
+                    method.type = Syntax.MethodDefinition;
+                    delete method.method;
+                    delete method.shorthand;
+                    body.push(method);
+                } else {
+                    throwUnexpectedToken(lookahead);
+                }
+            }
+        }
+        lex();
+        return classBody.finishClassBody(body);
+    }
+
+    function parseClassDeclaration() {
+        var id = null, superClass = null, classNode = new Node(), classBody, previousStrict = strict;
+        strict = true;
+
+        expectKeyword('class');
+
+        id = parseVariableIdentifier();
+
+        if (matchKeyword('extends')) {
+            lex();
+            superClass = parseLeftHandSideExpressionAllowCall();
+        }
+        classBody = parseClassBody();
+        strict = previousStrict;
+
+        return classNode.finishClassDeclaration(id, superClass, classBody);
+    }
+
+    function parseClassExpression() {
+        var id = null, superClass = null, classNode = new Node(), classBody, previousStrict = strict;
+        strict = true;
+
+        expectKeyword('class');
+
+        if (lookahead.type === Token.Identifier) {
+            id = parseVariableIdentifier();
+        }
+
+        if (matchKeyword('extends')) {
+            lex();
+            superClass = parseLeftHandSideExpressionAllowCall();
+        }
+        classBody = parseClassBody();
+        strict = previousStrict;
+
+        return classNode.finishClassExpression(id, superClass, classBody);
     }
 
     // 14 Program
 
-    function parseSourceElement() {
-        if (lookahead.type === Token.Keyword) {
-            switch (lookahead.value) {
-            case 'const':
-            case 'let':
-                return parseConstLetDeclaration(lookahead.value);
-            case 'function':
-                return parseFunctionDeclaration();
-            default:
-                return parseStatement();
-            }
-        }
+    function parseScriptBody() {
+        var statement, body = [], token, directive, firstRestricted;
 
-        if (lookahead.type !== Token.EOF) {
-            return parseStatement();
-        }
-    }
-
-    function parseSourceElements() {
-        var sourceElement, sourceElements = [], token, directive, firstRestricted;
-
-        while (index < length) {
+        while (startIndex < length) {
             token = lookahead;
             if (token.type !== Token.StringLiteral) {
                 break;
             }
 
-            sourceElement = parseSourceElement();
-            sourceElements.push(sourceElement);
-            if (sourceElement.expression.type !== Syntax.Literal) {
+            statement = parseStatementListItem();
+            body.push(statement);
+            if (statement.expression.type !== Syntax.Literal) {
                 // this is not directive
                 break;
             }
@@ -6511,7 +5485,7 @@ parseStatement: true, parseSourceElement: true */
             if (directive === 'use strict') {
                 strict = true;
                 if (firstRestricted) {
-                    throwErrorTolerant(firstRestricted, Messages.StrictOctalLiteral);
+                    tolerateUnexpectedToken(firstRestricted, Messages.StrictOctalLiteral);
                 }
             } else {
                 if (!firstRestricted && token.octal) {
@@ -6520,27 +5494,26 @@ parseStatement: true, parseSourceElement: true */
             }
         }
 
-        while (index < length) {
-            sourceElement = parseSourceElement();
+        while (startIndex < length) {
+            statement = parseStatementListItem();
             /* istanbul ignore if */
-            if (typeof sourceElement === 'undefined') {
+            if (typeof statement === 'undefined') {
                 break;
             }
-            sourceElements.push(sourceElement);
+            body.push(statement);
         }
-        return sourceElements;
+        return body;
     }
 
     function parseProgram() {
-        var body, startToken;
+        var body, node;
 
-        skipComment();
         peek();
-        startToken = lookahead;
+        node = new Node();
         strict = false;
 
-        body = parseSourceElements();
-        return delegate.markEnd(delegate.createProgram(body), startToken);
+        body = parseScriptBody();
+        return node.finishProgram(body);
     }
 
     function filterTokenLocation() {
@@ -6552,6 +5525,12 @@ parseStatement: true, parseSourceElement: true */
                 type: entry.type,
                 value: entry.value
             };
+            if (entry.regex) {
+                token.regex = {
+                    pattern: entry.regex.pattern,
+                    flags: entry.regex.flags
+                };
+            }
             if (extra.range) {
                 token.range = entry.range;
             }
@@ -6566,7 +5545,6 @@ parseStatement: true, parseSourceElement: true */
 
     function tokenize(code, options) {
         var toString,
-            token,
             tokens;
 
         toString = String;
@@ -6574,11 +5552,13 @@ parseStatement: true, parseSourceElement: true */
             code = toString(code);
         }
 
-        delegate = SyntaxTreeDelegate;
         source = code;
         index = 0;
         lineNumber = (source.length > 0) ? 1 : 0;
         lineStart = 0;
+        startIndex = index;
+        startLineNumber = lineNumber;
+        startLineStart = lineStart;
         length = source.length;
         lookahead = null;
         state = {
@@ -6619,14 +5599,13 @@ parseStatement: true, parseSourceElement: true */
                 return extra.tokens;
             }
 
-            token = lex();
+            lex();
             while (lookahead.type !== Token.EOF) {
                 try {
-                    token = lex();
+                    lex();
                 } catch (lexError) {
-                    token = lookahead;
                     if (extra.errors) {
-                        extra.errors.push(lexError);
+                        recordError(lexError);
                         // We have to break on the first error
                         // to avoid infinite loops.
                         break;
@@ -6660,11 +5639,13 @@ parseStatement: true, parseSourceElement: true */
             code = toString(code);
         }
 
-        delegate = SyntaxTreeDelegate;
         source = code;
         index = 0;
         lineNumber = (source.length > 0) ? 1 : 0;
         lineStart = 0;
+        startIndex = index;
+        startLineNumber = lineNumber;
+        startLineStart = lineStart;
         length = source.length;
         lookahead = null;
         state = {
@@ -6726,7 +5707,7 @@ parseStatement: true, parseSourceElement: true */
     }
 
     // Sync with *.json manifests.
-    exports.version = '1.2.5';
+    exports.version = '2.1.0';
 
     exports.tokenize = tokenize;
 
@@ -6757,854 +5738,7 @@ parseStatement: true, parseSourceElement: true */
 }));
 /* vim: set sw=4 ts=4 et tw=80 : */
 
-},{}],25:[function(_dereq_,module,exports){
-/*
-  Copyright (C) 2012-2013 Yusuke Suzuki <utatane.tea@gmail.com>
-  Copyright (C) 2012 Ariya Hidayat <ariya.hidayat@gmail.com>
-
-  Redistribution and use in source and binary forms, with or without
-  modification, are permitted provided that the following conditions are met:
-
-    * Redistributions of source code must retain the above copyright
-      notice, this list of conditions and the following disclaimer.
-    * Redistributions in binary form must reproduce the above copyright
-      notice, this list of conditions and the following disclaimer in the
-      documentation and/or other materials provided with the distribution.
-
-  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-  ARE DISCLAIMED. IN NO EVENT SHALL <COPYRIGHT HOLDER> BE LIABLE FOR ANY
-  DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
-  (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-  LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
-  ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
-  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-*/
-/*jslint vars:false, bitwise:true*/
-/*jshint indent:4*/
-/*global exports:true, define:true*/
-(function (root, factory) {
-    'use strict';
-
-    // Universal Module Definition (UMD) to support AMD, CommonJS/Node.js,
-    // and plain browser loading,
-    if (typeof define === 'function' && define.amd) {
-        define(['exports'], factory);
-    } else if (typeof exports !== 'undefined') {
-        factory(exports);
-    } else {
-        factory((root.estraverse = {}));
-    }
-}(this, function clone(exports) {
-    'use strict';
-
-    var Syntax,
-        isArray,
-        VisitorOption,
-        VisitorKeys,
-        objectCreate,
-        objectKeys,
-        BREAK,
-        SKIP,
-        REMOVE;
-
-    function ignoreJSHintError() { }
-
-    isArray = Array.isArray;
-    if (!isArray) {
-        isArray = function isArray(array) {
-            return Object.prototype.toString.call(array) === '[object Array]';
-        };
-    }
-
-    function deepCopy(obj) {
-        var ret = {}, key, val;
-        for (key in obj) {
-            if (obj.hasOwnProperty(key)) {
-                val = obj[key];
-                if (typeof val === 'object' && val !== null) {
-                    ret[key] = deepCopy(val);
-                } else {
-                    ret[key] = val;
-                }
-            }
-        }
-        return ret;
-    }
-
-    function shallowCopy(obj) {
-        var ret = {}, key;
-        for (key in obj) {
-            if (obj.hasOwnProperty(key)) {
-                ret[key] = obj[key];
-            }
-        }
-        return ret;
-    }
-    ignoreJSHintError(shallowCopy);
-
-    // based on LLVM libc++ upper_bound / lower_bound
-    // MIT License
-
-    function upperBound(array, func) {
-        var diff, len, i, current;
-
-        len = array.length;
-        i = 0;
-
-        while (len) {
-            diff = len >>> 1;
-            current = i + diff;
-            if (func(array[current])) {
-                len = diff;
-            } else {
-                i = current + 1;
-                len -= diff + 1;
-            }
-        }
-        return i;
-    }
-
-    function lowerBound(array, func) {
-        var diff, len, i, current;
-
-        len = array.length;
-        i = 0;
-
-        while (len) {
-            diff = len >>> 1;
-            current = i + diff;
-            if (func(array[current])) {
-                i = current + 1;
-                len -= diff + 1;
-            } else {
-                len = diff;
-            }
-        }
-        return i;
-    }
-    ignoreJSHintError(lowerBound);
-
-    objectCreate = Object.create || (function () {
-        function F() { }
-
-        return function (o) {
-            F.prototype = o;
-            return new F();
-        };
-    })();
-
-    objectKeys = Object.keys || function (o) {
-        var keys = [], key;
-        for (key in o) {
-            keys.push(key);
-        }
-        return keys;
-    };
-
-    function extend(to, from) {
-        var keys = objectKeys(from), key, i, len;
-        for (i = 0, len = keys.length; i < len; i += 1) {
-            key = keys[i];
-            to[key] = from[key];
-        }
-        return to;
-    }
-
-    Syntax = {
-        AssignmentExpression: 'AssignmentExpression',
-        ArrayExpression: 'ArrayExpression',
-        ArrayPattern: 'ArrayPattern',
-        ArrowFunctionExpression: 'ArrowFunctionExpression',
-        AwaitExpression: 'AwaitExpression', // CAUTION: It's deferred to ES7.
-        BlockStatement: 'BlockStatement',
-        BinaryExpression: 'BinaryExpression',
-        BreakStatement: 'BreakStatement',
-        CallExpression: 'CallExpression',
-        CatchClause: 'CatchClause',
-        ClassBody: 'ClassBody',
-        ClassDeclaration: 'ClassDeclaration',
-        ClassExpression: 'ClassExpression',
-        ComprehensionBlock: 'ComprehensionBlock',  // CAUTION: It's deferred to ES7.
-        ComprehensionExpression: 'ComprehensionExpression',  // CAUTION: It's deferred to ES7.
-        ConditionalExpression: 'ConditionalExpression',
-        ContinueStatement: 'ContinueStatement',
-        DebuggerStatement: 'DebuggerStatement',
-        DirectiveStatement: 'DirectiveStatement',
-        DoWhileStatement: 'DoWhileStatement',
-        EmptyStatement: 'EmptyStatement',
-        ExportBatchSpecifier: 'ExportBatchSpecifier',
-        ExportDeclaration: 'ExportDeclaration',
-        ExportSpecifier: 'ExportSpecifier',
-        ExpressionStatement: 'ExpressionStatement',
-        ForStatement: 'ForStatement',
-        ForInStatement: 'ForInStatement',
-        ForOfStatement: 'ForOfStatement',
-        FunctionDeclaration: 'FunctionDeclaration',
-        FunctionExpression: 'FunctionExpression',
-        GeneratorExpression: 'GeneratorExpression',  // CAUTION: It's deferred to ES7.
-        Identifier: 'Identifier',
-        IfStatement: 'IfStatement',
-        ImportDeclaration: 'ImportDeclaration',
-        ImportDefaultSpecifier: 'ImportDefaultSpecifier',
-        ImportNamespaceSpecifier: 'ImportNamespaceSpecifier',
-        ImportSpecifier: 'ImportSpecifier',
-        Literal: 'Literal',
-        LabeledStatement: 'LabeledStatement',
-        LogicalExpression: 'LogicalExpression',
-        MemberExpression: 'MemberExpression',
-        MethodDefinition: 'MethodDefinition',
-        ModuleSpecifier: 'ModuleSpecifier',
-        NewExpression: 'NewExpression',
-        ObjectExpression: 'ObjectExpression',
-        ObjectPattern: 'ObjectPattern',
-        Program: 'Program',
-        Property: 'Property',
-        ReturnStatement: 'ReturnStatement',
-        SequenceExpression: 'SequenceExpression',
-        SpreadElement: 'SpreadElement',
-        SwitchStatement: 'SwitchStatement',
-        SwitchCase: 'SwitchCase',
-        TaggedTemplateExpression: 'TaggedTemplateExpression',
-        TemplateElement: 'TemplateElement',
-        TemplateLiteral: 'TemplateLiteral',
-        ThisExpression: 'ThisExpression',
-        ThrowStatement: 'ThrowStatement',
-        TryStatement: 'TryStatement',
-        UnaryExpression: 'UnaryExpression',
-        UpdateExpression: 'UpdateExpression',
-        VariableDeclaration: 'VariableDeclaration',
-        VariableDeclarator: 'VariableDeclarator',
-        WhileStatement: 'WhileStatement',
-        WithStatement: 'WithStatement',
-        YieldExpression: 'YieldExpression'
-    };
-
-    VisitorKeys = {
-        AssignmentExpression: ['left', 'right'],
-        ArrayExpression: ['elements'],
-        ArrayPattern: ['elements'],
-        ArrowFunctionExpression: ['params', 'defaults', 'rest', 'body'],
-        AwaitExpression: ['argument'], // CAUTION: It's deferred to ES7.
-        BlockStatement: ['body'],
-        BinaryExpression: ['left', 'right'],
-        BreakStatement: ['label'],
-        CallExpression: ['callee', 'arguments'],
-        CatchClause: ['param', 'body'],
-        ClassBody: ['body'],
-        ClassDeclaration: ['id', 'body', 'superClass'],
-        ClassExpression: ['id', 'body', 'superClass'],
-        ComprehensionBlock: ['left', 'right'],  // CAUTION: It's deferred to ES7.
-        ComprehensionExpression: ['blocks', 'filter', 'body'],  // CAUTION: It's deferred to ES7.
-        ConditionalExpression: ['test', 'consequent', 'alternate'],
-        ContinueStatement: ['label'],
-        DebuggerStatement: [],
-        DirectiveStatement: [],
-        DoWhileStatement: ['body', 'test'],
-        EmptyStatement: [],
-        ExportBatchSpecifier: [],
-        ExportDeclaration: ['declaration', 'specifiers', 'source'],
-        ExportSpecifier: ['id', 'name'],
-        ExpressionStatement: ['expression'],
-        ForStatement: ['init', 'test', 'update', 'body'],
-        ForInStatement: ['left', 'right', 'body'],
-        ForOfStatement: ['left', 'right', 'body'],
-        FunctionDeclaration: ['id', 'params', 'defaults', 'rest', 'body'],
-        FunctionExpression: ['id', 'params', 'defaults', 'rest', 'body'],
-        GeneratorExpression: ['blocks', 'filter', 'body'],  // CAUTION: It's deferred to ES7.
-        Identifier: [],
-        IfStatement: ['test', 'consequent', 'alternate'],
-        ImportDeclaration: ['specifiers', 'source'],
-        ImportDefaultSpecifier: ['id'],
-        ImportNamespaceSpecifier: ['id'],
-        ImportSpecifier: ['id', 'name'],
-        Literal: [],
-        LabeledStatement: ['label', 'body'],
-        LogicalExpression: ['left', 'right'],
-        MemberExpression: ['object', 'property'],
-        MethodDefinition: ['key', 'value'],
-        ModuleSpecifier: [],
-        NewExpression: ['callee', 'arguments'],
-        ObjectExpression: ['properties'],
-        ObjectPattern: ['properties'],
-        Program: ['body'],
-        Property: ['key', 'value'],
-        ReturnStatement: ['argument'],
-        SequenceExpression: ['expressions'],
-        SpreadElement: ['argument'],
-        SwitchStatement: ['discriminant', 'cases'],
-        SwitchCase: ['test', 'consequent'],
-        TaggedTemplateExpression: ['tag', 'quasi'],
-        TemplateElement: [],
-        TemplateLiteral: ['quasis', 'expressions'],
-        ThisExpression: [],
-        ThrowStatement: ['argument'],
-        TryStatement: ['block', 'handlers', 'handler', 'guardedHandlers', 'finalizer'],
-        UnaryExpression: ['argument'],
-        UpdateExpression: ['argument'],
-        VariableDeclaration: ['declarations'],
-        VariableDeclarator: ['id', 'init'],
-        WhileStatement: ['test', 'body'],
-        WithStatement: ['object', 'body'],
-        YieldExpression: ['argument']
-    };
-
-    // unique id
-    BREAK = {};
-    SKIP = {};
-    REMOVE = {};
-
-    VisitorOption = {
-        Break: BREAK,
-        Skip: SKIP,
-        Remove: REMOVE
-    };
-
-    function Reference(parent, key) {
-        this.parent = parent;
-        this.key = key;
-    }
-
-    Reference.prototype.replace = function replace(node) {
-        this.parent[this.key] = node;
-    };
-
-    Reference.prototype.remove = function remove() {
-        if (isArray(this.parent)) {
-            this.parent.splice(this.key, 1);
-            return true;
-        } else {
-            this.replace(null);
-            return false;
-        }
-    };
-
-    function Element(node, path, wrap, ref) {
-        this.node = node;
-        this.path = path;
-        this.wrap = wrap;
-        this.ref = ref;
-    }
-
-    function Controller() { }
-
-    // API:
-    // return property path array from root to current node
-    Controller.prototype.path = function path() {
-        var i, iz, j, jz, result, element;
-
-        function addToPath(result, path) {
-            if (isArray(path)) {
-                for (j = 0, jz = path.length; j < jz; ++j) {
-                    result.push(path[j]);
-                }
-            } else {
-                result.push(path);
-            }
-        }
-
-        // root node
-        if (!this.__current.path) {
-            return null;
-        }
-
-        // first node is sentinel, second node is root element
-        result = [];
-        for (i = 2, iz = this.__leavelist.length; i < iz; ++i) {
-            element = this.__leavelist[i];
-            addToPath(result, element.path);
-        }
-        addToPath(result, this.__current.path);
-        return result;
-    };
-
-    // API:
-    // return type of current node
-    Controller.prototype.type = function () {
-        var node = this.current();
-        return node.type || this.__current.wrap;
-    };
-
-    // API:
-    // return array of parent elements
-    Controller.prototype.parents = function parents() {
-        var i, iz, result;
-
-        // first node is sentinel
-        result = [];
-        for (i = 1, iz = this.__leavelist.length; i < iz; ++i) {
-            result.push(this.__leavelist[i].node);
-        }
-
-        return result;
-    };
-
-    // API:
-    // return current node
-    Controller.prototype.current = function current() {
-        return this.__current.node;
-    };
-
-    Controller.prototype.__execute = function __execute(callback, element) {
-        var previous, result;
-
-        result = undefined;
-
-        previous  = this.__current;
-        this.__current = element;
-        this.__state = null;
-        if (callback) {
-            result = callback.call(this, element.node, this.__leavelist[this.__leavelist.length - 1].node);
-        }
-        this.__current = previous;
-
-        return result;
-    };
-
-    // API:
-    // notify control skip / break
-    Controller.prototype.notify = function notify(flag) {
-        this.__state = flag;
-    };
-
-    // API:
-    // skip child nodes of current node
-    Controller.prototype.skip = function () {
-        this.notify(SKIP);
-    };
-
-    // API:
-    // break traversals
-    Controller.prototype['break'] = function () {
-        this.notify(BREAK);
-    };
-
-    // API:
-    // remove node
-    Controller.prototype.remove = function () {
-        this.notify(REMOVE);
-    };
-
-    Controller.prototype.__initialize = function(root, visitor) {
-        this.visitor = visitor;
-        this.root = root;
-        this.__worklist = [];
-        this.__leavelist = [];
-        this.__current = null;
-        this.__state = null;
-        this.__fallback = visitor.fallback === 'iteration';
-        this.__keys = VisitorKeys;
-        if (visitor.keys) {
-            this.__keys = extend(objectCreate(this.__keys), visitor.keys);
-        }
-    };
-
-    function isNode(node) {
-        if (node == null) {
-            return false;
-        }
-        return typeof node === 'object' && typeof node.type === 'string';
-    }
-
-    function isProperty(nodeType, key) {
-        return (nodeType === Syntax.ObjectExpression || nodeType === Syntax.ObjectPattern) && 'properties' === key;
-    }
-
-    Controller.prototype.traverse = function traverse(root, visitor) {
-        var worklist,
-            leavelist,
-            element,
-            node,
-            nodeType,
-            ret,
-            key,
-            current,
-            current2,
-            candidates,
-            candidate,
-            sentinel;
-
-        this.__initialize(root, visitor);
-
-        sentinel = {};
-
-        // reference
-        worklist = this.__worklist;
-        leavelist = this.__leavelist;
-
-        // initialize
-        worklist.push(new Element(root, null, null, null));
-        leavelist.push(new Element(null, null, null, null));
-
-        while (worklist.length) {
-            element = worklist.pop();
-
-            if (element === sentinel) {
-                element = leavelist.pop();
-
-                ret = this.__execute(visitor.leave, element);
-
-                if (this.__state === BREAK || ret === BREAK) {
-                    return;
-                }
-                continue;
-            }
-
-            if (element.node) {
-
-                ret = this.__execute(visitor.enter, element);
-
-                if (this.__state === BREAK || ret === BREAK) {
-                    return;
-                }
-
-                worklist.push(sentinel);
-                leavelist.push(element);
-
-                if (this.__state === SKIP || ret === SKIP) {
-                    continue;
-                }
-
-                node = element.node;
-                nodeType = element.wrap || node.type;
-                candidates = this.__keys[nodeType];
-                if (!candidates) {
-                    if (this.__fallback) {
-                        candidates = objectKeys(node);
-                    } else {
-                        throw new Error('Unknown node type ' + nodeType + '.');
-                    }
-                }
-
-                current = candidates.length;
-                while ((current -= 1) >= 0) {
-                    key = candidates[current];
-                    candidate = node[key];
-                    if (!candidate) {
-                        continue;
-                    }
-
-                    if (isArray(candidate)) {
-                        current2 = candidate.length;
-                        while ((current2 -= 1) >= 0) {
-                            if (!candidate[current2]) {
-                                continue;
-                            }
-                            if (isProperty(nodeType, candidates[current])) {
-                                element = new Element(candidate[current2], [key, current2], 'Property', null);
-                            } else if (isNode(candidate[current2])) {
-                                element = new Element(candidate[current2], [key, current2], null, null);
-                            } else {
-                                continue;
-                            }
-                            worklist.push(element);
-                        }
-                    } else if (isNode(candidate)) {
-                        worklist.push(new Element(candidate, key, null, null));
-                    }
-                }
-            }
-        }
-    };
-
-    Controller.prototype.replace = function replace(root, visitor) {
-        function removeElem(element) {
-            var i,
-                key,
-                nextElem,
-                parent;
-
-            if (element.ref.remove()) {
-                // When the reference is an element of an array.
-                key = element.ref.key;
-                parent = element.ref.parent;
-
-                // If removed from array, then decrease following items' keys.
-                i = worklist.length;
-                while (i--) {
-                    nextElem = worklist[i];
-                    if (nextElem.ref && nextElem.ref.parent === parent) {
-                        if  (nextElem.ref.key < key) {
-                            break;
-                        }
-                        --nextElem.ref.key;
-                    }
-                }
-            }
-        }
-
-        var worklist,
-            leavelist,
-            node,
-            nodeType,
-            target,
-            element,
-            current,
-            current2,
-            candidates,
-            candidate,
-            sentinel,
-            outer,
-            key;
-
-        this.__initialize(root, visitor);
-
-        sentinel = {};
-
-        // reference
-        worklist = this.__worklist;
-        leavelist = this.__leavelist;
-
-        // initialize
-        outer = {
-            root: root
-        };
-        element = new Element(root, null, null, new Reference(outer, 'root'));
-        worklist.push(element);
-        leavelist.push(element);
-
-        while (worklist.length) {
-            element = worklist.pop();
-
-            if (element === sentinel) {
-                element = leavelist.pop();
-
-                target = this.__execute(visitor.leave, element);
-
-                // node may be replaced with null,
-                // so distinguish between undefined and null in this place
-                if (target !== undefined && target !== BREAK && target !== SKIP && target !== REMOVE) {
-                    // replace
-                    element.ref.replace(target);
-                }
-
-                if (this.__state === REMOVE || target === REMOVE) {
-                    removeElem(element);
-                }
-
-                if (this.__state === BREAK || target === BREAK) {
-                    return outer.root;
-                }
-                continue;
-            }
-
-            target = this.__execute(visitor.enter, element);
-
-            // node may be replaced with null,
-            // so distinguish between undefined and null in this place
-            if (target !== undefined && target !== BREAK && target !== SKIP && target !== REMOVE) {
-                // replace
-                element.ref.replace(target);
-                element.node = target;
-            }
-
-            if (this.__state === REMOVE || target === REMOVE) {
-                removeElem(element);
-                element.node = null;
-            }
-
-            if (this.__state === BREAK || target === BREAK) {
-                return outer.root;
-            }
-
-            // node may be null
-            node = element.node;
-            if (!node) {
-                continue;
-            }
-
-            worklist.push(sentinel);
-            leavelist.push(element);
-
-            if (this.__state === SKIP || target === SKIP) {
-                continue;
-            }
-
-            nodeType = element.wrap || node.type;
-            candidates = this.__keys[nodeType];
-            if (!candidates) {
-                if (this.__fallback) {
-                    candidates = objectKeys(node);
-                } else {
-                    throw new Error('Unknown node type ' + nodeType + '.');
-                }
-            }
-
-            current = candidates.length;
-            while ((current -= 1) >= 0) {
-                key = candidates[current];
-                candidate = node[key];
-                if (!candidate) {
-                    continue;
-                }
-
-                if (isArray(candidate)) {
-                    current2 = candidate.length;
-                    while ((current2 -= 1) >= 0) {
-                        if (!candidate[current2]) {
-                            continue;
-                        }
-                        if (isProperty(nodeType, candidates[current])) {
-                            element = new Element(candidate[current2], [key, current2], 'Property', new Reference(candidate, current2));
-                        } else if (isNode(candidate[current2])) {
-                            element = new Element(candidate[current2], [key, current2], null, new Reference(candidate, current2));
-                        } else {
-                            continue;
-                        }
-                        worklist.push(element);
-                    }
-                } else if (isNode(candidate)) {
-                    worklist.push(new Element(candidate, key, null, new Reference(node, key)));
-                }
-            }
-        }
-
-        return outer.root;
-    };
-
-    function traverse(root, visitor) {
-        var controller = new Controller();
-        return controller.traverse(root, visitor);
-    }
-
-    function replace(root, visitor) {
-        var controller = new Controller();
-        return controller.replace(root, visitor);
-    }
-
-    function extendCommentRange(comment, tokens) {
-        var target;
-
-        target = upperBound(tokens, function search(token) {
-            return token.range[0] > comment.range[0];
-        });
-
-        comment.extendedRange = [comment.range[0], comment.range[1]];
-
-        if (target !== tokens.length) {
-            comment.extendedRange[1] = tokens[target].range[0];
-        }
-
-        target -= 1;
-        if (target >= 0) {
-            comment.extendedRange[0] = tokens[target].range[1];
-        }
-
-        return comment;
-    }
-
-    function attachComments(tree, providedComments, tokens) {
-        // At first, we should calculate extended comment ranges.
-        var comments = [], comment, len, i, cursor;
-
-        if (!tree.range) {
-            throw new Error('attachComments needs range information');
-        }
-
-        // tokens array is empty, we attach comments to tree as 'leadingComments'
-        if (!tokens.length) {
-            if (providedComments.length) {
-                for (i = 0, len = providedComments.length; i < len; i += 1) {
-                    comment = deepCopy(providedComments[i]);
-                    comment.extendedRange = [0, tree.range[0]];
-                    comments.push(comment);
-                }
-                tree.leadingComments = comments;
-            }
-            return tree;
-        }
-
-        for (i = 0, len = providedComments.length; i < len; i += 1) {
-            comments.push(extendCommentRange(deepCopy(providedComments[i]), tokens));
-        }
-
-        // This is based on John Freeman's implementation.
-        cursor = 0;
-        traverse(tree, {
-            enter: function (node) {
-                var comment;
-
-                while (cursor < comments.length) {
-                    comment = comments[cursor];
-                    if (comment.extendedRange[1] > node.range[0]) {
-                        break;
-                    }
-
-                    if (comment.extendedRange[1] === node.range[0]) {
-                        if (!node.leadingComments) {
-                            node.leadingComments = [];
-                        }
-                        node.leadingComments.push(comment);
-                        comments.splice(cursor, 1);
-                    } else {
-                        cursor += 1;
-                    }
-                }
-
-                // already out of owned node
-                if (cursor === comments.length) {
-                    return VisitorOption.Break;
-                }
-
-                if (comments[cursor].extendedRange[0] > node.range[1]) {
-                    return VisitorOption.Skip;
-                }
-            }
-        });
-
-        cursor = 0;
-        traverse(tree, {
-            leave: function (node) {
-                var comment;
-
-                while (cursor < comments.length) {
-                    comment = comments[cursor];
-                    if (node.range[1] < comment.extendedRange[0]) {
-                        break;
-                    }
-
-                    if (node.range[1] === comment.extendedRange[0]) {
-                        if (!node.trailingComments) {
-                            node.trailingComments = [];
-                        }
-                        node.trailingComments.push(comment);
-                        comments.splice(cursor, 1);
-                    } else {
-                        cursor += 1;
-                    }
-                }
-
-                // already out of owned node
-                if (cursor === comments.length) {
-                    return VisitorOption.Break;
-                }
-
-                if (comments[cursor].extendedRange[0] > node.range[1]) {
-                    return VisitorOption.Skip;
-                }
-            }
-        });
-
-        return tree;
-    }
-
-    exports.version = '1.8.1-dev';
-    exports.Syntax = Syntax;
-    exports.traverse = traverse;
-    exports.replace = replace;
-    exports.attachComments = attachComments;
-    exports.VisitorKeys = VisitorKeys;
-    exports.VisitorOption = VisitorOption;
-    exports.Controller = Controller;
-    exports.cloneEnvironment = function () { return clone({}); };
-
-    return exports;
-}));
-/* vim: set sw=4 ts=4 et tw=80 : */
-
-},{}],26:[function(_dereq_,module,exports){
+},{}],21:[function(_dereq_,module,exports){
 
 var indexOf = [].indexOf;
 
@@ -7615,7 +5749,7 @@ module.exports = function(arr, obj){
   }
   return -1;
 };
-},{}],27:[function(_dereq_,module,exports){
+},{}],22:[function(_dereq_,module,exports){
 (function (global){
 /*
   Copyright (C) 2012-2014 Yusuke Suzuki <utatane.tea@gmail.com>
@@ -10177,9 +8311,854 @@ module.exports = function(arr, obj){
 /* vim: set sw=4 ts=4 et tw=80 : */
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./package.json":44,"estraverse":28,"esutils":32,"source-map":33}],28:[function(_dereq_,module,exports){
-arguments[4][25][0].apply(exports,arguments)
-},{"dup":25}],29:[function(_dereq_,module,exports){
+},{"./package.json":39,"estraverse":23,"esutils":27,"source-map":28}],23:[function(_dereq_,module,exports){
+/*
+  Copyright (C) 2012-2013 Yusuke Suzuki <utatane.tea@gmail.com>
+  Copyright (C) 2012 Ariya Hidayat <ariya.hidayat@gmail.com>
+
+  Redistribution and use in source and binary forms, with or without
+  modification, are permitted provided that the following conditions are met:
+
+    * Redistributions of source code must retain the above copyright
+      notice, this list of conditions and the following disclaimer.
+    * Redistributions in binary form must reproduce the above copyright
+      notice, this list of conditions and the following disclaimer in the
+      documentation and/or other materials provided with the distribution.
+
+  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+  ARE DISCLAIMED. IN NO EVENT SHALL <COPYRIGHT HOLDER> BE LIABLE FOR ANY
+  DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+  (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+  LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+  ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*/
+/*jslint vars:false, bitwise:true*/
+/*jshint indent:4*/
+/*global exports:true, define:true*/
+(function (root, factory) {
+    'use strict';
+
+    // Universal Module Definition (UMD) to support AMD, CommonJS/Node.js,
+    // and plain browser loading,
+    if (typeof define === 'function' && define.amd) {
+        define(['exports'], factory);
+    } else if (typeof exports !== 'undefined') {
+        factory(exports);
+    } else {
+        factory((root.estraverse = {}));
+    }
+}(this, function clone(exports) {
+    'use strict';
+
+    var Syntax,
+        isArray,
+        VisitorOption,
+        VisitorKeys,
+        objectCreate,
+        objectKeys,
+        BREAK,
+        SKIP,
+        REMOVE;
+
+    function ignoreJSHintError() { }
+
+    isArray = Array.isArray;
+    if (!isArray) {
+        isArray = function isArray(array) {
+            return Object.prototype.toString.call(array) === '[object Array]';
+        };
+    }
+
+    function deepCopy(obj) {
+        var ret = {}, key, val;
+        for (key in obj) {
+            if (obj.hasOwnProperty(key)) {
+                val = obj[key];
+                if (typeof val === 'object' && val !== null) {
+                    ret[key] = deepCopy(val);
+                } else {
+                    ret[key] = val;
+                }
+            }
+        }
+        return ret;
+    }
+
+    function shallowCopy(obj) {
+        var ret = {}, key;
+        for (key in obj) {
+            if (obj.hasOwnProperty(key)) {
+                ret[key] = obj[key];
+            }
+        }
+        return ret;
+    }
+    ignoreJSHintError(shallowCopy);
+
+    // based on LLVM libc++ upper_bound / lower_bound
+    // MIT License
+
+    function upperBound(array, func) {
+        var diff, len, i, current;
+
+        len = array.length;
+        i = 0;
+
+        while (len) {
+            diff = len >>> 1;
+            current = i + diff;
+            if (func(array[current])) {
+                len = diff;
+            } else {
+                i = current + 1;
+                len -= diff + 1;
+            }
+        }
+        return i;
+    }
+
+    function lowerBound(array, func) {
+        var diff, len, i, current;
+
+        len = array.length;
+        i = 0;
+
+        while (len) {
+            diff = len >>> 1;
+            current = i + diff;
+            if (func(array[current])) {
+                i = current + 1;
+                len -= diff + 1;
+            } else {
+                len = diff;
+            }
+        }
+        return i;
+    }
+    ignoreJSHintError(lowerBound);
+
+    objectCreate = Object.create || (function () {
+        function F() { }
+
+        return function (o) {
+            F.prototype = o;
+            return new F();
+        };
+    })();
+
+    objectKeys = Object.keys || function (o) {
+        var keys = [], key;
+        for (key in o) {
+            keys.push(key);
+        }
+        return keys;
+    };
+
+    function extend(to, from) {
+        var keys = objectKeys(from), key, i, len;
+        for (i = 0, len = keys.length; i < len; i += 1) {
+            key = keys[i];
+            to[key] = from[key];
+        }
+        return to;
+    }
+
+    Syntax = {
+        AssignmentExpression: 'AssignmentExpression',
+        ArrayExpression: 'ArrayExpression',
+        ArrayPattern: 'ArrayPattern',
+        ArrowFunctionExpression: 'ArrowFunctionExpression',
+        AwaitExpression: 'AwaitExpression', // CAUTION: It's deferred to ES7.
+        BlockStatement: 'BlockStatement',
+        BinaryExpression: 'BinaryExpression',
+        BreakStatement: 'BreakStatement',
+        CallExpression: 'CallExpression',
+        CatchClause: 'CatchClause',
+        ClassBody: 'ClassBody',
+        ClassDeclaration: 'ClassDeclaration',
+        ClassExpression: 'ClassExpression',
+        ComprehensionBlock: 'ComprehensionBlock',  // CAUTION: It's deferred to ES7.
+        ComprehensionExpression: 'ComprehensionExpression',  // CAUTION: It's deferred to ES7.
+        ConditionalExpression: 'ConditionalExpression',
+        ContinueStatement: 'ContinueStatement',
+        DebuggerStatement: 'DebuggerStatement',
+        DirectiveStatement: 'DirectiveStatement',
+        DoWhileStatement: 'DoWhileStatement',
+        EmptyStatement: 'EmptyStatement',
+        ExportBatchSpecifier: 'ExportBatchSpecifier',
+        ExportDeclaration: 'ExportDeclaration',
+        ExportSpecifier: 'ExportSpecifier',
+        ExpressionStatement: 'ExpressionStatement',
+        ForStatement: 'ForStatement',
+        ForInStatement: 'ForInStatement',
+        ForOfStatement: 'ForOfStatement',
+        FunctionDeclaration: 'FunctionDeclaration',
+        FunctionExpression: 'FunctionExpression',
+        GeneratorExpression: 'GeneratorExpression',  // CAUTION: It's deferred to ES7.
+        Identifier: 'Identifier',
+        IfStatement: 'IfStatement',
+        ImportDeclaration: 'ImportDeclaration',
+        ImportDefaultSpecifier: 'ImportDefaultSpecifier',
+        ImportNamespaceSpecifier: 'ImportNamespaceSpecifier',
+        ImportSpecifier: 'ImportSpecifier',
+        Literal: 'Literal',
+        LabeledStatement: 'LabeledStatement',
+        LogicalExpression: 'LogicalExpression',
+        MemberExpression: 'MemberExpression',
+        MethodDefinition: 'MethodDefinition',
+        ModuleSpecifier: 'ModuleSpecifier',
+        NewExpression: 'NewExpression',
+        ObjectExpression: 'ObjectExpression',
+        ObjectPattern: 'ObjectPattern',
+        Program: 'Program',
+        Property: 'Property',
+        ReturnStatement: 'ReturnStatement',
+        SequenceExpression: 'SequenceExpression',
+        SpreadElement: 'SpreadElement',
+        SwitchStatement: 'SwitchStatement',
+        SwitchCase: 'SwitchCase',
+        TaggedTemplateExpression: 'TaggedTemplateExpression',
+        TemplateElement: 'TemplateElement',
+        TemplateLiteral: 'TemplateLiteral',
+        ThisExpression: 'ThisExpression',
+        ThrowStatement: 'ThrowStatement',
+        TryStatement: 'TryStatement',
+        UnaryExpression: 'UnaryExpression',
+        UpdateExpression: 'UpdateExpression',
+        VariableDeclaration: 'VariableDeclaration',
+        VariableDeclarator: 'VariableDeclarator',
+        WhileStatement: 'WhileStatement',
+        WithStatement: 'WithStatement',
+        YieldExpression: 'YieldExpression'
+    };
+
+    VisitorKeys = {
+        AssignmentExpression: ['left', 'right'],
+        ArrayExpression: ['elements'],
+        ArrayPattern: ['elements'],
+        ArrowFunctionExpression: ['params', 'defaults', 'rest', 'body'],
+        AwaitExpression: ['argument'], // CAUTION: It's deferred to ES7.
+        BlockStatement: ['body'],
+        BinaryExpression: ['left', 'right'],
+        BreakStatement: ['label'],
+        CallExpression: ['callee', 'arguments'],
+        CatchClause: ['param', 'body'],
+        ClassBody: ['body'],
+        ClassDeclaration: ['id', 'body', 'superClass'],
+        ClassExpression: ['id', 'body', 'superClass'],
+        ComprehensionBlock: ['left', 'right'],  // CAUTION: It's deferred to ES7.
+        ComprehensionExpression: ['blocks', 'filter', 'body'],  // CAUTION: It's deferred to ES7.
+        ConditionalExpression: ['test', 'consequent', 'alternate'],
+        ContinueStatement: ['label'],
+        DebuggerStatement: [],
+        DirectiveStatement: [],
+        DoWhileStatement: ['body', 'test'],
+        EmptyStatement: [],
+        ExportBatchSpecifier: [],
+        ExportDeclaration: ['declaration', 'specifiers', 'source'],
+        ExportSpecifier: ['id', 'name'],
+        ExpressionStatement: ['expression'],
+        ForStatement: ['init', 'test', 'update', 'body'],
+        ForInStatement: ['left', 'right', 'body'],
+        ForOfStatement: ['left', 'right', 'body'],
+        FunctionDeclaration: ['id', 'params', 'defaults', 'rest', 'body'],
+        FunctionExpression: ['id', 'params', 'defaults', 'rest', 'body'],
+        GeneratorExpression: ['blocks', 'filter', 'body'],  // CAUTION: It's deferred to ES7.
+        Identifier: [],
+        IfStatement: ['test', 'consequent', 'alternate'],
+        ImportDeclaration: ['specifiers', 'source'],
+        ImportDefaultSpecifier: ['id'],
+        ImportNamespaceSpecifier: ['id'],
+        ImportSpecifier: ['id', 'name'],
+        Literal: [],
+        LabeledStatement: ['label', 'body'],
+        LogicalExpression: ['left', 'right'],
+        MemberExpression: ['object', 'property'],
+        MethodDefinition: ['key', 'value'],
+        ModuleSpecifier: [],
+        NewExpression: ['callee', 'arguments'],
+        ObjectExpression: ['properties'],
+        ObjectPattern: ['properties'],
+        Program: ['body'],
+        Property: ['key', 'value'],
+        ReturnStatement: ['argument'],
+        SequenceExpression: ['expressions'],
+        SpreadElement: ['argument'],
+        SwitchStatement: ['discriminant', 'cases'],
+        SwitchCase: ['test', 'consequent'],
+        TaggedTemplateExpression: ['tag', 'quasi'],
+        TemplateElement: [],
+        TemplateLiteral: ['quasis', 'expressions'],
+        ThisExpression: [],
+        ThrowStatement: ['argument'],
+        TryStatement: ['block', 'handlers', 'handler', 'guardedHandlers', 'finalizer'],
+        UnaryExpression: ['argument'],
+        UpdateExpression: ['argument'],
+        VariableDeclaration: ['declarations'],
+        VariableDeclarator: ['id', 'init'],
+        WhileStatement: ['test', 'body'],
+        WithStatement: ['object', 'body'],
+        YieldExpression: ['argument']
+    };
+
+    // unique id
+    BREAK = {};
+    SKIP = {};
+    REMOVE = {};
+
+    VisitorOption = {
+        Break: BREAK,
+        Skip: SKIP,
+        Remove: REMOVE
+    };
+
+    function Reference(parent, key) {
+        this.parent = parent;
+        this.key = key;
+    }
+
+    Reference.prototype.replace = function replace(node) {
+        this.parent[this.key] = node;
+    };
+
+    Reference.prototype.remove = function remove() {
+        if (isArray(this.parent)) {
+            this.parent.splice(this.key, 1);
+            return true;
+        } else {
+            this.replace(null);
+            return false;
+        }
+    };
+
+    function Element(node, path, wrap, ref) {
+        this.node = node;
+        this.path = path;
+        this.wrap = wrap;
+        this.ref = ref;
+    }
+
+    function Controller() { }
+
+    // API:
+    // return property path array from root to current node
+    Controller.prototype.path = function path() {
+        var i, iz, j, jz, result, element;
+
+        function addToPath(result, path) {
+            if (isArray(path)) {
+                for (j = 0, jz = path.length; j < jz; ++j) {
+                    result.push(path[j]);
+                }
+            } else {
+                result.push(path);
+            }
+        }
+
+        // root node
+        if (!this.__current.path) {
+            return null;
+        }
+
+        // first node is sentinel, second node is root element
+        result = [];
+        for (i = 2, iz = this.__leavelist.length; i < iz; ++i) {
+            element = this.__leavelist[i];
+            addToPath(result, element.path);
+        }
+        addToPath(result, this.__current.path);
+        return result;
+    };
+
+    // API:
+    // return type of current node
+    Controller.prototype.type = function () {
+        var node = this.current();
+        return node.type || this.__current.wrap;
+    };
+
+    // API:
+    // return array of parent elements
+    Controller.prototype.parents = function parents() {
+        var i, iz, result;
+
+        // first node is sentinel
+        result = [];
+        for (i = 1, iz = this.__leavelist.length; i < iz; ++i) {
+            result.push(this.__leavelist[i].node);
+        }
+
+        return result;
+    };
+
+    // API:
+    // return current node
+    Controller.prototype.current = function current() {
+        return this.__current.node;
+    };
+
+    Controller.prototype.__execute = function __execute(callback, element) {
+        var previous, result;
+
+        result = undefined;
+
+        previous  = this.__current;
+        this.__current = element;
+        this.__state = null;
+        if (callback) {
+            result = callback.call(this, element.node, this.__leavelist[this.__leavelist.length - 1].node);
+        }
+        this.__current = previous;
+
+        return result;
+    };
+
+    // API:
+    // notify control skip / break
+    Controller.prototype.notify = function notify(flag) {
+        this.__state = flag;
+    };
+
+    // API:
+    // skip child nodes of current node
+    Controller.prototype.skip = function () {
+        this.notify(SKIP);
+    };
+
+    // API:
+    // break traversals
+    Controller.prototype['break'] = function () {
+        this.notify(BREAK);
+    };
+
+    // API:
+    // remove node
+    Controller.prototype.remove = function () {
+        this.notify(REMOVE);
+    };
+
+    Controller.prototype.__initialize = function(root, visitor) {
+        this.visitor = visitor;
+        this.root = root;
+        this.__worklist = [];
+        this.__leavelist = [];
+        this.__current = null;
+        this.__state = null;
+        this.__fallback = visitor.fallback === 'iteration';
+        this.__keys = VisitorKeys;
+        if (visitor.keys) {
+            this.__keys = extend(objectCreate(this.__keys), visitor.keys);
+        }
+    };
+
+    function isNode(node) {
+        if (node == null) {
+            return false;
+        }
+        return typeof node === 'object' && typeof node.type === 'string';
+    }
+
+    function isProperty(nodeType, key) {
+        return (nodeType === Syntax.ObjectExpression || nodeType === Syntax.ObjectPattern) && 'properties' === key;
+    }
+
+    Controller.prototype.traverse = function traverse(root, visitor) {
+        var worklist,
+            leavelist,
+            element,
+            node,
+            nodeType,
+            ret,
+            key,
+            current,
+            current2,
+            candidates,
+            candidate,
+            sentinel;
+
+        this.__initialize(root, visitor);
+
+        sentinel = {};
+
+        // reference
+        worklist = this.__worklist;
+        leavelist = this.__leavelist;
+
+        // initialize
+        worklist.push(new Element(root, null, null, null));
+        leavelist.push(new Element(null, null, null, null));
+
+        while (worklist.length) {
+            element = worklist.pop();
+
+            if (element === sentinel) {
+                element = leavelist.pop();
+
+                ret = this.__execute(visitor.leave, element);
+
+                if (this.__state === BREAK || ret === BREAK) {
+                    return;
+                }
+                continue;
+            }
+
+            if (element.node) {
+
+                ret = this.__execute(visitor.enter, element);
+
+                if (this.__state === BREAK || ret === BREAK) {
+                    return;
+                }
+
+                worklist.push(sentinel);
+                leavelist.push(element);
+
+                if (this.__state === SKIP || ret === SKIP) {
+                    continue;
+                }
+
+                node = element.node;
+                nodeType = element.wrap || node.type;
+                candidates = this.__keys[nodeType];
+                if (!candidates) {
+                    if (this.__fallback) {
+                        candidates = objectKeys(node);
+                    } else {
+                        throw new Error('Unknown node type ' + nodeType + '.');
+                    }
+                }
+
+                current = candidates.length;
+                while ((current -= 1) >= 0) {
+                    key = candidates[current];
+                    candidate = node[key];
+                    if (!candidate) {
+                        continue;
+                    }
+
+                    if (isArray(candidate)) {
+                        current2 = candidate.length;
+                        while ((current2 -= 1) >= 0) {
+                            if (!candidate[current2]) {
+                                continue;
+                            }
+                            if (isProperty(nodeType, candidates[current])) {
+                                element = new Element(candidate[current2], [key, current2], 'Property', null);
+                            } else if (isNode(candidate[current2])) {
+                                element = new Element(candidate[current2], [key, current2], null, null);
+                            } else {
+                                continue;
+                            }
+                            worklist.push(element);
+                        }
+                    } else if (isNode(candidate)) {
+                        worklist.push(new Element(candidate, key, null, null));
+                    }
+                }
+            }
+        }
+    };
+
+    Controller.prototype.replace = function replace(root, visitor) {
+        function removeElem(element) {
+            var i,
+                key,
+                nextElem,
+                parent;
+
+            if (element.ref.remove()) {
+                // When the reference is an element of an array.
+                key = element.ref.key;
+                parent = element.ref.parent;
+
+                // If removed from array, then decrease following items' keys.
+                i = worklist.length;
+                while (i--) {
+                    nextElem = worklist[i];
+                    if (nextElem.ref && nextElem.ref.parent === parent) {
+                        if  (nextElem.ref.key < key) {
+                            break;
+                        }
+                        --nextElem.ref.key;
+                    }
+                }
+            }
+        }
+
+        var worklist,
+            leavelist,
+            node,
+            nodeType,
+            target,
+            element,
+            current,
+            current2,
+            candidates,
+            candidate,
+            sentinel,
+            outer,
+            key;
+
+        this.__initialize(root, visitor);
+
+        sentinel = {};
+
+        // reference
+        worklist = this.__worklist;
+        leavelist = this.__leavelist;
+
+        // initialize
+        outer = {
+            root: root
+        };
+        element = new Element(root, null, null, new Reference(outer, 'root'));
+        worklist.push(element);
+        leavelist.push(element);
+
+        while (worklist.length) {
+            element = worklist.pop();
+
+            if (element === sentinel) {
+                element = leavelist.pop();
+
+                target = this.__execute(visitor.leave, element);
+
+                // node may be replaced with null,
+                // so distinguish between undefined and null in this place
+                if (target !== undefined && target !== BREAK && target !== SKIP && target !== REMOVE) {
+                    // replace
+                    element.ref.replace(target);
+                }
+
+                if (this.__state === REMOVE || target === REMOVE) {
+                    removeElem(element);
+                }
+
+                if (this.__state === BREAK || target === BREAK) {
+                    return outer.root;
+                }
+                continue;
+            }
+
+            target = this.__execute(visitor.enter, element);
+
+            // node may be replaced with null,
+            // so distinguish between undefined and null in this place
+            if (target !== undefined && target !== BREAK && target !== SKIP && target !== REMOVE) {
+                // replace
+                element.ref.replace(target);
+                element.node = target;
+            }
+
+            if (this.__state === REMOVE || target === REMOVE) {
+                removeElem(element);
+                element.node = null;
+            }
+
+            if (this.__state === BREAK || target === BREAK) {
+                return outer.root;
+            }
+
+            // node may be null
+            node = element.node;
+            if (!node) {
+                continue;
+            }
+
+            worklist.push(sentinel);
+            leavelist.push(element);
+
+            if (this.__state === SKIP || target === SKIP) {
+                continue;
+            }
+
+            nodeType = element.wrap || node.type;
+            candidates = this.__keys[nodeType];
+            if (!candidates) {
+                if (this.__fallback) {
+                    candidates = objectKeys(node);
+                } else {
+                    throw new Error('Unknown node type ' + nodeType + '.');
+                }
+            }
+
+            current = candidates.length;
+            while ((current -= 1) >= 0) {
+                key = candidates[current];
+                candidate = node[key];
+                if (!candidate) {
+                    continue;
+                }
+
+                if (isArray(candidate)) {
+                    current2 = candidate.length;
+                    while ((current2 -= 1) >= 0) {
+                        if (!candidate[current2]) {
+                            continue;
+                        }
+                        if (isProperty(nodeType, candidates[current])) {
+                            element = new Element(candidate[current2], [key, current2], 'Property', new Reference(candidate, current2));
+                        } else if (isNode(candidate[current2])) {
+                            element = new Element(candidate[current2], [key, current2], null, new Reference(candidate, current2));
+                        } else {
+                            continue;
+                        }
+                        worklist.push(element);
+                    }
+                } else if (isNode(candidate)) {
+                    worklist.push(new Element(candidate, key, null, new Reference(node, key)));
+                }
+            }
+        }
+
+        return outer.root;
+    };
+
+    function traverse(root, visitor) {
+        var controller = new Controller();
+        return controller.traverse(root, visitor);
+    }
+
+    function replace(root, visitor) {
+        var controller = new Controller();
+        return controller.replace(root, visitor);
+    }
+
+    function extendCommentRange(comment, tokens) {
+        var target;
+
+        target = upperBound(tokens, function search(token) {
+            return token.range[0] > comment.range[0];
+        });
+
+        comment.extendedRange = [comment.range[0], comment.range[1]];
+
+        if (target !== tokens.length) {
+            comment.extendedRange[1] = tokens[target].range[0];
+        }
+
+        target -= 1;
+        if (target >= 0) {
+            comment.extendedRange[0] = tokens[target].range[1];
+        }
+
+        return comment;
+    }
+
+    function attachComments(tree, providedComments, tokens) {
+        // At first, we should calculate extended comment ranges.
+        var comments = [], comment, len, i, cursor;
+
+        if (!tree.range) {
+            throw new Error('attachComments needs range information');
+        }
+
+        // tokens array is empty, we attach comments to tree as 'leadingComments'
+        if (!tokens.length) {
+            if (providedComments.length) {
+                for (i = 0, len = providedComments.length; i < len; i += 1) {
+                    comment = deepCopy(providedComments[i]);
+                    comment.extendedRange = [0, tree.range[0]];
+                    comments.push(comment);
+                }
+                tree.leadingComments = comments;
+            }
+            return tree;
+        }
+
+        for (i = 0, len = providedComments.length; i < len; i += 1) {
+            comments.push(extendCommentRange(deepCopy(providedComments[i]), tokens));
+        }
+
+        // This is based on John Freeman's implementation.
+        cursor = 0;
+        traverse(tree, {
+            enter: function (node) {
+                var comment;
+
+                while (cursor < comments.length) {
+                    comment = comments[cursor];
+                    if (comment.extendedRange[1] > node.range[0]) {
+                        break;
+                    }
+
+                    if (comment.extendedRange[1] === node.range[0]) {
+                        if (!node.leadingComments) {
+                            node.leadingComments = [];
+                        }
+                        node.leadingComments.push(comment);
+                        comments.splice(cursor, 1);
+                    } else {
+                        cursor += 1;
+                    }
+                }
+
+                // already out of owned node
+                if (cursor === comments.length) {
+                    return VisitorOption.Break;
+                }
+
+                if (comments[cursor].extendedRange[0] > node.range[1]) {
+                    return VisitorOption.Skip;
+                }
+            }
+        });
+
+        cursor = 0;
+        traverse(tree, {
+            leave: function (node) {
+                var comment;
+
+                while (cursor < comments.length) {
+                    comment = comments[cursor];
+                    if (node.range[1] < comment.extendedRange[0]) {
+                        break;
+                    }
+
+                    if (node.range[1] === comment.extendedRange[0]) {
+                        if (!node.trailingComments) {
+                            node.trailingComments = [];
+                        }
+                        node.trailingComments.push(comment);
+                        comments.splice(cursor, 1);
+                    } else {
+                        cursor += 1;
+                    }
+                }
+
+                // already out of owned node
+                if (cursor === comments.length) {
+                    return VisitorOption.Break;
+                }
+
+                if (comments[cursor].extendedRange[0] > node.range[1]) {
+                    return VisitorOption.Skip;
+                }
+            }
+        });
+
+        return tree;
+    }
+
+    exports.version = '1.8.1-dev';
+    exports.Syntax = Syntax;
+    exports.traverse = traverse;
+    exports.replace = replace;
+    exports.attachComments = attachComments;
+    exports.VisitorKeys = VisitorKeys;
+    exports.VisitorOption = VisitorOption;
+    exports.Controller = Controller;
+    exports.cloneEnvironment = function () { return clone({}); };
+
+    return exports;
+}));
+/* vim: set sw=4 ts=4 et tw=80 : */
+
+},{}],24:[function(_dereq_,module,exports){
 /*
   Copyright (C) 2013 Yusuke Suzuki <utatane.tea@gmail.com>
 
@@ -10325,7 +9304,7 @@ arguments[4][25][0].apply(exports,arguments)
 }());
 /* vim: set sw=4 ts=4 et tw=80 : */
 
-},{}],30:[function(_dereq_,module,exports){
+},{}],25:[function(_dereq_,module,exports){
 /*
   Copyright (C) 2013-2014 Yusuke Suzuki <utatane.tea@gmail.com>
   Copyright (C) 2014 Ivan Nikulin <ifaaan@gmail.com>
@@ -10428,7 +9407,7 @@ arguments[4][25][0].apply(exports,arguments)
 }());
 /* vim: set sw=4 ts=4 et tw=80 : */
 
-},{}],31:[function(_dereq_,module,exports){
+},{}],26:[function(_dereq_,module,exports){
 /*
   Copyright (C) 2013 Yusuke Suzuki <utatane.tea@gmail.com>
 
@@ -10567,7 +9546,7 @@ arguments[4][25][0].apply(exports,arguments)
 }());
 /* vim: set sw=4 ts=4 et tw=80 : */
 
-},{"./code":30}],32:[function(_dereq_,module,exports){
+},{"./code":25}],27:[function(_dereq_,module,exports){
 /*
   Copyright (C) 2013 Yusuke Suzuki <utatane.tea@gmail.com>
 
@@ -10602,7 +9581,7 @@ arguments[4][25][0].apply(exports,arguments)
 }());
 /* vim: set sw=4 ts=4 et tw=80 : */
 
-},{"./ast":29,"./code":30,"./keyword":31}],33:[function(_dereq_,module,exports){
+},{"./ast":24,"./code":25,"./keyword":26}],28:[function(_dereq_,module,exports){
 /*
  * Copyright 2009-2011 Mozilla Foundation and contributors
  * Licensed under the New BSD license. See LICENSE.txt or:
@@ -10612,7 +9591,7 @@ exports.SourceMapGenerator = _dereq_('./source-map/source-map-generator').Source
 exports.SourceMapConsumer = _dereq_('./source-map/source-map-consumer').SourceMapConsumer;
 exports.SourceNode = _dereq_('./source-map/source-node').SourceNode;
 
-},{"./source-map/source-map-consumer":39,"./source-map/source-map-generator":40,"./source-map/source-node":41}],34:[function(_dereq_,module,exports){
+},{"./source-map/source-map-consumer":34,"./source-map/source-map-generator":35,"./source-map/source-node":36}],29:[function(_dereq_,module,exports){
 /* -*- Mode: js; js-indent-level: 2; -*- */
 /*
  * Copyright 2011 Mozilla Foundation and contributors
@@ -10711,7 +9690,7 @@ define(function (_dereq_, exports, module) {
 
 });
 
-},{"./util":42,"amdefine":43}],35:[function(_dereq_,module,exports){
+},{"./util":37,"amdefine":38}],30:[function(_dereq_,module,exports){
 /* -*- Mode: js; js-indent-level: 2; -*- */
 /*
  * Copyright 2011 Mozilla Foundation and contributors
@@ -10855,7 +9834,7 @@ define(function (_dereq_, exports, module) {
 
 });
 
-},{"./base64":36,"amdefine":43}],36:[function(_dereq_,module,exports){
+},{"./base64":31,"amdefine":38}],31:[function(_dereq_,module,exports){
 /* -*- Mode: js; js-indent-level: 2; -*- */
 /*
  * Copyright 2011 Mozilla Foundation and contributors
@@ -10899,7 +9878,7 @@ define(function (_dereq_, exports, module) {
 
 });
 
-},{"amdefine":43}],37:[function(_dereq_,module,exports){
+},{"amdefine":38}],32:[function(_dereq_,module,exports){
 /* -*- Mode: js; js-indent-level: 2; -*- */
 /*
  * Copyright 2011 Mozilla Foundation and contributors
@@ -10981,7 +9960,7 @@ define(function (_dereq_, exports, module) {
 
 });
 
-},{"amdefine":43}],38:[function(_dereq_,module,exports){
+},{"amdefine":38}],33:[function(_dereq_,module,exports){
 /* -*- Mode: js; js-indent-level: 2; -*- */
 /*
  * Copyright 2014 Mozilla Foundation and contributors
@@ -11069,7 +10048,7 @@ define(function (_dereq_, exports, module) {
 
 });
 
-},{"./util":42,"amdefine":43}],39:[function(_dereq_,module,exports){
+},{"./util":37,"amdefine":38}],34:[function(_dereq_,module,exports){
 /* -*- Mode: js; js-indent-level: 2; -*- */
 /*
  * Copyright 2011 Mozilla Foundation and contributors
@@ -11646,7 +10625,7 @@ define(function (_dereq_, exports, module) {
 
 });
 
-},{"./array-set":34,"./base64-vlq":35,"./binary-search":37,"./util":42,"amdefine":43}],40:[function(_dereq_,module,exports){
+},{"./array-set":29,"./base64-vlq":30,"./binary-search":32,"./util":37,"amdefine":38}],35:[function(_dereq_,module,exports){
 /* -*- Mode: js; js-indent-level: 2; -*- */
 /*
  * Copyright 2011 Mozilla Foundation and contributors
@@ -12048,7 +11027,7 @@ define(function (_dereq_, exports, module) {
 
 });
 
-},{"./array-set":34,"./base64-vlq":35,"./mapping-list":38,"./util":42,"amdefine":43}],41:[function(_dereq_,module,exports){
+},{"./array-set":29,"./base64-vlq":30,"./mapping-list":33,"./util":37,"amdefine":38}],36:[function(_dereq_,module,exports){
 /* -*- Mode: js; js-indent-level: 2; -*- */
 /*
  * Copyright 2011 Mozilla Foundation and contributors
@@ -12464,7 +11443,7 @@ define(function (_dereq_, exports, module) {
 
 });
 
-},{"./source-map-generator":40,"./util":42,"amdefine":43}],42:[function(_dereq_,module,exports){
+},{"./source-map-generator":35,"./util":37,"amdefine":38}],37:[function(_dereq_,module,exports){
 /* -*- Mode: js; js-indent-level: 2; -*- */
 /*
  * Copyright 2011 Mozilla Foundation and contributors
@@ -12785,7 +11764,7 @@ define(function (_dereq_, exports, module) {
 
 });
 
-},{"amdefine":43}],43:[function(_dereq_,module,exports){
+},{"amdefine":38}],38:[function(_dereq_,module,exports){
 (function (process,__filename){
 /** vim: et:ts=4:sw=4:sts=4
  * @license amdefine 0.1.0 Copyright (c) 2011, The Dojo Foundation All Rights Reserved.
@@ -13088,7 +12067,7 @@ function amdefine(module, requireFn) {
 module.exports = amdefine;
 
 }).call(this,_dereq_('_process'),"/node_modules/escodegen/node_modules/source-map/node_modules/amdefine/amdefine.js")
-},{"_process":14,"path":13}],44:[function(_dereq_,module,exports){
+},{"_process":11,"path":10}],39:[function(_dereq_,module,exports){
 module.exports={
   "name": "escodegen",
   "description": "ECMAScript code generator",
@@ -13177,7 +12156,7 @@ module.exports={
   "readme": "ERROR: No README data found!"
 }
 
-},{}],45:[function(_dereq_,module,exports){
+},{}],40:[function(_dereq_,module,exports){
 /**
  * espurify - Clone new AST without extra properties
  * 
@@ -13189,77 +12168,18 @@ module.exports={
  */
 'use strict';
 
-var traverse = _dereq_('traverse'),
-    indexOf = _dereq_('indexof'),
-    deepCopy = _dereq_('./lib/ast-deepcopy'),
-    astProps = _dereq_('./lib/ast-properties'),
-    hasOwn = Object.prototype.hasOwnProperty;
+var createWhitelist = _dereq_('./lib/create-whitelist');
+var cloneWithWhitelist = _dereq_('./lib/clone-ast');
 
-function espurify (node) {
-    var result = deepCopy(node);
-    traverse(result).forEach(function (x) {
-        if (this.parent &&
-            this.parent.node &&
-            this.parent.node.type &&
-            isSupportedNodeType(this.parent.node.type) &&
-            !isSupportedKey(this.parent.node.type, this.key))
-        {
-            this.remove(true);
-        }
-    });
-    return result;
+function createCloneFunction (options) {
+    return cloneWithWhitelist(createWhitelist(options));
 }
 
-function isSupportedNodeType (type) {
-    return hasOwn.call(astProps, type);
-}
-
-function isSupportedKey (type, key) {
-    return indexOf(astProps[type], key) !== -1;
-}
-
+var espurify = createCloneFunction();
+espurify.customize = createCloneFunction;
 module.exports = espurify;
 
-},{"./lib/ast-deepcopy":46,"./lib/ast-properties":47,"indexof":48,"traverse":49}],46:[function(_dereq_,module,exports){
-/**
- * Copyright (C) 2012 Yusuke Suzuki (twitter: @Constellation) and other contributors.
- * Released under the BSD license.
- * https://github.com/Constellation/esmangle/blob/master/LICENSE.BSD
- */
-'use strict';
-
-var isArray = Array.isArray || function isArray (array) {
-    return Object.prototype.toString.call(array) === '[object Array]';
-};
-
-function deepCopyInternal (obj, result) {
-    var key, val;
-    for (key in obj) {
-        if (key.lastIndexOf('_', 0) === 0) {
-            continue;
-        }
-        if (obj.hasOwnProperty(key)) {
-            val = obj[key];
-            if (typeof val === 'object' && val !== null) {
-                if (val instanceof RegExp) {
-                    val = new RegExp(val);
-                } else {
-                    val = deepCopyInternal(val, isArray(val) ? [] : {});
-                }
-            }
-            result[key] = val;
-        }
-    }
-    return result;
-}
-
-function deepCopy (obj) {
-    return deepCopyInternal(obj, isArray(obj) ? [] : {});
-}
-
-module.exports = deepCopy;
-
-},{}],47:[function(_dereq_,module,exports){
+},{"./lib/clone-ast":42,"./lib/create-whitelist":43}],41:[function(_dereq_,module,exports){
 module.exports = {
     ArrayExpression: ['type', 'elements'],
     ArrayPattern: ['type', 'elements'],
@@ -13328,325 +12248,182 @@ module.exports = {
     YieldExpression: ['type', 'argument']
 };
 
-},{}],48:[function(_dereq_,module,exports){
-arguments[4][26][0].apply(exports,arguments)
-},{"dup":26}],49:[function(_dereq_,module,exports){
-var traverse = module.exports = function (obj) {
-    return new Traverse(obj);
-};
+},{}],42:[function(_dereq_,module,exports){
+'use strict';
 
-function Traverse (obj) {
-    this.value = obj;
-}
+var isArray = _dereq_('isarray');
 
-Traverse.prototype.get = function (ps) {
-    var node = this.value;
-    for (var i = 0; i < ps.length; i ++) {
-        var key = ps[i];
-        if (!node || !hasOwnProperty.call(node, key)) {
-            node = undefined;
-            break;
-        }
-        node = node[key];
+module.exports = function cloneWithWhitelist (whitelist) {
+
+    function cloneRoot (ast) {
+        return cloneContainer({}, ast);
     }
-    return node;
-};
 
-Traverse.prototype.has = function (ps) {
-    var node = this.value;
-    for (var i = 0; i < ps.length; i ++) {
-        var key = ps[i];
-        if (!node || !hasOwnProperty.call(node, key)) {
-            return false;
+    function cloneContainer (collector, obj) {
+        if (isArray(obj)) {
+            return cloneArray(collector, obj);
+        } else if (obj.type && whitelist[obj.type]) {
+            return cloneNode(collector, obj);
+        } else {
+            return cloneObj(collector, obj);
         }
-        node = node[key];
     }
-    return true;
-};
 
-Traverse.prototype.set = function (ps, value) {
-    var node = this.value;
-    for (var i = 0; i < ps.length - 1; i ++) {
-        var key = ps[i];
-        if (!hasOwnProperty.call(node, key)) node[key] = {};
-        node = node[key];
-    }
-    node[ps[i]] = value;
-    return value;
-};
-
-Traverse.prototype.map = function (cb) {
-    return walk(this.value, cb, true);
-};
-
-Traverse.prototype.forEach = function (cb) {
-    this.value = walk(this.value, cb, false);
-    return this.value;
-};
-
-Traverse.prototype.reduce = function (cb, init) {
-    var skip = arguments.length === 1;
-    var acc = skip ? this.value : init;
-    this.forEach(function (x) {
-        if (!this.isRoot || !skip) {
-            acc = cb.call(this, acc, x);
+    function cloneArray (collector, ary) {
+        var i, len;
+        for (i = 0, len = ary.length; i < len; i += 1) {
+            collector.push(cloneOf(ary[i]));
         }
-    });
-    return acc;
-};
+        return collector;
+    }
 
-Traverse.prototype.paths = function () {
-    var acc = [];
-    this.forEach(function (x) {
-        acc.push(this.path); 
-    });
-    return acc;
-};
+    function cloneNode (collector, obj) {
+        var i, len, props = whitelist[obj.type];
+        for (i = 0, len = props.length; i < len; i += 1) {
+            cloneProperty(collector, obj, props[i]);
+        }
+        return collector;
+    }
 
-Traverse.prototype.nodes = function () {
-    var acc = [];
-    this.forEach(function (x) {
-        acc.push(this.node);
-    });
-    return acc;
-};
+    function cloneObj (collector, obj) {
+        var key;
+        for (key in obj) {
+            cloneProperty(collector, obj, key);
+        }
+        return collector;
+    }
 
-Traverse.prototype.clone = function () {
-    var parents = [], nodes = [];
-    
-    return (function clone (src) {
-        for (var i = 0; i < parents.length; i++) {
-            if (parents[i] === src) {
-                return nodes[i];
+    function cloneProperty (collector, obj, key) {
+        if (obj.hasOwnProperty(key)) {
+            collector[key] = cloneOf(obj[key]);
+        }
+    }
+
+    function cloneOf (val) {
+        if (typeof val === 'object' && val !== null) {
+            if (val instanceof RegExp) {
+                return new RegExp(val);
+            } else {
+                return cloneContainer(isArray(val) ? [] : {}, val);
             }
+        } else {
+            return val;
         }
-        
-        if (typeof src === 'object' && src !== null) {
-            var dst = copy(src);
-            
-            parents.push(src);
-            nodes.push(dst);
-            
-            forEach(objectKeys(src), function (key) {
-                dst[key] = clone(src[key]);
-            });
-            
-            parents.pop();
-            nodes.pop();
-            return dst;
-        }
-        else {
-            return src;
-        }
-    })(this.value);
-};
-
-function walk (root, cb, immutable) {
-    var path = [];
-    var parents = [];
-    var alive = true;
-    
-    return (function walker (node_) {
-        var node = immutable ? copy(node_) : node_;
-        var modifiers = {};
-        
-        var keepGoing = true;
-        
-        var state = {
-            node : node,
-            node_ : node_,
-            path : [].concat(path),
-            parent : parents[parents.length - 1],
-            parents : parents,
-            key : path.slice(-1)[0],
-            isRoot : path.length === 0,
-            level : path.length,
-            circular : null,
-            update : function (x, stopHere) {
-                if (!state.isRoot) {
-                    state.parent.node[state.key] = x;
-                }
-                state.node = x;
-                if (stopHere) keepGoing = false;
-            },
-            'delete' : function (stopHere) {
-                delete state.parent.node[state.key];
-                if (stopHere) keepGoing = false;
-            },
-            remove : function (stopHere) {
-                if (isArray(state.parent.node)) {
-                    state.parent.node.splice(state.key, 1);
-                }
-                else {
-                    delete state.parent.node[state.key];
-                }
-                if (stopHere) keepGoing = false;
-            },
-            keys : null,
-            before : function (f) { modifiers.before = f },
-            after : function (f) { modifiers.after = f },
-            pre : function (f) { modifiers.pre = f },
-            post : function (f) { modifiers.post = f },
-            stop : function () { alive = false },
-            block : function () { keepGoing = false }
-        };
-        
-        if (!alive) return state;
-        
-        function updateState() {
-            if (typeof state.node === 'object' && state.node !== null) {
-                if (!state.keys || state.node_ !== state.node) {
-                    state.keys = objectKeys(state.node)
-                }
-                
-                state.isLeaf = state.keys.length == 0;
-                
-                for (var i = 0; i < parents.length; i++) {
-                    if (parents[i].node_ === node_) {
-                        state.circular = parents[i];
-                        break;
-                    }
-                }
-            }
-            else {
-                state.isLeaf = true;
-                state.keys = null;
-            }
-            
-            state.notLeaf = !state.isLeaf;
-            state.notRoot = !state.isRoot;
-        }
-        
-        updateState();
-        
-        // use return values to update if defined
-        var ret = cb.call(state, state.node);
-        if (ret !== undefined && state.update) state.update(ret);
-        
-        if (modifiers.before) modifiers.before.call(state, state.node);
-        
-        if (!keepGoing) return state;
-        
-        if (typeof state.node == 'object'
-        && state.node !== null && !state.circular) {
-            parents.push(state);
-            
-            updateState();
-            
-            forEach(state.keys, function (key, i) {
-                path.push(key);
-                
-                if (modifiers.pre) modifiers.pre.call(state, state.node[key], key);
-                
-                var child = walker(state.node[key]);
-                if (immutable && hasOwnProperty.call(state.node, key)) {
-                    state.node[key] = child.node;
-                }
-                
-                child.isLast = i == state.keys.length - 1;
-                child.isFirst = i == 0;
-                
-                if (modifiers.post) modifiers.post.call(state, child);
-                
-                path.pop();
-            });
-            parents.pop();
-        }
-        
-        if (modifiers.after) modifiers.after.call(state, state.node);
-        
-        return state;
-    })(root).node;
-}
-
-function copy (src) {
-    if (typeof src === 'object' && src !== null) {
-        var dst;
-        
-        if (isArray(src)) {
-            dst = [];
-        }
-        else if (isDate(src)) {
-            dst = new Date(src.getTime ? src.getTime() : src);
-        }
-        else if (isRegExp(src)) {
-            dst = new RegExp(src);
-        }
-        else if (isError(src)) {
-            dst = { message: src.message };
-        }
-        else if (isBoolean(src)) {
-            dst = new Boolean(src);
-        }
-        else if (isNumber(src)) {
-            dst = new Number(src);
-        }
-        else if (isString(src)) {
-            dst = new String(src);
-        }
-        else if (Object.create && Object.getPrototypeOf) {
-            dst = Object.create(Object.getPrototypeOf(src));
-        }
-        else if (src.constructor === Object) {
-            dst = {};
-        }
-        else {
-            var proto =
-                (src.constructor && src.constructor.prototype)
-                || src.__proto__
-                || {}
-            ;
-            var T = function () {};
-            T.prototype = proto;
-            dst = new T;
-        }
-        
-        forEach(objectKeys(src), function (key) {
-            dst[key] = src[key];
-        });
-        return dst;
     }
-    else return src;
-}
 
-var objectKeys = Object.keys || function keys (obj) {
-    var res = [];
-    for (var key in obj) res.push(key)
-    return res;
+    return cloneRoot;
 };
 
-function toS (obj) { return Object.prototype.toString.call(obj) }
-function isDate (obj) { return toS(obj) === '[object Date]' }
-function isRegExp (obj) { return toS(obj) === '[object RegExp]' }
-function isError (obj) { return toS(obj) === '[object Error]' }
-function isBoolean (obj) { return toS(obj) === '[object Boolean]' }
-function isNumber (obj) { return toS(obj) === '[object Number]' }
-function isString (obj) { return toS(obj) === '[object String]' }
+},{"isarray":48}],43:[function(_dereq_,module,exports){
+'use strict';
 
-var isArray = Array.isArray || function isArray (xs) {
-    return Object.prototype.toString.call(xs) === '[object Array]';
-};
+var defaultProps = _dereq_('./ast-properties');
+var objectKeys = _dereq_('object-keys');
+var extend = _dereq_('xtend');
 
-var forEach = function (xs, fn) {
-    if (xs.forEach) return xs.forEach(fn)
-    else for (var i = 0; i < xs.length; i++) {
-        fn(xs[i], i, xs);
+module.exports = function createWhitelist (options) {
+    var opts = extend({}, options);
+    var typeName, i, len;
+    var keys = objectKeys(defaultProps);
+    var result = {};
+    for (i = 0, len = keys.length; i < len; i += 1) {
+        typeName = keys[i];
+        result[typeName] = [].concat(defaultProps[typeName]).concat(opts.extra);
     }
+    return result;
 };
 
-forEach(objectKeys(Traverse.prototype), function (key) {
-    traverse[key] = function (obj) {
-        var args = [].slice.call(arguments, 1);
-        var t = new Traverse(obj);
-        return t[key].apply(t, args);
-    };
-});
+},{"./ast-properties":41,"object-keys":44,"xtend":61}],44:[function(_dereq_,module,exports){
+'use strict';
 
-var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
-    return key in obj;
+// modified from https://github.com/es-shims/es5-shim
+var has = Object.prototype.hasOwnProperty;
+var toStr = Object.prototype.toString;
+var isArgs = _dereq_('./isArguments');
+var hasDontEnumBug = !({ 'toString': null }).propertyIsEnumerable('toString');
+var hasProtoEnumBug = function () {}.propertyIsEnumerable('prototype');
+var dontEnums = [
+	'toString',
+	'toLocaleString',
+	'valueOf',
+	'hasOwnProperty',
+	'isPrototypeOf',
+	'propertyIsEnumerable',
+	'constructor'
+];
+
+var keysShim = function keys(object) {
+	var isObject = object !== null && typeof object === 'object';
+	var isFunction = toStr.call(object) === '[object Function]';
+	var isArguments = isArgs(object);
+	var isString = isObject && toStr.call(object) === '[object String]';
+	var theKeys = [];
+
+	if (!isObject && !isFunction && !isArguments) {
+		throw new TypeError('Object.keys called on a non-object');
+	}
+
+	var skipProto = hasProtoEnumBug && isFunction;
+	if (isString && object.length > 0 && !has.call(object, 0)) {
+		for (var i = 0; i < object.length; ++i) {
+			theKeys.push(String(i));
+		}
+	}
+
+	if (isArguments && object.length > 0) {
+		for (var j = 0; j < object.length; ++j) {
+			theKeys.push(String(j));
+		}
+	} else {
+		for (var name in object) {
+			if (!(skipProto && name === 'prototype') && has.call(object, name)) {
+				theKeys.push(String(name));
+			}
+		}
+	}
+
+	if (hasDontEnumBug) {
+		var ctor = object.constructor;
+		var skipConstructor = ctor && ctor.prototype === object;
+
+		for (var k = 0; k < dontEnums.length; ++k) {
+			if (!(skipConstructor && dontEnums[k] === 'constructor') && has.call(object, dontEnums[k])) {
+				theKeys.push(dontEnums[k]);
+			}
+		}
+	}
+	return theKeys;
 };
 
-},{}],50:[function(_dereq_,module,exports){
+keysShim.shim = function shimObjectKeys() {
+	if (!Object.keys) {
+		Object.keys = keysShim;
+	}
+	return Object.keys || keysShim;
+};
+
+module.exports = keysShim;
+
+},{"./isArguments":45}],45:[function(_dereq_,module,exports){
+'use strict';
+
+var toStr = Object.prototype.toString;
+
+module.exports = function isArguments(value) {
+	var str = toStr.call(value);
+	var isArgs = str === '[object Arguments]';
+	if (!isArgs) {
+		isArgs = str !== '[object Array]'
+			&& value !== null
+			&& typeof value === 'object'
+			&& typeof value.length === 'number'
+			&& value.length >= 0
+			&& toStr.call(value.callee) === '[object Function]';
+	}
+	return isArgs;
+};
+
+},{}],46:[function(_dereq_,module,exports){
 /*
   Copyright (C) 2012-2013 Yusuke Suzuki <utatane.tea@gmail.com>
   Copyright (C) 2012 Ariya Hidayat <ariya.hidayat@gmail.com>
@@ -14489,7 +13266,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 }(exports));
 /* vim: set sw=4 ts=4 et tw=80 : */
 
-},{"./package.json":51}],51:[function(_dereq_,module,exports){
+},{"./package.json":47}],47:[function(_dereq_,module,exports){
 module.exports={
   "name": "estraverse",
   "description": "ECMAScript JS AST traversal functions",
@@ -14542,7 +13319,7 @@ module.exports={
   },
   "_id": "estraverse@3.1.0",
   "_shasum": "15e28a446b8b82bc700ccc8b96c78af4da0d6cba",
-  "_from": "estraverse@>=3.0.0 <4.0.0",
+  "_from": "estraverse@>=3.1.0 <4.0.0",
   "_npmVersion": "2.0.0-alpha-5",
   "_npmUser": {
     "name": "constellation",
@@ -14557,11 +13334,16 @@ module.exports={
   "readme": "ERROR: No README data found!"
 }
 
-},{}],52:[function(_dereq_,module,exports){
-arguments[4][33][0].apply(exports,arguments)
-},{"./source-map/source-map-consumer":58,"./source-map/source-map-generator":59,"./source-map/source-node":60,"dup":33}],53:[function(_dereq_,module,exports){
-arguments[4][34][0].apply(exports,arguments)
-},{"./util":61,"amdefine":62,"dup":34}],54:[function(_dereq_,module,exports){
+},{}],48:[function(_dereq_,module,exports){
+module.exports = Array.isArray || function (arr) {
+  return Object.prototype.toString.call(arr) == '[object Array]';
+};
+
+},{}],49:[function(_dereq_,module,exports){
+arguments[4][28][0].apply(exports,arguments)
+},{"./source-map/source-map-consumer":55,"./source-map/source-map-generator":56,"./source-map/source-node":57,"dup":28}],50:[function(_dereq_,module,exports){
+arguments[4][29][0].apply(exports,arguments)
+},{"./util":58,"amdefine":59,"dup":29}],51:[function(_dereq_,module,exports){
 /* -*- Mode: js; js-indent-level: 2; -*- */
 /*
  * Copyright 2011 Mozilla Foundation and contributors
@@ -14704,9 +13486,9 @@ define(function (_dereq_, exports, module) {
 
 });
 
-},{"./base64":55,"amdefine":62}],55:[function(_dereq_,module,exports){
-arguments[4][36][0].apply(exports,arguments)
-},{"amdefine":62,"dup":36}],56:[function(_dereq_,module,exports){
+},{"./base64":52,"amdefine":59}],52:[function(_dereq_,module,exports){
+arguments[4][31][0].apply(exports,arguments)
+},{"amdefine":59,"dup":31}],53:[function(_dereq_,module,exports){
 /* -*- Mode: js; js-indent-level: 2; -*- */
 /*
  * Copyright 2011 Mozilla Foundation and contributors
@@ -14825,9 +13607,9 @@ define(function (_dereq_, exports, module) {
 
 });
 
-},{"amdefine":62}],57:[function(_dereq_,module,exports){
-arguments[4][38][0].apply(exports,arguments)
-},{"./util":61,"amdefine":62,"dup":38}],58:[function(_dereq_,module,exports){
+},{"amdefine":59}],54:[function(_dereq_,module,exports){
+arguments[4][33][0].apply(exports,arguments)
+},{"./util":58,"amdefine":59,"dup":33}],55:[function(_dereq_,module,exports){
 /* -*- Mode: js; js-indent-level: 2; -*- */
 /*
  * Copyright 2011 Mozilla Foundation and contributors
@@ -15787,7 +14569,7 @@ define(function (_dereq_, exports, module) {
 
 });
 
-},{"./array-set":53,"./base64-vlq":54,"./binary-search":56,"./util":61,"amdefine":62}],59:[function(_dereq_,module,exports){
+},{"./array-set":50,"./base64-vlq":51,"./binary-search":53,"./util":58,"amdefine":59}],56:[function(_dereq_,module,exports){
 /* -*- Mode: js; js-indent-level: 2; -*- */
 /*
  * Copyright 2011 Mozilla Foundation and contributors
@@ -16189,9 +14971,9 @@ define(function (_dereq_, exports, module) {
 
 });
 
-},{"./array-set":53,"./base64-vlq":54,"./mapping-list":57,"./util":61,"amdefine":62}],60:[function(_dereq_,module,exports){
-arguments[4][41][0].apply(exports,arguments)
-},{"./source-map-generator":59,"./util":61,"amdefine":62,"dup":41}],61:[function(_dereq_,module,exports){
+},{"./array-set":50,"./base64-vlq":51,"./mapping-list":54,"./util":58,"amdefine":59}],57:[function(_dereq_,module,exports){
+arguments[4][36][0].apply(exports,arguments)
+},{"./source-map-generator":56,"./util":58,"amdefine":59,"dup":36}],58:[function(_dereq_,module,exports){
 /* -*- Mode: js; js-indent-level: 2; -*- */
 /*
  * Copyright 2011 Mozilla Foundation and contributors
@@ -16512,7 +15294,7 @@ define(function (_dereq_, exports, module) {
 
 });
 
-},{"amdefine":62}],62:[function(_dereq_,module,exports){
+},{"amdefine":59}],59:[function(_dereq_,module,exports){
 (function (process,__filename){
 /** vim: et:ts=4:sw=4:sts=4
  * @license amdefine 0.1.0 Copyright (c) 2011, The Dojo Foundation All Rights Reserved.
@@ -16815,7 +15597,7 @@ function amdefine(module, requireFn) {
 module.exports = amdefine;
 
 }).call(this,_dereq_('_process'),"/node_modules/source-map/node_modules/amdefine/amdefine.js")
-},{"_process":14,"path":13}],63:[function(_dereq_,module,exports){
+},{"_process":11,"path":10}],60:[function(_dereq_,module,exports){
 /**
  * type-name - Just a reasonable typeof
  * 
@@ -16855,7 +15637,7 @@ function typeName (val) {
 
 module.exports = typeName;
 
-},{}],64:[function(_dereq_,module,exports){
+},{}],61:[function(_dereq_,module,exports){
 module.exports = extend
 
 function extend() {

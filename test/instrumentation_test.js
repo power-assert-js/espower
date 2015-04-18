@@ -1,15 +1,15 @@
 (function (root, factory) {
     'use strict';
     if (typeof define === 'function' && define.amd) {
-        define(['espower', 'esprima', 'escodegen', 'assert'], factory);
+        define(['espower', 'acorn', 'escodegen', 'assert'], factory);
     } else if (typeof exports === 'object') {
-        factory(require('..'), require('esprima'), require('escodegen'), require('assert'));
+        factory(require('..'), require('acorn'), require('escodegen'), require('assert'));
     } else {
-        factory(root.espower, root.esprima, root.escodegen, root.assert);
+        factory(root.espower, root.acorn, root.escodegen, root.assert);
     }
 }(this, function (
     espower,
-    esprima,
+    acorn,
     escodegen,
     assert
 ) {
@@ -20,28 +20,29 @@ if (typeof define === 'function' && define.amd) {
 }
 
 describe('instrumentation spec', function () {
-    function testWithEsprimaOptions (jsCode, expected, options) {
+    function testWithOptions (jsCode, expected, options) {
         it(jsCode, function () {
-            var jsAST = esprima.parse(jsCode, options),
+            var jsAST = acorn.parse(jsCode, options),
                 espoweredAST = espower(jsAST, {source: jsCode, path: '/path/to/some_test.js'}),
                 instrumentedCode = escodegen.generate(espoweredAST, {format: {compact: true}});
             assert.equal(instrumentedCode, expected);
+            assert(acorn.parse(instrumentedCode, options));
         });
     }
 
     function inst (jsCode, expected) {
         describe('with loc, range', function () {
-            var options = {tolerant: true, loc: true, range: true};
-            testWithEsprimaOptions(jsCode, expected, options);
+            var options = {ecmaVersion: 6, locations: true, ranges: true};
+            testWithOptions(jsCode, expected, options);
         });
         describe('with loc', function () {
-            var options = {tolerant: true, loc: true};
-            testWithEsprimaOptions(jsCode, expected, options);
+            var options = {ecmaVersion: 6, locations: true};
+            testWithOptions(jsCode, expected, options);
         });
     }
 
 
-    describe('Non target', function () {
+    describe('NonTarget', function () {
         inst("assert.hoge(falsyStr);",
              "assert.hoge(falsyStr);");
 
@@ -71,13 +72,6 @@ describe('instrumentation spec', function () {
     });
 
 
-    describe('multiline, multiassert', function () {
-        inst("assert.equal(\nstr,\nanotherStr\n);\n\nassert.equal(\nstr,\nyetAnotherStr\n);",
-             "assert.equal(assert._expr(assert._capt(str,'arguments/0'),{content:'assert.equal(str, anotherStr)',filepath:'/path/to/some_test.js',line:1}),assert._expr(assert._capt(anotherStr,'arguments/1'),{content:'assert.equal(str, anotherStr)',filepath:'/path/to/some_test.js',line:1}));assert.equal(assert._expr(assert._capt(str,'arguments/0'),{content:'assert.equal(str, yetAnotherStr)',filepath:'/path/to/some_test.js',line:6}),assert._expr(assert._capt(yetAnotherStr,'arguments/1'),{content:'assert.equal(str, yetAnotherStr)',filepath:'/path/to/some_test.js',line:6}));");
-    });
-
-
-
     describe('Identifier', function () {
         inst("assert(falsyStr);",
              "assert(assert._expr(assert._capt(falsyStr,'arguments/0'),{content:'assert(falsyStr)',filepath:'/path/to/some_test.js',line:1}));");
@@ -93,6 +87,12 @@ describe('instrumentation spec', function () {
 
         inst("assert.equal(str, anotherStr, messageStr);",
              "assert.equal(assert._expr(assert._capt(str,'arguments/0'),{content:'assert.equal(str, anotherStr, messageStr)',filepath:'/path/to/some_test.js',line:1}),assert._expr(assert._capt(anotherStr,'arguments/1'),{content:'assert.equal(str, anotherStr, messageStr)',filepath:'/path/to/some_test.js',line:1}),messageStr);");
+    });
+
+
+    describe('Identifier: multiline, multiassert', function () {
+        inst("assert.equal(\nstr,\nanotherStr\n);\n\nassert.equal(\nstr,\nyetAnotherStr\n);",
+             "assert.equal(assert._expr(assert._capt(str,'arguments/0'),{content:'assert.equal(str, anotherStr)',filepath:'/path/to/some_test.js',line:1}),assert._expr(assert._capt(anotherStr,'arguments/1'),{content:'assert.equal(str, anotherStr)',filepath:'/path/to/some_test.js',line:1}));assert.equal(assert._expr(assert._capt(str,'arguments/0'),{content:'assert.equal(str, yetAnotherStr)',filepath:'/path/to/some_test.js',line:6}),assert._expr(assert._capt(yetAnotherStr,'arguments/1'),{content:'assert.equal(str, yetAnotherStr)',filepath:'/path/to/some_test.js',line:6}));");
     });
 
 
@@ -132,9 +132,6 @@ describe('instrumentation spec', function () {
 
         inst("assert(!!foo.bar);",
              "assert(assert._expr(assert._capt(!assert._capt(!assert._capt(assert._capt(foo,'arguments/0/argument/argument/object').bar,'arguments/0/argument/argument'),'arguments/0/argument'),'arguments/0'),{content:'assert(!!foo.bar)',filepath:'/path/to/some_test.js',line:1}));");
-
-        inst("assert(delete foo);",
-             "assert(assert._expr(assert._capt(delete foo,'arguments/0'),{content:'assert(delete foo)',filepath:'/path/to/some_test.js',line:1}));");
 
         inst("assert(delete foo.bar);",
              "assert(assert._expr(assert._capt(delete assert._capt(assert._capt(foo,'arguments/0/argument/object').bar,'arguments/0/argument'),'arguments/0'),{content:'assert(delete foo.bar)',filepath:'/path/to/some_test.js',line:1}));");
@@ -254,13 +251,13 @@ describe('instrumentation spec', function () {
 
     describe('ArrayExpression', function () {
         inst("assert([foo, bar]);",
-             "assert(assert._expr([assert._capt(foo,'arguments/0/elements/0'),assert._capt(bar,'arguments/0/elements/1')],{content:'assert([foo,bar])',filepath:'/path/to/some_test.js',line:1}));");
+             "assert(assert._expr(assert._capt([assert._capt(foo,'arguments/0/elements/0'),assert._capt(bar,'arguments/0/elements/1')],'arguments/0'),{content:'assert([foo,bar])',filepath:'/path/to/some_test.js',line:1}));");
 
         inst("assert(typeof [[foo.bar, baz(moo)], + fourStr] === 'number');",
-             "assert(assert._expr(assert._capt(assert._capt(typeof[[assert._capt(assert._capt(foo,'arguments/0/left/argument/elements/0/elements/0/object').bar,'arguments/0/left/argument/elements/0/elements/0'),assert._capt(baz(assert._capt(moo,'arguments/0/left/argument/elements/0/elements/1/arguments/0')),'arguments/0/left/argument/elements/0/elements/1')],assert._capt(+assert._capt(fourStr,'arguments/0/left/argument/elements/1/argument'),'arguments/0/left/argument/elements/1')],'arguments/0/left')==='number','arguments/0'),{content:'assert(typeof [[foo.bar,baz(moo)],+fourStr] === \\'number\\')',filepath:'/path/to/some_test.js',line:1}));");
+             "assert(assert._expr(assert._capt(assert._capt(typeof assert._capt([assert._capt([assert._capt(assert._capt(foo,'arguments/0/left/argument/elements/0/elements/0/object').bar,'arguments/0/left/argument/elements/0/elements/0'),assert._capt(baz(assert._capt(moo,'arguments/0/left/argument/elements/0/elements/1/arguments/0')),'arguments/0/left/argument/elements/0/elements/1')],'arguments/0/left/argument/elements/0'),assert._capt(+assert._capt(fourStr,'arguments/0/left/argument/elements/1/argument'),'arguments/0/left/argument/elements/1')],'arguments/0/left/argument'),'arguments/0/left')==='number','arguments/0'),{content:'assert(typeof [[foo.bar,baz(moo)],+fourStr] === \\'number\\')',filepath:'/path/to/some_test.js',line:1}));");
 
         inst("assert.notDeepEqual([foo, bar], [hoge, fuga, piyo]);",
-             "assert.notDeepEqual(assert._expr([assert._capt(foo,'arguments/0/elements/0'),assert._capt(bar,'arguments/0/elements/1')],{content:'assert.notDeepEqual([foo,bar], [hoge,fuga,piyo])',filepath:'/path/to/some_test.js',line:1}),assert._expr([assert._capt(hoge,'arguments/1/elements/0'),assert._capt(fuga,'arguments/1/elements/1'),assert._capt(piyo,'arguments/1/elements/2')],{content:'assert.notDeepEqual([foo,bar], [hoge,fuga,piyo])',filepath:'/path/to/some_test.js',line:1}));");
+             "assert.notDeepEqual(assert._expr(assert._capt([assert._capt(foo,'arguments/0/elements/0'),assert._capt(bar,'arguments/0/elements/1')],'arguments/0'),{content:'assert.notDeepEqual([foo,bar], [hoge,fuga,piyo])',filepath:'/path/to/some_test.js',line:1}),assert._expr(assert._capt([assert._capt(hoge,'arguments/1/elements/0'),assert._capt(fuga,'arguments/1/elements/1'),assert._capt(piyo,'arguments/1/elements/2')],'arguments/1'),{content:'assert.notDeepEqual([foo,bar], [hoge,fuga,piyo])',filepath:'/path/to/some_test.js',line:1}));");
     });
 
 
@@ -291,7 +288,7 @@ describe('instrumentation spec', function () {
     });
 
 
-    describe('RegularExpression will not be instrumented', function () {
+    describe('Literal: regular expression will not be instrumented', function () {
         inst("assert(/^not/.exec(str));",
              "assert(assert._expr(assert._capt(/^not/.exec(assert._capt(str,'arguments/0/arguments/0')),'arguments/0'),{content:'assert(/^not/.exec(str))',filepath:'/path/to/some_test.js',line:1}));");
     });
@@ -299,13 +296,13 @@ describe('instrumentation spec', function () {
 
     describe('ObjectExpression', function () {
         inst("assert({foo: bar, hoge: fuga});",
-             "assert(assert._expr({foo:assert._capt(bar,'arguments/0/properties/0/value'),hoge:assert._capt(fuga,'arguments/0/properties/1/value')},{content:'assert({foo: bar,hoge: fuga})',filepath:'/path/to/some_test.js',line:1}));");
+             "assert(assert._expr(assert._capt({foo:assert._capt(bar,'arguments/0/properties/0/value'),hoge:assert._capt(fuga,'arguments/0/properties/1/value')},'arguments/0'),{content:'assert({foo: bar,hoge: fuga})',filepath:'/path/to/some_test.js',line:1}));");
 
         inst("assert(!({ foo: bar.baz, name: nameOf({firstName: first, lastName: last}) }));",
-             "assert(assert._expr(assert._capt(!{foo:assert._capt(assert._capt(bar,'arguments/0/argument/properties/0/value/object').baz,'arguments/0/argument/properties/0/value'),name:assert._capt(nameOf({firstName:assert._capt(first,'arguments/0/argument/properties/1/value/arguments/0/properties/0/value'),lastName:assert._capt(last,'arguments/0/argument/properties/1/value/arguments/0/properties/1/value')}),'arguments/0/argument/properties/1/value')},'arguments/0'),{content:'assert(!{foo: bar.baz,name: nameOf({firstName: first,lastName: last})})',filepath:'/path/to/some_test.js',line:1}));");
+             "assert(assert._expr(assert._capt(!assert._capt({foo:assert._capt(assert._capt(bar,'arguments/0/argument/properties/0/value/object').baz,'arguments/0/argument/properties/0/value'),name:assert._capt(nameOf(assert._capt({firstName:assert._capt(first,'arguments/0/argument/properties/1/value/arguments/0/properties/0/value'),lastName:assert._capt(last,'arguments/0/argument/properties/1/value/arguments/0/properties/1/value')},'arguments/0/argument/properties/1/value/arguments/0')),'arguments/0/argument/properties/1/value')},'arguments/0/argument'),'arguments/0'),{content:'assert(!{foo: bar.baz,name: nameOf({firstName: first,lastName: last})})',filepath:'/path/to/some_test.js',line:1}));");
 
         inst("assert.deepEqual({foo: bar, hoge: fuga}, {hoge: fuga, foo: bar});",
-             "assert.deepEqual(assert._expr({foo:assert._capt(bar,'arguments/0/properties/0/value'),hoge:assert._capt(fuga,'arguments/0/properties/1/value')},{content:'assert.deepEqual({foo: bar,hoge: fuga}, {hoge: fuga,foo: bar})',filepath:'/path/to/some_test.js',line:1}),assert._expr({hoge:assert._capt(fuga,'arguments/1/properties/0/value'),foo:assert._capt(bar,'arguments/1/properties/1/value')},{content:'assert.deepEqual({foo: bar,hoge: fuga}, {hoge: fuga,foo: bar})',filepath:'/path/to/some_test.js',line:1}));");
+             "assert.deepEqual(assert._expr(assert._capt({foo:assert._capt(bar,'arguments/0/properties/0/value'),hoge:assert._capt(fuga,'arguments/0/properties/1/value')},'arguments/0'),{content:'assert.deepEqual({foo: bar,hoge: fuga}, {hoge: fuga,foo: bar})',filepath:'/path/to/some_test.js',line:1}),assert._expr(assert._capt({hoge:assert._capt(fuga,'arguments/1/properties/0/value'),foo:assert._capt(bar,'arguments/1/properties/1/value')},'arguments/1'),{content:'assert.deepEqual({foo: bar,hoge: fuga}, {hoge: fuga,foo: bar})',filepath:'/path/to/some_test.js',line:1}));");
     });
 
 
@@ -324,7 +321,7 @@ describe('instrumentation spec', function () {
     });
 
 
-    describe('FunctionExpression will not be instrumented', function () {
+    describe('FunctionExpression: body will not be instrumented', function () {
         inst("assert(function (a, b) { return a + b; });",
              "assert(function(a,b){return a+b;});");
         inst("assert(baz === (function (a, b) { return a + b; })(foo, bar));",
@@ -332,12 +329,95 @@ describe('instrumentation spec', function () {
     });
 
 
-    describe('multibyte string literal', function () {
+    describe('Literal: multibyte string literal', function () {
         inst("assert(fuga !== 'ふが');",
              "assert(assert._expr(assert._capt(assert._capt(fuga,'arguments/0/left')!=='\\u3075\\u304C','arguments/0'),{content:'assert(fuga !== \\'\\u3075\\u304C\\')',filepath:'/path/to/some_test.js',line:1}));");
 
         inst("assert('ほげ' !== 'ふが');",
              "assert(assert._expr(assert._capt('\\u307B\\u3052'!=='\\u3075\\u304C','arguments/0'),{content:'assert(\\'\\u307B\\u3052\\' !== \\'\\u3075\\u304C\\')',filepath:'/path/to/some_test.js',line:1}));");
+    });
+
+
+    describe('ES6', function () {
+
+        describe('TemplateLiteral', function () {
+            inst("assert(`Hello`);",
+                 "assert(assert._expr(assert._capt(`Hello`,'arguments/0'),{content:'assert(`Hello`)',filepath:'/path/to/some_test.js',line:1}));");
+            inst("assert(`Hello, ${nickname}`);",
+                 "assert(assert._expr(assert._capt(`Hello, ${assert._capt(nickname,'arguments/0/expressions/0')}`,'arguments/0'),{content:'assert(`Hello, ${ nickname }`)',filepath:'/path/to/some_test.js',line:1}));");
+            inst("assert(`Hello, ${user.nickname}`);",
+                 "assert(assert._expr(assert._capt(`Hello, ${assert._capt(assert._capt(user,'arguments/0/expressions/0/object').nickname,'arguments/0/expressions/0')}`,'arguments/0'),{content:'assert(`Hello, ${ user.nickname }`)',filepath:'/path/to/some_test.js',line:1}));");
+        });
+
+        describe('TaggedTemplateExpression', function () {
+            inst("assert(fn`a${1}`);",
+                 "assert(assert._expr(assert._capt(fn`a${1}`,'arguments/0'),{content:'assert(fn`a${ 1 }`)',filepath:'/path/to/some_test.js',line:1}));");
+            inst("assert(fn`a${foo}b${bar}c${baz}`);",
+                 "assert(assert._expr(assert._capt(fn`a${assert._capt(foo,'arguments/0/quasi/expressions/0')}b${assert._capt(bar,'arguments/0/quasi/expressions/1')}c${assert._capt(baz,'arguments/0/quasi/expressions/2')}`,'arguments/0'),{content:'assert(fn`a${ foo }b${ bar }c${ baz }`)',filepath:'/path/to/some_test.js',line:1}));");
+            inst("assert(fn`driver ${bob.name}, navigator ${alice.getName()}`);",
+                 "assert(assert._expr(assert._capt(fn`driver ${assert._capt(assert._capt(bob,'arguments/0/quasi/expressions/0/object').name,'arguments/0/quasi/expressions/0')}, navigator ${assert._capt(assert._capt(alice,'arguments/0/quasi/expressions/1/callee/object').getName(),'arguments/0/quasi/expressions/1')}`,'arguments/0'),{content:'assert(fn`driver ${ bob.name }, navigator ${ alice.getName() }`)',filepath:'/path/to/some_test.js',line:1}));");
+        });
+
+        describe('ArrowFunctionExpression: body will not be instrumented', function () {
+            inst("assert(v => v + 1);",
+                 "assert(v=>v+1);");
+            inst("assert((v, i) => v + i);",
+                 "assert((v,i)=>v+i);");
+            inst("assert(v => ({even: v, odd: v + 1}));",
+                 "assert(v=>({even:v,odd:v+1}));");
+            inst("assert(seven === ((v, i) => v + i)(four, five));",
+                 "assert(assert._expr(assert._capt(assert._capt(seven,'arguments/0/left')===assert._capt(((v,i)=>v+i)(assert._capt(four,'arguments/0/right/arguments/0'),assert._capt(five,'arguments/0/right/arguments/1')),'arguments/0/right'),'arguments/0'),{content:'assert(seven === ((v, i) => v + i)(four, five))',filepath:'/path/to/some_test.js',line:1}));");
+        });
+
+        describe('ClassExpression: body will not be instrumented', function () {
+            inst("assert(class Me { getClassName() { return foo + Me.name; } });",
+                 "assert(class Me{getClassName(){return foo+Me.name;}});");
+        });
+
+        describe('AssignmentExpression: left hand side of Destructuring will not be instrumented', function () {
+            inst("assert([x] = [3]);",
+                 "assert(assert._expr(assert._capt([x]=assert._capt([3],'arguments/0/right'),'arguments/0'),{content:'assert([x] = [3])',filepath:'/path/to/some_test.js',line:1}));");
+            inst("assert([x] = [foo]);",
+                 "assert(assert._expr(assert._capt([x]=assert._capt([assert._capt(foo,'arguments/0/right/elements/0')],'arguments/0/right'),'arguments/0'),{content:'assert([x] = [foo])',filepath:'/path/to/some_test.js',line:1}));");
+        });
+
+        describe('Literal: Binary and Octal Literals', function () {
+            inst("assert(0b111110111);",
+                 "assert(503);");
+            inst("assert(0o767);",
+                 "assert(503);");
+        });
+
+        describe('SpreadElement', function () {
+            inst("assert(hello(...names));",
+                 "assert(assert._expr(assert._capt(hello(...assert._capt(names,'arguments/0/arguments/0/argument')),'arguments/0'),{content:'assert(hello(...names))',filepath:'/path/to/some_test.js',line:1}));");
+            inst("assert([head, ...tail].length);",
+                 "assert(assert._expr(assert._capt(assert._capt([assert._capt(head,'arguments/0/object/elements/0'),...assert._capt(tail,'arguments/0/object/elements/1/argument')],'arguments/0/object').length,'arguments/0'),{content:'assert([head,...tail].length)',filepath:'/path/to/some_test.js',line:1}));");
+            inst("assert(f(head, ...iter(), ...[foo, bar]));",
+                 "assert(assert._expr(assert._capt(f(assert._capt(head,'arguments/0/arguments/0'),...assert._capt(iter(),'arguments/0/arguments/1/argument'),...assert._capt([assert._capt(foo,'arguments/0/arguments/2/argument/elements/0'),assert._capt(bar,'arguments/0/arguments/2/argument/elements/1')],'arguments/0/arguments/2/argument')),'arguments/0'),{content:'assert(f(head, ...iter(), ...[foo,bar]))',filepath:'/path/to/some_test.js',line:1}));");
+        });
+
+        describe('Enhanced Object Literals', function () {
+
+            describe('Property: Computed (dynamic) property names', function () {
+                inst("assert({[num]: foo});",
+                     "assert(assert._expr(assert._capt({[assert._capt(num,'arguments/0/properties/0/key')]:assert._capt(foo,'arguments/0/properties/0/value')},'arguments/0'),{content:'assert({ [num]: foo })',filepath:'/path/to/some_test.js',line:1}));");
+
+                inst("assert({[ 'prop_' + (() => bar())() ]: 42});",
+                     "assert(assert._expr(assert._capt({[assert._capt('prop_'+assert._capt((()=>bar())(),'arguments/0/properties/0/key/right'),'arguments/0/properties/0/key')]:42},'arguments/0'),{content:'assert({ [\\'prop_\\' + (() => bar())()]: 42 })',filepath:'/path/to/some_test.js',line:1}));");
+
+                inst("assert({[`prop_${generate(seed)}`]: foo});",
+                     "assert(assert._expr(assert._capt({[assert._capt(`prop_${assert._capt(generate(assert._capt(seed,'arguments/0/properties/0/key/expressions/0/arguments/0')),'arguments/0/properties/0/key/expressions/0')}`,'arguments/0/properties/0/key')]:assert._capt(foo,'arguments/0/properties/0/value')},'arguments/0'),{content:'assert({ [`prop_${ generate(seed) }`]: foo })',filepath:'/path/to/some_test.js',line:1}));");
+            });
+
+            describe('Property: shorthand literal itself will not be instrumented', function () {
+                inst("assert({foo});",
+                     "assert(assert._expr(assert._capt({foo},'arguments/0'),{content:'assert({ foo })',filepath:'/path/to/some_test.js',line:1}));");
+
+                inst("assert({foo, bar: baz});",
+                     "assert(assert._expr(assert._capt({foo,bar:assert._capt(baz,'arguments/0/properties/1/value')},'arguments/0'),{content:'assert({foo,bar: baz})',filepath:'/path/to/some_test.js',line:1}));");
+            });
+        });
     });
 
 });
