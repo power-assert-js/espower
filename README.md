@@ -201,6 +201,12 @@ Install
 
     $ npm install --save-dev espower
 
+#### use espower module on browser
+
+`espower` function is exported
+
+    <script type="text/javascript" src="./path/to/node_modules/espower/build/espower.js"></script>
+
 
 ### via bower
 
