@@ -1,3 +1,16 @@
+## [0.11.0](https://github.com/twada/espower/releases/tag/v0.11.0) (2015-04-18)
+
+
+#### Bug Fixes
+
+* throw Error if AST is already instrumented ([1d47bdc3](https://github.com/twada/espower/commit/1d47bdc3169de7865e176ceb708a07247ab17703))
+
+
+#### Features
+
+* [ES6 support](https://github.com/twada/espower/pull/16)
+
+
 ## [0.10.0](https://github.com/twada/espower/releases/tag/v0.10.0) (2014-11-11)
 
 
