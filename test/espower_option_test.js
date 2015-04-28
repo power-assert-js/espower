@@ -348,7 +348,7 @@ describe('SourceMap support', function () {
     });
 
 
-    it('when sourceRoot is given', function () {
+    it('when escodegen sourceMapRoot is given', function () {
         var originalBasePath = '/path/to/base/';
         var originalRelativePath = 'original_test.js';
         var originalCode = 'var str = "foo";\nvar anotherStr = "bar"\n\nassert.equal(\nstr,\nanotherStr\n);';

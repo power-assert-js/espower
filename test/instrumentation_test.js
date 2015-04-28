@@ -20,7 +20,7 @@ if (typeof define === 'function' && define.amd) {
 }
 
 describe('instrumentation spec', function () {
-    function testWithOptions (jsCode, expected, options) {
+    function testWithParserOptions (jsCode, expected, options) {
         it(jsCode, function () {
             var jsAST = acorn.parse(jsCode, options),
                 espoweredAST = espower(jsAST, {source: jsCode, path: '/path/to/some_test.js'}),
@@ -33,11 +33,11 @@ describe('instrumentation spec', function () {
     function inst (jsCode, expected) {
         describe('with loc, range', function () {
             var options = {ecmaVersion: 6, locations: true, ranges: true};
-            testWithOptions(jsCode, expected, options);
+            testWithParserOptions(jsCode, expected, options);
         });
         describe('with loc', function () {
             var options = {ecmaVersion: 6, locations: true};
-            testWithOptions(jsCode, expected, options);
+            testWithParserOptions(jsCode, expected, options);
         });
     }
 
