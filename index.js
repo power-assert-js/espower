@@ -9,9 +9,9 @@
  */
 'use strict';
 
-var defaultOptions = require('./lib/default-options'),
-    Instrumentor = require('./lib/instrumentor'),
-    extend = require('xtend');
+var defaultOptions = require('./lib/default-options');
+var Instrumentor = require('./lib/instrumentor');
+var extend = require('xtend');
 
 /**
  * Instrument power assert feature into code. ECMAScript AST in, ECMAScript AST out.

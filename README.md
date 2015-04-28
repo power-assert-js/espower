@@ -148,9 +148,9 @@ EXAMPLE
 For given test file `example_test.js` below,
 
 ```javascript
-var assert = require('power-assert'),
-    truthy = 'true',
-    falsy = 'false';
+var assert = require('power-assert');
+var truthy = 'true';
+var falsy = 'false';
 assert(falsy);
 assert.equal(truthy, falsy);
 ```
@@ -158,11 +158,11 @@ assert.equal(truthy, falsy);
 Apply `espower` then generate modified code to console,
 
 ```javascript
-var espower = require('espower'),
-    esprima = require('esprima'),
-    escodegen = require('escodegen'),
-    fs = require('fs'),
-    path = require('path');
+var espower = require('espower');
+var esprima = require('esprima');
+var escodegen = require('escodegen');
+var fs = require('fs');
+var path = require('path');
 
 var filepath = path.join(__dirname, 'example_test.js');
 var jsAst = esprima.parse(fs.readFileSync(filepath), {tolerant: true, loc: true, tokens: true});
@@ -174,7 +174,9 @@ console.log(escodegen.generate(modifiedAst));
 Output:
 
 ```javascript
-var assert = require('power-assert'), truthy = 'true', falsy = 'false';
+var assert = require('power-assert');
+var truthy = 'true';
+var falsy = 'false';
 assert(assert._expr(assert._capt(falsy, 'arguments/0'), {
     content: 'assert(falsy)',
     filepath: '/path/to/example_test.js',
