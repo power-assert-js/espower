@@ -80,6 +80,7 @@
     "lint": "gulp lint",
     "test": "gulp test",
     "unit": "gulp unit",
+    "watch": "gulp watch",
     "coveralls": "gulp coverage && cat ./coverage.lcov | coveralls"
   }
 }
