@@ -121,6 +121,15 @@ Filepath of `originalAst`. If passed, espower stores filepath information for re
 A raw (either as a string which can be JSON.parse'd, or an object) [SourceMap](https://github.com/mozilla/source-map/) associated with `originalAst`. This property is optional. If given, espower uses `options.sourceMap` to adjust information in the power-assert output.
 
 
+#### (optional) options.visitorKeys
+
+| type     | default value |
+|:---------|:--------------|
+| `object` | N/A           |
+
+VisitorKeys for AST traversal. See [estraverse.VisitorKeys](https://github.com/estools/estraverse/blob/4.0.0/estraverse.js#L217-L288) and [babel.types.VISITOR_KEYS](https://github.com/babel/babel/blob/v5.1.13/src/babel/types/visitor-keys.json).
+
+
 ### var options = espower.defaultOptions();
 
 Returns default options object for `espower` function. In other words, returns
