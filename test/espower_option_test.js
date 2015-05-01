@@ -100,17 +100,17 @@ describe('instrumentation tests for options', function () {
                 callback(assert, saved, tree, result);
             });
         }
-        destructiveOptionTest('default is false', {source: 'assert(falsyStr);'}, function (assert, before, tree, after) {
+        destructiveOptionTest('default is false', {}, function (assert, before, tree, after) {
             assert.deepEqual(tree, before);
             assert.notDeepEqual(after, before);
             assert.notDeepEqual(after, tree);
         });
-        destructiveOptionTest('destructive: false', {source: 'assert(falsyStr);', destructive: false}, function (assert, before, tree, after) {
+        destructiveOptionTest('destructive: false', {destructive: false}, function (assert, before, tree, after) {
             assert.deepEqual(tree, before);
             assert.notDeepEqual(after, before);
             assert.notDeepEqual(after, tree);
         });
-        destructiveOptionTest('destructive: true', {source: 'assert(falsyStr);', destructive: true}, function (assert, before, tree, after) {
+        destructiveOptionTest('destructive: true', {destructive: true}, function (assert, before, tree, after) {
             assert.notDeepEqual(tree, before);
             assert.notDeepEqual(after, before);
             assert.deepEqual(after, tree);
@@ -121,7 +121,6 @@ describe('instrumentation tests for options', function () {
     describe('patterns option.', function () {
         it('matches function call', function () {
             var instrumentedCode = instrument('refute(falsyStr);', {
-                source: 'refute(falsyStr);',
                 patterns: [
                     'refute(value)'
                 ]
@@ -131,7 +130,6 @@ describe('instrumentation tests for options', function () {
 
         it('matches method call', function () {
             var instrumentedCode = instrument('refute.equal(foo, bar);', {
-                source: 'refute.equal(foo, bar);',
                 patterns: [
                     'refute.equal(actual, expected)'
                 ]
@@ -141,7 +139,6 @@ describe('instrumentation tests for options', function () {
 
         it('deep callee chain', function () {
             var instrumentedCode = instrument('browser.assert.element(foo);', {
-                source: 'browser.assert.element(foo);',
                 patterns: [
                     'browser.assert.element(selection, [message])'
                 ]
@@ -151,13 +148,13 @@ describe('instrumentation tests for options', function () {
     });
 
 
-    describe('source option and path option.', function () {
+    describe('path option.', function () {
         it('path: null', function () {
-            var instrumentedCode = instrument('assert(falsyStr);', {source: 'assert(falsyStr);'});
+            var instrumentedCode = instrument('assert(falsyStr);', {});
             assert.equal(instrumentedCode, "assert(assert._expr(assert._capt(falsyStr,'arguments/0'),{content:'assert(falsyStr)',line:1}));");
         });
-        it('with source and path', function () {
-            var instrumentedCode = instrument('assert(falsyStr);', {source: 'assert(falsyStr);', path: '/path/to/baz_test.js'});
+        it('with path', function () {
+            var instrumentedCode = instrument('assert(falsyStr);', {path: '/path/to/baz_test.js'});
             assert.equal(instrumentedCode, "assert(assert._expr(assert._capt(falsyStr,'arguments/0'),{content:'assert(falsyStr)',filepath:'/path/to/baz_test.js',line:1}));");
         });
     });
@@ -184,11 +181,11 @@ describe('option prerequisites', function () {
     }
 
     optionPrerequisitesTest('destructive option shoud be a boolean',
-                            {source: 'assert(falsyStr);', destructive: 1},
+                            {destructive: 1},
                             '[espower] options.destructive should be a boolean value.');
 
     optionPrerequisitesTest('patterns option should be an array',
-                            {source: 'assert(falsyStr);', patterns: 'hoge'},
+                            {patterns: 'hoge'},
                             '[espower] options.patterns should be an array.');
 });
 
@@ -200,7 +197,7 @@ describe('AST prerequisites. Error should be thrown if location is missing.', fu
     });
     it('error message when path option is not specified', function () {
         try {
-            espower(this.tree, {destructive: false, source: this.jsCode});
+            espower(this.tree, {destructive: false});
             assert.ok(false, 'Error should be thrown');
         } catch (e) {
             assert.equal(e.name, 'EspowerError');
@@ -212,7 +209,7 @@ describe('AST prerequisites. Error should be thrown if location is missing.', fu
     });
     it('error message when path option is specified', function () {
         try {
-            espower(this.tree, {destructive: false, source: this.jsCode, path: '/path/to/baz_test.js'});
+            espower(this.tree, {destructive: false, path: '/path/to/baz_test.js'});
             assert.ok(false, 'Error should be thrown');
         } catch (e) {
             assert.equal(e.name, 'EspowerError');
@@ -231,7 +228,7 @@ describe('AST prerequisites. Error should be thrown if AST is already instrument
         var alreadyEspoweredCode = "assert(assert._expr(assert._capt(falsyStr,'arguments/0'),{content:'assert(falsyStr)',filepath:'/path/to/some_test.js',line:1}));";
         var ast = acorn.parse(alreadyEspoweredCode, {ecmaVersion: 6, locations: true});
         try {
-            espower(ast, {destructive: false, source: alreadyEspoweredCode, path: '/path/to/baz_test.js'});
+            espower(ast, {destructive: false, path: '/path/to/baz_test.js'});
             assert.ok(false, 'Error should be thrown');
         } catch (e) {
             assert.equal(e.name, 'EspowerError');
@@ -248,7 +245,6 @@ describe('AST prerequisites. Error should be thrown if AST is already instrument
         try {
             espower(ast, {
                 destructive: false,
-                source: alreadyEspoweredCode,
                 path: '/path/to/foo_test.js',
                 patterns: [
                     'browser.assert.element(selection, [message])'
@@ -271,7 +267,7 @@ describe('location information', function () {
     it('preserve location of instrumented nodes.', function () {
         var jsCode = 'assert((three * (seven * ten)) === three);';
         var tree = acorn.parse(jsCode, {ecmaVersion: 6, locations: true, ranges: true});
-        var result = espower(tree, {destructive: false, source: jsCode, path: '/path/to/baz_test.js'});
+        var result = espower(tree, {destructive: false, path: '/path/to/baz_test.js'});
         estraverse.traverse(result, function (node) {
             if (typeof node.type === 'undefined') return;
             assert.ok(typeof node.loc !== 'undefined', 'type: ' + node.type);
@@ -290,7 +286,6 @@ describe('lineSeparator', function () {
                 '// comment line',
                 'assert.ok(falsyStr);'
             ].join(lineSeparatorInCode);
-            options.source = sourceLines;
             assert.equal(instrument(sourceLines, options), expected);
         });
     }
