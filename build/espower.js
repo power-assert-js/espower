@@ -10,9 +10,9 @@
  */
 'use strict';
 
-var defaultOptions = _dereq_('./lib/default-options'),
-    Instrumentor = _dereq_('./lib/instrumentor'),
-    extend = _dereq_('xtend');
+var defaultOptions = _dereq_('./lib/default-options');
+var Instrumentor = _dereq_('./lib/instrumentor');
+var extend = _dereq_('xtend');
 
 /**
  * Instrument power assert feature into code. ECMAScript AST in, ECMAScript AST out.
@@ -37,26 +37,26 @@ module.exports = espower;
 },{"./lib/assertion-visitor":2,"./lib/default-options":4,"./lib/espower-error":5,"./lib/instrumentor":6,"xtend":61}],2:[function(_dereq_,module,exports){
 'use strict';
 
-var estraverse = _dereq_('estraverse'),
-    escodegen = _dereq_('escodegen'),
-    espurify = _dereq_('espurify'),
-    espurifyWithRaw = espurify.customize({extra: 'raw'}),
-    isArray = _dereq_('isarray'),
-    deepEqual = _dereq_('deep-equal'),
-    syntax = estraverse.Syntax,
-    SourceMapConsumer = _dereq_('source-map').SourceMapConsumer,
-    EspowerError = _dereq_('./espower-error'),
-    toBeSkipped = _dereq_('./rules/to-be-skipped'),
-    toBeCaptured = _dereq_('./rules/to-be-captured'),
-    canonicalCodeOptions = {
-        format: {
-            indent: {
-                style: ''
-            },
-            newline: ''
+var estraverse = _dereq_('estraverse');
+var escodegen = _dereq_('escodegen');
+var espurify = _dereq_('espurify');
+var espurifyWithRaw = espurify.customize({extra: 'raw'});
+var isArray = _dereq_('isarray');
+var deepEqual = _dereq_('deep-equal');
+var syntax = estraverse.Syntax;
+var SourceMapConsumer = _dereq_('source-map').SourceMapConsumer;
+var EspowerError = _dereq_('./espower-error');
+var toBeSkipped = _dereq_('./rules/to-be-skipped');
+var toBeCaptured = _dereq_('./rules/to-be-captured');
+var canonicalCodeOptions = {
+    format: {
+        indent: {
+            style: ''
         },
-        verbatim: 'x-verbatim-espower'
-    };
+        newline: ''
+    },
+    verbatim: 'x-verbatim-espower'
+};
 
 function astEqual (ast1, ast2) {
     return deepEqual(espurify(ast1), espurify(ast2));
@@ -67,9 +67,9 @@ if (typeof define === 'function' && define.amd) {
     escodegen = window.escodegen;
 }
 
-function AssertionVisitor (matcher, path, options) {
+function AssertionVisitor (matcher, assertionPath, options) {
     this.matcher = matcher;
-    this.assertionPath = [].concat(path);
+    this.assertionPath = [].concat(assertionPath);
     this.options = options || {};
     if (this.options.sourceMap) {
         this.sourceMapConsumer = new SourceMapConsumer(this.options.sourceMap);
@@ -79,7 +79,7 @@ function AssertionVisitor (matcher, path, options) {
 }
 
 AssertionVisitor.prototype.enter = function (currentNode, parentNode) {
-    this.canonicalCode = generateCanonicalCode(currentNode);
+    this.canonicalCode = generateCanonicalCode(currentNode, this.options.visitorKeys);
     this.powerAssertCalleeObject = guessPowerAssertCalleeObjectFor(currentNode.callee);
 
     if (this.sourceMapConsumer) {
@@ -167,9 +167,9 @@ AssertionVisitor.prototype.isLeavingArgument = function (nodePath) {
 };
 
 AssertionVisitor.prototype.captureArgument = function (node) {
-    var n = newNodeWithLocationCopyOf(node),
-        props = [],
-        newCalleeObject = updateLocRecursively(espurify(this.powerAssertCalleeObject), n);
+    var n = newNodeWithLocationCopyOf(node);
+    var props = [];
+    var newCalleeObject = updateLocRecursively(espurify(this.powerAssertCalleeObject), n, this.options.visitorKeys);
     addLiteralTo(props, n, 'content', this.canonicalCode);
     addLiteralTo(props, n, 'filepath', this.filepath);
     addLiteralTo(props, n, 'line', this.lineNum);
@@ -193,9 +193,9 @@ AssertionVisitor.prototype.captureArgument = function (node) {
 
 AssertionVisitor.prototype.captureNode = function (target, path) {
     this.argumentModified = true;
-    var n = newNodeWithLocationCopyOf(target),
-        relativeEsPath = path.slice(this.assertionPath.length),
-        newCalleeObject = updateLocRecursively(espurify(this.powerAssertCalleeObject), n);
+    var n = newNodeWithLocationCopyOf(target);
+    var relativeEsPath = path.slice(this.assertionPath.length);
+    var newCalleeObject = updateLocRecursively(espurify(this.powerAssertCalleeObject), n, this.options.visitorKeys);
     return n({
         type: syntax.CallExpression,
         callee: n({
@@ -235,9 +235,9 @@ function guessPowerAssertCalleeObjectFor (node) {
     return null;
 }
 
-function generateCanonicalCode (node) {
+function generateCanonicalCode (node, visitorKeys) {
     var ast = espurifyWithRaw(node);
-    estraverse.replace(ast, {
+    var visitor = {
         leave: function (currentNode, parentNode) {
             if (currentNode.type === syntax.Literal && typeof currentNode.raw !== 'undefined') {
                 currentNode['x-verbatim-espower'] = {
@@ -249,7 +249,11 @@ function generateCanonicalCode (node) {
                 return undefined;
             }
         }
-    });
+    };
+    if (visitorKeys) {
+        visitor.keys = visitorKeys;
+    }
+    estraverse.replace(ast, visitor);
     return escodegen.generate(ast, canonicalCodeOptions);
 }
 
@@ -277,12 +281,16 @@ function addToProps (props, createNode, name, value) {
     }));
 }
 
-function updateLocRecursively (node, n) {
-    estraverse.replace(node, {
+function updateLocRecursively (node, n, visitorKeys) {
+    var visitor = {
         leave: function (currentNode, parentNode) {
             return n(currentNode);
         }
-    });
+    };
+    if (visitorKeys) {
+        visitor.keys = visitorKeys;
+    }
+    estraverse.replace(node, visitor);
     return node;
 }
 
@@ -405,41 +413,40 @@ module.exports = EspowerError;
 },{}],6:[function(_dereq_,module,exports){
 'use strict';
 
-var estraverse = _dereq_('estraverse'),
-    syntax = estraverse.Syntax,
-    escallmatch = _dereq_('escallmatch'),
-    cloneAst = _dereq_('./clone-ast'),
-    AssertionVisitor = _dereq_('./assertion-visitor'),
-    EspowerError = _dereq_('./espower-error'),
-    typeName = _dereq_('type-name');
+var estraverse = _dereq_('estraverse');
+var syntax = estraverse.Syntax;
+var escallmatch = _dereq_('escallmatch');
+var cloneAst = _dereq_('./clone-ast');
+var AssertionVisitor = _dereq_('./assertion-visitor');
+var EspowerError = _dereq_('./espower-error');
+var typeName = _dereq_('type-name');
 
 function Instrumentor (options) {
     verifyOptionPrerequisites(options);
     this.options = options;
-    this.matchers = options.patterns.map(escallmatch);
+    this.matchers = options.patterns.map(function (pattern) { return escallmatch(pattern, options); });
 }
 
 Instrumentor.prototype.instrument = function (ast) {
     verifyAstPrerequisites(ast, this.options);
-    var that = this,
-        assertionVisitor,
-        skipping = false,
-        result = (this.options.destructive) ? ast : cloneAst(ast);
-
-    estraverse.replace(result, {
+    var that = this;
+    var assertionVisitor;
+    var skipping = false;
+    var result = (this.options.destructive) ? ast : cloneAst(ast);
+    var visitor = {
         enter: function (currentNode, parentNode) {
-            var controller = this,
-                path = controller.path(),
-                currentKey = path ? path[path.length - 1] : null;
+            var controller = this;
+            var path = controller.path();
+            var currentKey = path ? path[path.length - 1] : null;
             if (assertionVisitor) {
                 if (assertionVisitor.toBeSkipped(currentNode, parentNode, currentKey)) {
                     skipping = true;
                     return controller.skip();
                 }
-                if (!assertionVisitor.isCapturingArgument()) {
+                if (!assertionVisitor.isCapturingArgument() && !isCalleeOfParentCallExpression(parentNode, currentKey)) {
                     return assertionVisitor.enterArgument(currentNode, parentNode, path);
                 }
-            } else {
+            } else if (currentNode.type === syntax.CallExpression) {
                 var candidates = that.matchers.filter(function (matcher) { return matcher.test(currentNode); });
                 if (candidates.length === 1) {
                     // entering target assertion
@@ -451,9 +458,9 @@ Instrumentor.prototype.instrument = function (ast) {
             return undefined;
         },
         leave: function (currentNode, parentNode) {
-            var path = this.path(),
-                resultTree = currentNode,
-                currentKey = path ? path[path.length - 1] : null;
+            var path = this.path();
+            var resultTree = currentNode;
+            var currentKey = path ? path[path.length - 1] : null;
             if (!assertionVisitor) {
                 return undefined;
             }
@@ -477,9 +484,17 @@ Instrumentor.prototype.instrument = function (ast) {
             }
             return resultTree;
         }
-    });
+    };
+    if (this.options.visitorKeys) {
+        visitor.keys = this.options.visitorKeys;
+    }
+    estraverse.replace(result, visitor);
     return result;
 };
+
+function isCalleeOfParentCallExpression (parentNode, currentKey) {
+    return parentNode.type === syntax.CallExpression && currentKey === 'callee';
+}
 
 function verifyAstPrerequisites (ast, options) {
     var errorMessage;
@@ -506,8 +521,8 @@ module.exports = Instrumentor;
 },{"./assertion-visitor":2,"./clone-ast":3,"./espower-error":5,"escallmatch":15,"estraverse":46,"type-name":60}],7:[function(_dereq_,module,exports){
 'use strict';
 
-var estraverse = _dereq_('estraverse'),
-    syntax = estraverse.Syntax;
+var estraverse = _dereq_('estraverse');
+var syntax = estraverse.Syntax;
 
 module.exports = [
     syntax.Identifier,
@@ -572,9 +587,9 @@ module.exports = function toBeCaptured (currentNode, parentNode, currentKey) {
 },{"estraverse":46}],9:[function(_dereq_,module,exports){
 'use strict';
 
-var estraverse = _dereq_('estraverse'),
-    syntax = estraverse.Syntax,
-    supportedNodeTypes = _dereq_('./supported-node-types');
+var estraverse = _dereq_('estraverse');
+var syntax = estraverse.Syntax;
+var supportedNodeTypes = _dereq_('./supported-node-types');
 
 function isLeftHandSideOfAssignment(parentNode, currentKey) {
     // Do not instrument left due to 'Invalid left-hand side in assignment'
