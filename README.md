@@ -112,6 +112,15 @@ Detection is done by [escallmatch](http://github.com/twada/escallmatch). Any arg
 Filepath of `originalAst`. If passed, espower stores filepath information for reporting. This property is optional.
 
 
+#### (optional) options.sourceRoot
+
+| type     | default value |
+|:---------|:--------------|
+| `string` | N/A           |
+
+Root filepath for target test files. Only works with `options.path` or `options.sourceMap`. If set, filepath in power-assert output will be relative from `options.sourceRoot`. This property is optional.
+
+
 #### (optional) options.sourceMap
 
 | type                | default value |
