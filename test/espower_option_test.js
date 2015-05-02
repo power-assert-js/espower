@@ -377,4 +377,30 @@ describe('SourceMap support', function () {
 });
 
 
+describe('sourceRoot option', function () {
+    function instrumentCodeWithOptions (espowerOptions) {
+        var jsCode = 'assert(falsyStr);';
+        var jsAST = acorn.parse(jsCode, {ecmaVersion: 6, locations: true, sourceFile: '/path/to/project/test/some_test.js'});
+        var espoweredAST = espower(jsAST, espowerOptions);
+        return escodegen.generate(espoweredAST, {format: {compact: true}});
+    }
+
+    it('when sourceRoot ends with slash', function () {
+        var instrumentedCode = instrumentCodeWithOptions({
+            path: '/path/to/project/test/some_test.js',
+            sourceRoot: '/path/to/project/'
+        });
+        assert.equal(instrumentedCode, "assert(assert._expr(assert._capt(falsyStr,'arguments/0'),{content:'assert(falsyStr)',filepath:'test/some_test.js',line:1}));");
+    });
+
+    it('when sourceRoot does not end with slash', function () {
+        var instrumentedCode = instrumentCodeWithOptions({
+            path: '/path/to/project/test/some_test.js',
+            sourceRoot: '/path/to/project'
+        });
+        assert.equal(instrumentedCode, "assert(assert._expr(assert._capt(falsyStr,'arguments/0'),{content:'assert(falsyStr)',filepath:'test/some_test.js',line:1}));");
+    });
+});
+
+
 }));
