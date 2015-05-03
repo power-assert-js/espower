@@ -343,13 +343,13 @@ describe('SourceMap support', function () {
     });
 
 
-    it('when escodegen sourceMapRoot is given', function () {
-        var originalBasePath = '/path/to/base/';
-        var originalRelativePath = 'original_test.js';
+    it('when sourceRoot in SourceMap is given', function () {
+        var originalBasePath = '/path/to/base';
+        var originalRelativePath = 'test/original_test.js';
         var originalCode = 'var str = "foo";\nvar anotherStr = "bar"\n\nassert.equal(\nstr,\nanotherStr\n);';
         // console.log(originalCode);
 
-        var compactResult = escodegen.generate(acorn.parse(originalCode, {ecmaVersion: 6, locations: true, sourceFile: originalBasePath + originalRelativePath}), {
+        var compactResult = escodegen.generate(acorn.parse(originalCode, {ecmaVersion: 6, locations: true, sourceFile: originalRelativePath}), {
             format: {
                 compact: true
             },
@@ -363,7 +363,7 @@ describe('SourceMap support', function () {
         var sourceMap = compactResult.map.toString();
         // console.log(sourceMap);
 
-        var espoweredAST = espower(acorn.parse(compactCode, {ecmaVersion: 6, locations: true, sourceFile: originalBasePath + originalRelativePath}), {
+        var espoweredAST = espower(acorn.parse(compactCode, {ecmaVersion: 6, locations: true, sourceFile: originalRelativePath}), {
             patterns: [
                 'assert.equal(actual, expected, [message])'
             ],
@@ -372,7 +372,7 @@ describe('SourceMap support', function () {
 
         var espoweredCode = escodegen.generate(espoweredAST, {format: {compact: true}});
 
-        assert.equal(espoweredCode, "var str='foo';var anotherStr='bar';assert.equal(assert._expr(assert._capt(str,'arguments/0'),{content:'assert.equal(str, anotherStr)',filepath:'/path/to/base/original_test.js',line:4}),assert._expr(assert._capt(anotherStr,'arguments/1'),{content:'assert.equal(str, anotherStr)',filepath:'/path/to/base/original_test.js',line:4}));");
+        assert.equal(espoweredCode, "var str='foo';var anotherStr='bar';assert.equal(assert._expr(assert._capt(str,'arguments/0'),{content:'assert.equal(str, anotherStr)',filepath:'test/original_test.js',line:4}),assert._expr(assert._capt(anotherStr,'arguments/1'),{content:'assert.equal(str, anotherStr)',filepath:'test/original_test.js',line:4}));");
     });
 });
 
