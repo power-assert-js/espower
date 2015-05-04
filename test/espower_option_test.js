@@ -403,6 +403,38 @@ describe('SourceMap support', function () {
 
         assert.equal(espoweredCode, "var str='foo';var anotherStr='bar';assert.equal(assert._expr(assert._capt(str,'arguments/0'),{content:'assert.equal(str, anotherStr)',filepath:'test/original_test.js',line:4}),assert._expr(assert._capt(anotherStr,'arguments/1'),{content:'assert.equal(str, anotherStr)',filepath:'test/original_test.js',line:4}));");
     });
+
+
+    it('when both options.sourceRoot and sourceMap.sourceRoot are given, options.sourceRoot has precedence over sourceMap.sourceRoot', function () {
+        var originalBasePath = '/path/to';
+        var originalRelativePath = 'project/test/original_test.js';
+        var originalCode = 'var str = "foo";\nvar anotherStr = "bar"\n\nassert.equal(\nstr,\nanotherStr\n);';
+
+        var compactResult = escodegen.generate(acorn.parse(originalCode, {ecmaVersion: 6, locations: true, sourceFile: originalRelativePath}), {
+            format: {
+                compact: true
+            },
+            sourceMap: true,
+            sourceMapRoot: originalBasePath,
+            sourceMapWithCode: true
+        });
+
+        var compactCode = compactResult.code;
+        var sourceMap = compactResult.map.toString();
+
+        var espoweredAST = espower(acorn.parse(compactCode, {ecmaVersion: 6, locations: true, sourceFile: originalRelativePath}), {
+            patterns: [
+                'assert.equal(actual, expected, [message])'
+            ],
+            sourceMap: sourceMap,
+            sourceRoot: '/path/to/project/'
+        });
+
+        var espoweredCode = escodegen.generate(espoweredAST, {format: {compact: true}});
+
+        assert.equal(espoweredCode, "var str='foo';var anotherStr='bar';assert.equal(assert._expr(assert._capt(str,'arguments/0'),{content:'assert.equal(str, anotherStr)',filepath:'test/original_test.js',line:4}),assert._expr(assert._capt(anotherStr,'arguments/1'),{content:'assert.equal(str, anotherStr)',filepath:'test/original_test.js',line:4}));");
+    });
+
 });
 
 
