@@ -57,6 +57,7 @@ var canonicalCodeOptions = {
     },
     verbatim: 'x-verbatim-espower'
 };
+var _path = _dereq_('path');
 
 function astEqual (ast1, ast2) {
     return deepEqual(espurify(ast1), espurify(ast2));
@@ -90,7 +91,13 @@ AssertionVisitor.prototype.enter = function (currentNode, parentNode) {
         if (pos) {
             // console.log(JSON.stringify(pos, null, 2));
             if (pos.source) {
-                this.filepath = pos.source;
+                if (this.options.sourceRoot) {
+                    this.filepath = _path.relative(this.options.sourceRoot, pos.source);
+                } else if (this.sourceMapConsumer.sourceRoot) {
+                    this.filepath = _path.relative(this.sourceMapConsumer.sourceRoot, pos.source);
+                } else {
+                    this.filepath = pos.source;
+                }
             }
             if (pos.line) {
                 this.lineNum = pos.line;
@@ -99,7 +106,11 @@ AssertionVisitor.prototype.enter = function (currentNode, parentNode) {
     }
 
     if (!this.filepath) {
-        this.filepath = this.options.path;
+        if (this.options.sourceRoot) {
+            this.filepath = _path.relative(this.options.sourceRoot, this.options.path);
+        } else {
+            this.filepath = this.options.path;
+        }
     }
     if (!this.lineNum) {
         this.lineNum = currentNode.loc.start.line;
@@ -328,7 +339,7 @@ function newNodeWithLocationCopyOf (original) {
 
 module.exports = AssertionVisitor;
 
-},{"./espower-error":5,"./rules/to-be-captured":8,"./rules/to-be-skipped":9,"deep-equal":12,"escodegen":22,"espurify":40,"estraverse":46,"isarray":48,"source-map":49}],3:[function(_dereq_,module,exports){
+},{"./espower-error":5,"./rules/to-be-captured":8,"./rules/to-be-skipped":9,"deep-equal":12,"escodegen":22,"espurify":40,"estraverse":46,"isarray":48,"path":10,"source-map":49}],3:[function(_dereq_,module,exports){
 /**
  * Copyright (C) 2012 Yusuke Suzuki (twitter: @Constellation) and other contributors.
  * Released under the BSD license.
@@ -881,32 +892,64 @@ var substr = 'ab'.substr(-1) === 'b'
 var process = module.exports = {};
 var queue = [];
 var draining = false;
+var currentQueue;
+var queueIndex = -1;
+
+function cleanUpNextTick() {
+    draining = false;
+    if (currentQueue.length) {
+        queue = currentQueue.concat(queue);
+    } else {
+        queueIndex = -1;
+    }
+    if (queue.length) {
+        drainQueue();
+    }
+}
 
 function drainQueue() {
     if (draining) {
         return;
     }
+    var timeout = setTimeout(cleanUpNextTick);
     draining = true;
-    var currentQueue;
+
     var len = queue.length;
     while(len) {
         currentQueue = queue;
         queue = [];
-        var i = -1;
-        while (++i < len) {
-            currentQueue[i]();
+        while (++queueIndex < len) {
+            currentQueue[queueIndex].run();
         }
+        queueIndex = -1;
         len = queue.length;
     }
+    currentQueue = null;
     draining = false;
+    clearTimeout(timeout);
 }
+
 process.nextTick = function (fun) {
-    queue.push(fun);
+    var args = new Array(arguments.length - 1);
+    if (arguments.length > 1) {
+        for (var i = 1; i < arguments.length; i++) {
+            args[i - 1] = arguments[i];
+        }
+    }
+    queue.push(new Item(fun, args));
     if (!draining) {
         setTimeout(drainQueue, 0);
     }
 };
 
+// v8 likes predictible objects
+function Item(fun, array) {
+    this.fun = fun;
+    this.array = array;
+}
+Item.prototype.run = function () {
+    this.fun.apply(null, this.array);
+};
 process.title = 'browser';
 process.browser = true;
 process.env = {};
@@ -1093,20 +1136,21 @@ var esprima = _dereq_('esprima'),
     duplicatedArgMessage = 'Duplicate argument name: ',
     invalidFormMessage = 'Argument should be in the form of `name` or `[name]`';
 
-function createMatcher (signatureStr) {
+function createMatcher (signatureStr, options) {
     var ast = extractExpressionFrom(esprima.parse(signatureStr));
-    return new Matcher(ast);
+    return new Matcher(ast, options || {});
 }
 
-function Matcher (signatureAst) {
+function Matcher (signatureAst, options) {
+    this.visitorKeys = options.visitorKeys || estraverse.VisitorKeys;
     this.signatureAst = signatureAst;
-    this.signatureCalleeDepth = astDepth(signatureAst.callee);
+    this.signatureCalleeDepth = astDepth(signatureAst.callee, this.visitorKeys);
     this.numMaxArgs = this.signatureAst.arguments.length;
     this.numMinArgs = filter(this.signatureAst.arguments, identifiers).length;
 }
 
 Matcher.prototype.test = function (currentNode) {
-    var calleeMatched = isCalleeMatched(this.signatureAst, this.signatureCalleeDepth, currentNode),
+    var calleeMatched = this.isCalleeMatched(currentNode),
         numArgs;
     if (calleeMatched) {
         numArgs = currentNode.arguments.length;
@@ -1145,6 +1189,35 @@ Matcher.prototype.argumentSignatures = function () {
     return map(this.signatureAst.arguments, toArgumentSignature);
 };
 
+Matcher.prototype.isCalleeMatched = function (node) {
+    if (!isCallExpression(node)) {
+        return false;
+    }
+    if (!this.isSameDepthAsSignatureCallee(node.callee)) {
+        return false;
+    }
+    return deepEqual(espurify(this.signatureAst.callee), espurify(node.callee));
+};
+
+Matcher.prototype.isSameDepthAsSignatureCallee = function (ast) {
+    var depth = this.signatureCalleeDepth;
+    var currentDepth = 0;
+    estraverse.traverse(ast, {
+        keys: this.visitorKeys,
+        enter: function (currentNode, parentNode) {
+            var path = this.path(),
+                pathDepth = path ? path.length : 0;
+            if (currentDepth < pathDepth) {
+                currentDepth = pathDepth;
+            }
+            if (depth < currentDepth) {
+                this['break']();
+            }
+        }
+    });
+    return (depth === currentDepth);
+};
+
 function toArgumentSignature (argSignatureNode) {
     switch(argSignatureNode.type) {
     case syntax.Identifier:
@@ -1162,36 +1235,10 @@ function toArgumentSignature (argSignatureNode) {
     }
 }
 
-function isCalleeMatched(callSignature, signatureCalleeDepth, node) {
-    if (!isCallExpression(node)) {
-        return false;
-    }
-    if (!isSameAstDepth(node.callee, signatureCalleeDepth)) {
-        return false;
-    }
-    return deepEqual(espurify(callSignature.callee), espurify(node.callee));
-}
-
-function isSameAstDepth (ast, depth) {
-    var currentDepth = 0;
-    estraverse.traverse(ast, {
-        enter: function (currentNode, parentNode) {
-            var path = this.path(),
-                pathDepth = path ? path.length : 0;
-            if (currentDepth < pathDepth) {
-                currentDepth = pathDepth;
-            }
-            if (depth < currentDepth) {
-                this['break']();
-            }
-        }
-    });
-    return (depth === currentDepth);
-}
-
-function astDepth (ast) {
+function astDepth (ast, visitorKeys) {
     var maxDepth = 0;
     estraverse.traverse(ast, {
+        keys: visitorKeys,
         enter: function (currentNode, parentNode) {
             var path = this.path(),
                 pathDepth = path ? path.length : 0;
@@ -13544,6 +13591,7 @@ module.exports = function isArguments(value) {
         LabeledStatement: 'LabeledStatement',
         LogicalExpression: 'LogicalExpression',
         MemberExpression: 'MemberExpression',
+        MetaProperty: 'MetaProperty',
         MethodDefinition: 'MethodDefinition',
         ModuleSpecifier: 'ModuleSpecifier',
         NewExpression: 'NewExpression',
@@ -13555,7 +13603,7 @@ module.exports = function isArguments(value) {
         ReturnStatement: 'ReturnStatement',
         SequenceExpression: 'SequenceExpression',
         SpreadElement: 'SpreadElement',
-        SuperExpression: 'SuperExpression',
+        Super: 'Super',
         SwitchStatement: 'SwitchStatement',
         SwitchCase: 'SwitchCase',
         TaggedTemplateExpression: 'TaggedTemplateExpression',
@@ -13617,6 +13665,7 @@ module.exports = function isArguments(value) {
         LabeledStatement: ['label', 'body'],
         LogicalExpression: ['left', 'right'],
         MemberExpression: ['object', 'property'],
+        MetaProperty: ['meta', 'property'],
         MethodDefinition: ['key', 'value'],
         ModuleSpecifier: [],
         NewExpression: ['callee', 'arguments'],
@@ -13628,7 +13677,7 @@ module.exports = function isArguments(value) {
         ReturnStatement: ['argument'],
         SequenceExpression: ['expressions'],
         SpreadElement: ['argument'],
-        SuperExpression: ['super'],
+        Super: [],
         SwitchStatement: ['discriminant', 'cases'],
         SwitchCase: ['test', 'consequent'],
         TaggedTemplateExpression: ['tag', 'quasi'],
@@ -14205,7 +14254,7 @@ module.exports={
   "description": "ECMAScript JS AST traversal functions",
   "homepage": "https://github.com/estools/estraverse",
   "main": "estraverse.js",
-  "version": "3.1.0",
+  "version": "4.1.0",
   "engines": {
     "node": ">=0.10.0"
   },
@@ -14221,7 +14270,7 @@ module.exports={
   ],
   "repository": {
     "type": "git",
-    "url": "http://github.com/estools/estraverse.git"
+    "url": "git+ssh://git@github.com/estools/estraverse.git"
   },
   "devDependencies": {
     "chai": "^2.1.1",
@@ -14246,25 +14295,25 @@ module.exports={
     "lint": "jshint estraverse.js",
     "unit-test": "mocha --compilers coffee:coffee-script/register"
   },
-  "gitHead": "166ebbe0a8d45ceb2391b6f5ef5d1bab6bfb267a",
+  "gitHead": "347d52996336719b5910c7ffb5ff3ea8ecb87cf3",
   "bugs": {
     "url": "https://github.com/estools/estraverse/issues"
   },
-  "_id": "estraverse@3.1.0",
-  "_shasum": "15e28a446b8b82bc700ccc8b96c78af4da0d6cba",
-  "_from": "estraverse@>=3.1.0 <4.0.0",
-  "_npmVersion": "2.0.0-alpha-5",
+  "_id": "estraverse@4.1.0",
+  "_shasum": "40f23a76092041be6467d7f235c933b670766e05",
+  "_from": "estraverse@>=4.1.0 <5.0.0",
+  "_npmVersion": "2.8.3",
+  "_nodeVersion": "1.8.1",
   "_npmUser": {
     "name": "constellation",
     "email": "utatane.tea@gmail.com"
   },
   "dist": {
-    "shasum": "15e28a446b8b82bc700ccc8b96c78af4da0d6cba",
-    "tarball": "http://registry.npmjs.org/estraverse/-/estraverse-3.1.0.tgz"
+    "shasum": "40f23a76092041be6467d7f235c933b670766e05",
+    "tarball": "http://registry.npmjs.org/estraverse/-/estraverse-4.1.0.tgz"
   },
   "directories": {},
-  "_resolved": "https://registry.npmjs.org/estraverse/-/estraverse-3.1.0.tgz",
-  "readme": "ERROR: No README data found!"
+  "_resolved": "https://registry.npmjs.org/estraverse/-/estraverse-4.1.0.tgz"
 }
 
 },{}],48:[function(_dereq_,module,exports){
