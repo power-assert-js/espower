@@ -15,7 +15,7 @@
     "escallmatch": "^1.4.0",
     "escodegen": "^1.6.1",
     "espurify": "^1.2.0",
-    "estraverse": "^3.1.0",
+    "estraverse": "^4.1.0",
     "isarray": "^0.0.1",
     "source-map": "^0.4.2",
     "type-name": "^1.0.1",
