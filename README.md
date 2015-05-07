@@ -93,7 +93,9 @@ If `false`, espower clones `originalAst` deeply, so `originalAst` will be unchan
     'assert.strictEqual(actual, expected, [message])',
     'assert.notStrictEqual(actual, expected, [message])',
     'assert.deepEqual(actual, expected, [message])',
-    'assert.notDeepEqual(actual, expected, [message])'
+    'assert.notDeepEqual(actual, expected, [message])',
+    'assert.deepStrictEqual(actual, expected, [message])',
+    'assert.notDeepStrictEqual(actual, expected, [message])'
 ]
 ```
 
@@ -154,7 +156,9 @@ Returns default options object for `espower` function. In other words, returns
         'assert.strictEqual(actual, expected, [message])',
         'assert.notStrictEqual(actual, expected, [message])',
         'assert.deepEqual(actual, expected, [message])',
-        'assert.notDeepEqual(actual, expected, [message])'
+        'assert.notDeepEqual(actual, expected, [message])',
+        'assert.deepStrictEqual(actual, expected, [message])',
+        'assert.notDeepStrictEqual(actual, expected, [message])'
     ]
 }
 ```
