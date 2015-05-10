@@ -16,18 +16,18 @@ Power Assert feature instrumentor based on the [ECMAScript AST](https://github.c
 
 DESCRIPTION
 ---------------------------------------
-`espower` is a core module of [power-assert](http://github.com/twada/power-assert) family. 
+`espower` is a core module of [power-assert](http://github.com/power-assert-js/power-assert) family. 
 
 
 `espower` detects and manipulates assertion expression (JavaScript Code) in the form of ECMAScript AST defined in [The ESTree Spec](https://github.com/estree/estree) (formerly known as [Mozilla SpiderMonkey Parser API](https://developer.mozilla.org/en-US/docs/SpiderMonkey/Parser_API)), to instrument power-assert feature into returned new AST object. AST in, AST out. Since 0.11.0, `espower` can transform ES6 AST as well.
 
 
-Pull-requests, issue reports and patches are always welcomed. See [power-assert](http://github.com/twada/power-assert) project for more documentation.
+Pull-requests, issue reports and patches are always welcomed. See [power-assert](http://github.com/power-assert-js/power-assert) project for more documentation.
 
 
 CHANGELOG
 ---------------------------------------
-See [CHANGELOG](https://github.com/twada/espower/blob/master/CHANGELOG.md)
+See [CHANGELOG](https://github.com/power-assert-js/espower/blob/master/CHANGELOG.md)
 
 
 API
@@ -250,7 +250,7 @@ AUTHOR
 
 LICENSE
 ---------------------------------------
-Licensed under the [MIT](https://github.com/twada/espower/blob/master/MIT-LICENSE.txt) license.
+Licensed under the [MIT](https://github.com/power-assert-js/espower/blob/master/MIT-LICENSE.txt) license.
 
 
 [npm-url]: https://npmjs.org/package/espower
@@ -259,20 +259,20 @@ Licensed under the [MIT](https://github.com/twada/espower/blob/master/MIT-LICENS
 [bower-url]: http://badge.fury.io/bo/espower
 [bower-image]: https://badge.fury.io/bo/espower.svg
 
-[travis-url]: http://travis-ci.org/twada/espower
-[travis-image]: https://secure.travis-ci.org/twada/espower.svg?branch=master
+[travis-url]: http://travis-ci.org/power-assert-js/espower
+[travis-image]: https://secure.travis-ci.org/power-assert-js/espower.svg?branch=master
 
-[depstat-url]: https://gemnasium.com/twada/espower
-[depstat-image]: https://gemnasium.com/twada/espower.svg
+[depstat-url]: https://gemnasium.com/power-assert-js/espower
+[depstat-image]: https://gemnasium.com/power-assert-js/espower.svg
 
-[license-url]: https://github.com/twada/espower/blob/master/MIT-LICENSE.txt
+[license-url]: https://github.com/power-assert-js/espower/blob/master/MIT-LICENSE.txt
 [license-image]: http://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat
 
-[codeclimate-url]: https://codeclimate.com/github/twada/espower
-[codeclimate-image]: https://codeclimate.com/github/twada/espower/badges/gpa.svg
+[codeclimate-url]: https://codeclimate.com/github/power-assert-js/espower
+[codeclimate-image]: https://codeclimate.com/github/power-assert-js/espower/badges/gpa.svg
 
-[coverage-url]: https://coveralls.io/r/twada/espower?branch=master
-[coverage-image]: https://coveralls.io/repos/twada/espower/badge.svg?branch=master
+[coverage-url]: https://coveralls.io/r/power-assert-js/espower?branch=master
+[coverage-image]: https://coveralls.io/repos/power-assert-js/espower/badge.svg?branch=master
 
 [gulp-url]: http://gulpjs.com/
 [gulp-image]: http://img.shields.io/badge/built_with-gulp-brightgreen.svg

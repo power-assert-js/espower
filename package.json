@@ -8,7 +8,7 @@
     "url": "http://github.com/twada"
   },
   "bugs": {
-    "url": "http://github.com/twada/espower/issues"
+    "url": "http://github.com/power-assert-js/espower/issues"
   },
   "dependencies": {
     "deep-equal": "^1.0.0",
@@ -54,7 +54,7 @@
     "package.json",
     "test"
   ],
-  "homepage": "http://github.com/twada/espower",
+  "homepage": "http://github.com/power-assert-js/espower",
   "keywords": [
     "power-assert",
     "assert",
@@ -67,12 +67,12 @@
   ],
   "license": {
     "type": "MIT",
-    "url": "https://github.com/twada/espower/blob/master/MIT-LICENSE.txt"
+    "url": "https://github.com/power-assert-js/espower/blob/master/MIT-LICENSE.txt"
   },
   "main": "./index.js",
   "repository": {
     "type": "git",
-    "url": "http://github.com/twada/espower.git"
+    "url": "http://github.com/power-assert-js/espower.git"
   },
   "scripts": {
     "bower": "bower install --config.interactive=false",
