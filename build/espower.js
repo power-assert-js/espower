@@ -2,11 +2,11 @@
 /**
  * espower - Power Assert feature instrumentor based on the ECMAScript AST.
  *
- * https://github.com/twada/espower
+ * https://github.com/power-assert-js/espower
  *
  * Copyright (c) 2013-2015 Takuto Wada
  * Licensed under the MIT license.
- *   https://github.com/twada/espower/blob/master/MIT-LICENSE.txt
+ *   https://github.com/power-assert-js/espower/blob/master/MIT-LICENSE.txt
  */
 'use strict';
 
@@ -14315,7 +14315,8 @@ module.exports={
     "tarball": "http://registry.npmjs.org/estraverse/-/estraverse-4.1.0.tgz"
   },
   "directories": {},
-  "_resolved": "https://registry.npmjs.org/estraverse/-/estraverse-4.1.0.tgz"
+  "_resolved": "https://registry.npmjs.org/estraverse/-/estraverse-4.1.0.tgz",
+  "readme": "ERROR: No README data found!"
 }
 
 },{}],48:[function(_dereq_,module,exports){
