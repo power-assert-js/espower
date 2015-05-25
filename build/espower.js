@@ -939,7 +939,7 @@ process.nextTick = function (fun) {
         }
     }
     queue.push(new Item(fun, args));
-    if (!draining) {
+    if (queue.length === 1 && !draining) {
         setTimeout(drainQueue, 0);
     }
 };
@@ -1123,20 +1123,20 @@ function shim (obj) {
 'use strict';
 /* jshint -W024 */
 
-var esprima = _dereq_('esprima'),
-    estraverse = _dereq_('estraverse'),
-    espurify = _dereq_('espurify'),
-    syntax = estraverse.Syntax,
-    hasOwn = Object.prototype.hasOwnProperty,
-    forEach = _dereq_('array-foreach'),
-    map = _dereq_('array-map'),
-    filter = _dereq_('array-filter'),
-    reduce = _dereq_('array-reduce'),
-    indexOf = _dereq_('indexof'),
-    deepEqual = _dereq_('deep-equal'),
-    notCallExprMessage = 'Argument should be in the form of CallExpression',
-    duplicatedArgMessage = 'Duplicate argument name: ',
-    invalidFormMessage = 'Argument should be in the form of `name` or `[name]`';
+var esprima = _dereq_('esprima');
+var estraverse = _dereq_('estraverse');
+var espurify = _dereq_('espurify');
+var syntax = estraverse.Syntax;
+var hasOwn = Object.prototype.hasOwnProperty;
+var forEach = _dereq_('array-foreach');
+var map = _dereq_('array-map');
+var filter = _dereq_('array-filter');
+var reduce = _dereq_('array-reduce');
+var indexOf = _dereq_('indexof');
+var deepEqual = _dereq_('deep-equal');
+var notCallExprMessage = 'Argument should be in the form of CallExpression';
+var duplicatedArgMessage = 'Duplicate argument name: ';
+var invalidFormMessage = 'Argument should be in the form of `name` or `[name]`';
 
 function createMatcher (signatureStr, options) {
     var ast = extractExpressionFrom(esprima.parse(signatureStr));
@@ -1152,8 +1152,8 @@ function Matcher (signatureAst, options) {
 }
 
 Matcher.prototype.test = function (currentNode) {
-    var calleeMatched = this.isCalleeMatched(currentNode),
-        numArgs;
+    var calleeMatched = this.isCalleeMatched(currentNode);
+    var numArgs;
     if (calleeMatched) {
         numArgs = currentNode.arguments.length;
         return this.numMinArgs <= numArgs && numArgs <= this.numMaxArgs;
@@ -1207,8 +1207,8 @@ Matcher.prototype.isSameDepthAsSignatureCallee = function (ast) {
     estraverse.traverse(ast, {
         keys: this.visitorKeys,
         enter: function (currentNode, parentNode) {
-            var path = this.path(),
-                pathDepth = path ? path.length : 0;
+            var path = this.path();
+            var pathDepth = path ? path.length : 0;
             if (currentDepth < pathDepth) {
                 currentDepth = pathDepth;
             }
@@ -1242,8 +1242,8 @@ function astDepth (ast, visitorKeys) {
     estraverse.traverse(ast, {
         keys: visitorKeys,
         enter: function (currentNode, parentNode) {
-            var path = this.path(),
-                pathDepth = path ? path.length : 0;
+            var path = this.path();
+            var pathDepth = path ? path.length : 0;
             if (maxDepth < pathDepth) {
                 maxDepth = pathDepth;
             }
@@ -1326,7 +1326,7 @@ module.exports = createMatcher;
  */
 
 module.exports = function (arr, fn, self) {
-  if (arr.filter) return arr.filter(fn);
+  if (arr.filter) return arr.filter(fn, self);
   if (void 0 === arr || null === arr) throw new TypeError;
   if ('function' != typeof fn) throw new TypeError;
   var ret = [];
@@ -13321,6 +13321,7 @@ module.exports = function createWhitelist (options) {
 // modified from https://github.com/es-shims/es5-shim
 var has = Object.prototype.hasOwnProperty;
 var toStr = Object.prototype.toString;
+var slice = Array.prototype.slice;
 var isArgs = _dereq_('./isArguments');
 var hasDontEnumBug = !({ 'toString': null }).propertyIsEnumerable('toString');
 var hasProtoEnumBug = function () {}.propertyIsEnumerable('prototype');
@@ -13380,6 +13381,21 @@ var keysShim = function keys(object) {
 keysShim.shim = function shimObjectKeys() {
 	if (!Object.keys) {
 		Object.keys = keysShim;
+	} else {
+		var keysWorksWithArguments = (function () {
+			// Safari 5.0 bug
+			return (Object.keys(arguments) || '').length === 2;
+		}(1, 2));
+		if (!keysWorksWithArguments) {
+			var originalKeys = Object.keys;
+			Object.keys = function keys(object) {
+				if (isArgs(object)) {
+					return originalKeys(slice.call(object));
+				} else {
+					return originalKeys(object);
+				}
+			};
+		}
 	}
 	return Object.keys || keysShim;
 };
@@ -13395,12 +13411,12 @@ module.exports = function isArguments(value) {
 	var str = toStr.call(value);
 	var isArgs = str === '[object Arguments]';
 	if (!isArgs) {
-		isArgs = str !== '[object Array]'
-			&& value !== null
-			&& typeof value === 'object'
-			&& typeof value.length === 'number'
-			&& value.length >= 0
-			&& toStr.call(value.callee) === '[object Function]';
+		isArgs = str !== '[object Array]' &&
+			value !== null &&
+			typeof value === 'object' &&
+			typeof value.length === 'number' &&
+			value.length >= 0 &&
+			toStr.call(value.callee) === '[object Function]';
 	}
 	return isArgs;
 };
