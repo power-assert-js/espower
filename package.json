@@ -12,7 +12,7 @@
   },
   "dependencies": {
     "deep-equal": "^1.0.0",
-    "escallmatch": "^1.4.0",
+    "escallmatch": "^1.4.1",
     "escodegen": "^1.6.1",
     "espurify": "^1.2.0",
     "estraverse": "^4.1.0",
