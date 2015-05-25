@@ -1,3 +1,14 @@
+## [1.0.0](https://github.com/power-assert-js/espower/releases/tag/v1.0.0) (2015-05-25)
+
+
+#### Features
+
+  * transfer to power-assert-js organization ([c3b79559](https://github.com/power-assert-js/espower/commit/c3b79559d1d5cd8ea6d66406b36749bbafe33637))
+  * support `deepStrictEqual` and `notDeepStrictEqual` ([9d98bc17](https://github.com/power-assert-js/espower/commit/9d98bc178c0a21f41ff4888fba9c89139f8af195))
+  * [`sourceRoot` option](https://github.com/power-assert-js/espower/pull/18). If set, filepath in power-assert output will be relative from `sourceRoot`
+  * [`visitorKeys` option](https://github.com/power-assert-js/espower/pull/17) to customize AST traversal
+
+
 ## [0.11.0](https://github.com/power-assert-js/espower/releases/tag/v0.11.0) (2015-04-18)
 
 
