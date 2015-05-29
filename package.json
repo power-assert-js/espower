@@ -17,6 +17,7 @@
     "espurify": "^1.2.0",
     "estraverse": "^4.1.0",
     "isarray": "^0.0.1",
+    "path-is-absolute": "^1.0.0",
     "source-map": "^0.4.2",
     "type-name": "^1.0.1",
     "xtend": "^4.0.0"
