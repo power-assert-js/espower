@@ -91,9 +91,9 @@ AssertionVisitor.prototype.enter = function (currentNode, parentNode) {
         if (pos) {
             // console.log(JSON.stringify(pos, null, 2));
             if (pos.source) {
-                if (this.options.sourceRoot) {
+                if (this.options.sourceRoot && _path.isAbsolute(pos.source)) {
                     this.filepath = _path.relative(this.options.sourceRoot, pos.source);
-                } else if (this.sourceMapConsumer.sourceRoot) {
+                } else if (this.sourceMapConsumer.sourceRoot && _path.isAbsolute(pos.source)) {
                     this.filepath = _path.relative(this.sourceMapConsumer.sourceRoot, pos.source);
                 } else {
                     this.filepath = pos.source;
@@ -106,7 +106,7 @@ AssertionVisitor.prototype.enter = function (currentNode, parentNode) {
     }
 
     if (!this.filepath) {
-        if (this.options.sourceRoot) {
+        if (this.options.sourceRoot && _path.isAbsolute(this.options.path)) {
             this.filepath = _path.relative(this.options.sourceRoot, this.options.path);
         } else {
             this.filepath = this.options.path;

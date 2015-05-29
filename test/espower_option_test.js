@@ -312,138 +312,89 @@ describe('lineSeparator', function () {
 });
 
 
-describe('SourceMap support', function () {
+describe('incoming SourceMap support', function () {
 
-    it('adjust line number', function () {
-        var originalPath = '/path/to/absolute/original_test.js';
-        var originalCode = 'var str = "foo";\nvar anotherStr = "bar"\n\nassert.equal(\nstr,\nanotherStr\n);';
-        // console.log(originalCode);
+    function incomingSourceMapTest (testName, opts) {
+        it(testName, function () {
+            var originalCode = 'var str = "foo";\nvar anotherStr = "bar"\n\nassert.equal(\nstr,\nanotherStr\n);';
 
-        var compactResult = escodegen.generate(acorn.parse(originalCode, {ecmaVersion: 6, locations: true, sourceFile: originalPath}), {
-            format: {
-                compact: true
-            },
-            sourceMap: true,
-            sourceMapWithCode: true
+            var compactResult = escodegen.generate(acorn.parse(originalCode, {ecmaVersion: 6, locations: true, sourceFile: opts.filepath}), {
+                format: {
+                    compact: true
+                },
+                sourceMap: true,
+                sourceMapRoot: opts.sourceMapRoot,
+                sourceMapWithCode: true
+            });
+
+            var compactCode = compactResult.code;
+            // console.log(compactCode);
+            var incomingSourceMap = compactResult.map.toString();
+            // console.log(incomingSourceMap);
+
+            var transformedPath = '/path/to/absolute/intermediate/transformed_test.js';
+            var espoweredAST = espower(acorn.parse(compactCode, {ecmaVersion: 6, locations: true, sourceFile: transformedPath}), {
+                patterns: [
+                    'assert.equal(actual, expected, [message])'
+                ],
+                sourceMap: incomingSourceMap,
+                sourceRoot: opts.espowerSourceRoot
+            });
+
+            var espoweredCode = escodegen.generate(espoweredAST, {format: {compact: true}});
+
+            assert.equal(espoweredCode, "var str='foo';var anotherStr='bar';assert.equal(assert._expr(assert._capt(str,'arguments/0'),{content:'assert.equal(str, anotherStr)',filepath:'" + opts.expectedPath + "',line:4}),assert._expr(assert._capt(anotherStr,'arguments/1'),{content:'assert.equal(str, anotherStr)',filepath:'" + opts.expectedPath + "',line:4}));");
         });
+    }
 
-        var compactCode = compactResult.code;
-        // console.log(compactCode);
-        var sourceMap = compactResult.map.toString();
-        // console.log(sourceMap);
-
-        var espoweredAST = espower(acorn.parse(compactCode, {ecmaVersion: 6, locations: true, sourceFile: originalPath}), {
-            patterns: [
-                'assert.equal(actual, expected, [message])'
-            ],
-            sourceMap: sourceMap
-        });
-
-        var espoweredCode = escodegen.generate(espoweredAST, {format: {compact: true}});
-
-        assert.equal(espoweredCode, "var str='foo';var anotherStr='bar';assert.equal(assert._expr(assert._capt(str,'arguments/0'),{content:'assert.equal(str, anotherStr)',filepath:'/path/to/absolute/original_test.js',line:4}),assert._expr(assert._capt(anotherStr,'arguments/1'),{content:'assert.equal(str, anotherStr)',filepath:'/path/to/absolute/original_test.js',line:4}));");
+    incomingSourceMapTest('filepath in sourceMap is absolute', {
+        filepath: '/path/to/absolute/original_test.js',
+        sourceMapRoot: null,
+        espowerSourceRoot: null,
+        expectedPath: '/path/to/absolute/original_test.js'
     });
 
-
-    it('when sourceRoot in SourceMap is given', function () {
-        var originalBasePath = '/path/to/base';
-        var originalRelativePath = 'test/original_test.js';
-        var originalCode = 'var str = "foo";\nvar anotherStr = "bar"\n\nassert.equal(\nstr,\nanotherStr\n);';
-        // console.log(originalCode);
-
-        var compactResult = escodegen.generate(acorn.parse(originalCode, {ecmaVersion: 6, locations: true, sourceFile: originalRelativePath}), {
-            format: {
-                compact: true
-            },
-            sourceMap: true,
-            sourceMapRoot: originalBasePath,
-            sourceMapWithCode: true
-        });
-
-        var compactCode = compactResult.code;
-        // console.log(compactCode);
-        var sourceMap = compactResult.map.toString();
-        // console.log(sourceMap);
-
-        var espoweredAST = espower(acorn.parse(compactCode, {ecmaVersion: 6, locations: true, sourceFile: originalRelativePath}), {
-            patterns: [
-                'assert.equal(actual, expected, [message])'
-            ],
-            sourceMap: sourceMap
-        });
-
-        var espoweredCode = escodegen.generate(espoweredAST, {format: {compact: true}});
-
-        assert.equal(espoweredCode, "var str='foo';var anotherStr='bar';assert.equal(assert._expr(assert._capt(str,'arguments/0'),{content:'assert.equal(str, anotherStr)',filepath:'test/original_test.js',line:4}),assert._expr(assert._capt(anotherStr,'arguments/1'),{content:'assert.equal(str, anotherStr)',filepath:'test/original_test.js',line:4}));");
+    incomingSourceMapTest('filepath in sourceMap is relative', {
+        filepath: 'relative/original_test.js',
+        sourceMapRoot: null,
+        espowerSourceRoot: null,
+        expectedPath: 'relative/original_test.js'
     });
 
-
-    it('when options.sourceRoot is given and sourceMap.sourceRoot is not given', function () {
-        var originalPath = '/path/to/project/test/original_test.js';
-        var originalCode = 'var str = "foo";\nvar anotherStr = "bar"\n\nassert.equal(\nstr,\nanotherStr\n);';
-
-        var compactResult = escodegen.generate(acorn.parse(originalCode, {ecmaVersion: 6, locations: true, sourceFile: originalPath}), {
-            format: {
-                compact: true
-            },
-            sourceMap: true,
-            sourceMapWithCode: true
-        });
-
-        var compactCode = compactResult.code;
-        var sourceMap = compactResult.map.toString();
-
-        var espoweredAST = espower(acorn.parse(compactCode, {ecmaVersion: 6, locations: true, sourceFile: originalPath}), {
-            patterns: [
-                'assert.equal(actual, expected, [message])'
-            ],
-            sourceMap: sourceMap,
-            sourceRoot: '/path/to/project/'
-        });
-
-        var espoweredCode = escodegen.generate(espoweredAST, {format: {compact: true}});
-
-        assert.equal(espoweredCode, "var str='foo';var anotherStr='bar';assert.equal(assert._expr(assert._capt(str,'arguments/0'),{content:'assert.equal(str, anotherStr)',filepath:'test/original_test.js',line:4}),assert._expr(assert._capt(anotherStr,'arguments/1'),{content:'assert.equal(str, anotherStr)',filepath:'test/original_test.js',line:4}));");
+    incomingSourceMapTest('when sourceMap.sourceRoot is given and options.sourceRoot is not given', {
+        filepath: 'test/original_test.js',
+        sourceMapRoot: '/path/to/base',
+        espowerSourceRoot: null,
+        expectedPath: 'test/original_test.js'
     });
 
-
-    it('when both options.sourceRoot and sourceMap.sourceRoot are given, options.sourceRoot has precedence over sourceMap.sourceRoot', function () {
-        var originalBasePath = '/path/to';
-        var originalRelativePath = 'project/test/original_test.js';
-        var originalCode = 'var str = "foo";\nvar anotherStr = "bar"\n\nassert.equal(\nstr,\nanotherStr\n);';
-
-        var compactResult = escodegen.generate(acorn.parse(originalCode, {ecmaVersion: 6, locations: true, sourceFile: originalRelativePath}), {
-            format: {
-                compact: true
-            },
-            sourceMap: true,
-            sourceMapRoot: originalBasePath,
-            sourceMapWithCode: true
-        });
-
-        var compactCode = compactResult.code;
-        var sourceMap = compactResult.map.toString();
-
-        var espoweredAST = espower(acorn.parse(compactCode, {ecmaVersion: 6, locations: true, sourceFile: originalRelativePath}), {
-            patterns: [
-                'assert.equal(actual, expected, [message])'
-            ],
-            sourceMap: sourceMap,
-            sourceRoot: '/path/to/project/'
-        });
-
-        var espoweredCode = escodegen.generate(espoweredAST, {format: {compact: true}});
-
-        assert.equal(espoweredCode, "var str='foo';var anotherStr='bar';assert.equal(assert._expr(assert._capt(str,'arguments/0'),{content:'assert.equal(str, anotherStr)',filepath:'test/original_test.js',line:4}),assert._expr(assert._capt(anotherStr,'arguments/1'),{content:'assert.equal(str, anotherStr)',filepath:'test/original_test.js',line:4}));");
+    incomingSourceMapTest('when options.sourceRoot is given and sourceMap.sourceRoot is not given', {
+        filepath: '/path/to/project/test/original_test.js',
+        sourceMapRoot: null,
+        espowerSourceRoot: '/path/to/project/',
+        expectedPath: 'test/original_test.js'
     });
 
+    incomingSourceMapTest('when both options.sourceRoot and sourceMap.sourceRoot are given, options.sourceRoot has precedence over sourceMap.sourceRoot', {
+        filepath: 'project/test/original_test.js',
+        sourceMapRoot: '/path/to',
+        espowerSourceRoot: '/path/to/project/',
+        expectedPath: 'test/original_test.js'
+    });
+
+    incomingSourceMapTest('when path in sourceMap is already relative, just use it even if sourceRoot exists', {
+        filepath: 'already/relative/test.js',
+        sourceMapRoot: null,
+        espowerSourceRoot: '/path/to/project/test/already/relative',
+        expectedPath: 'already/relative/test.js'
+    });
 });
 
 
 describe('sourceRoot option', function () {
     function instrumentCodeWithOptions (espowerOptions) {
         var jsCode = 'assert(falsyStr);';
-        var jsAST = acorn.parse(jsCode, {ecmaVersion: 6, locations: true, sourceFile: '/path/to/project/test/some_test.js'});
+        var jsAST = acorn.parse(jsCode, {ecmaVersion: 6, locations: true, sourceFile: espowerOptions.path});
         var espoweredAST = espower(jsAST, espowerOptions);
         return escodegen.generate(espoweredAST, {format: {compact: true}});
     }
@@ -462,6 +413,14 @@ describe('sourceRoot option', function () {
             sourceRoot: '/path/to/project'
         });
         assert.equal(instrumentedCode, "assert(assert._expr(assert._capt(falsyStr,'arguments/0'),{content:'assert(falsyStr)',filepath:'test/some_test.js',line:1}));");
+    });
+
+    it('when path is already relative, just use it even if sourceRoot exists', function () {
+        var instrumentedCode = instrumentCodeWithOptions({
+            path: 'any/test/some_test.js',
+            sourceRoot: '/path/to/any/test'
+        });
+        assert.equal(instrumentedCode, "assert(assert._expr(assert._capt(falsyStr,'arguments/0'),{content:'assert(falsyStr)',filepath:'any/test/some_test.js',line:1}));");
     });
 });
 
