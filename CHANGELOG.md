@@ -1,3 +1,11 @@
+### [1.0.1](https://github.com/power-assert-js/espower/releases/tag/v1.0.1) (2015-05-29)
+
+
+#### Bug Fixes
+
+  * apply `options.sourceRoot` if and only if incoming `options.path` is absolute ([65b4012a](https://github.com/power-assert-js/espower/commit/65b4012ab4ef71131fa5c4ea3090ab3f625e32d9))
+
+
 ## [1.0.0](https://github.com/power-assert-js/espower/releases/tag/v1.0.0) (2015-05-25)
 
 
