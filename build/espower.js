@@ -34,7 +34,7 @@ espower.AssertionVisitor = _dereq_('./lib/assertion-visitor');
 espower.EspowerError = _dereq_('./lib/espower-error');
 module.exports = espower;
 
-},{"./lib/assertion-visitor":2,"./lib/default-options":4,"./lib/espower-error":5,"./lib/instrumentor":6,"xtend":61}],2:[function(_dereq_,module,exports){
+},{"./lib/assertion-visitor":2,"./lib/default-options":4,"./lib/espower-error":5,"./lib/instrumentor":6,"xtend":62}],2:[function(_dereq_,module,exports){
 'use strict';
 
 var estraverse = _dereq_('estraverse');
@@ -58,6 +58,7 @@ var canonicalCodeOptions = {
     verbatim: 'x-verbatim-espower'
 };
 var _path = _dereq_('path');
+var isAbsolute = _dereq_('path-is-absolute');
 
 function astEqual (ast1, ast2) {
     return deepEqual(espurify(ast1), espurify(ast2));
@@ -91,9 +92,9 @@ AssertionVisitor.prototype.enter = function (currentNode, parentNode) {
         if (pos) {
             // console.log(JSON.stringify(pos, null, 2));
             if (pos.source) {
-                if (this.options.sourceRoot && _path.isAbsolute(pos.source)) {
+                if (this.options.sourceRoot && isAbsolute(pos.source)) {
                     this.filepath = _path.relative(this.options.sourceRoot, pos.source);
-                } else if (this.sourceMapConsumer.sourceRoot && _path.isAbsolute(pos.source)) {
+                } else if (this.sourceMapConsumer.sourceRoot && isAbsolute(pos.source)) {
                     this.filepath = _path.relative(this.sourceMapConsumer.sourceRoot, pos.source);
                 } else {
                     this.filepath = pos.source;
@@ -106,7 +107,7 @@ AssertionVisitor.prototype.enter = function (currentNode, parentNode) {
     }
 
     if (!this.filepath) {
-        if (this.options.sourceRoot && _path.isAbsolute(this.options.path)) {
+        if (this.options.sourceRoot && isAbsolute(this.options.path)) {
             this.filepath = _path.relative(this.options.sourceRoot, this.options.path);
         } else {
             this.filepath = this.options.path;
@@ -339,7 +340,7 @@ function newNodeWithLocationCopyOf (original) {
 
 module.exports = AssertionVisitor;
 
-},{"./espower-error":5,"./rules/to-be-captured":8,"./rules/to-be-skipped":9,"deep-equal":12,"escodegen":22,"espurify":40,"estraverse":46,"isarray":48,"path":10,"source-map":49}],3:[function(_dereq_,module,exports){
+},{"./espower-error":5,"./rules/to-be-captured":8,"./rules/to-be-skipped":9,"deep-equal":12,"escodegen":22,"espurify":40,"estraverse":46,"isarray":48,"path":10,"path-is-absolute":49,"source-map":50}],3:[function(_dereq_,module,exports){
 /**
  * Copyright (C) 2012 Yusuke Suzuki (twitter: @Constellation) and other contributors.
  * Released under the BSD license.
@@ -531,7 +532,7 @@ function verifyOptionPrerequisites (options) {
 
 module.exports = Instrumentor;
 
-},{"./assertion-visitor":2,"./clone-ast":3,"./espower-error":5,"escallmatch":15,"estraverse":46,"type-name":60}],7:[function(_dereq_,module,exports){
+},{"./assertion-visitor":2,"./clone-ast":3,"./espower-error":5,"escallmatch":15,"estraverse":46,"type-name":61}],7:[function(_dereq_,module,exports){
 'use strict';
 
 var estraverse = _dereq_('estraverse');
@@ -13315,7 +13316,7 @@ module.exports = function createWhitelist (options) {
     return result;
 };
 
-},{"./ast-properties":41,"object-keys":44,"xtend":61}],44:[function(_dereq_,module,exports){
+},{"./ast-properties":41,"object-keys":44,"xtend":62}],44:[function(_dereq_,module,exports){
 'use strict';
 
 // modified from https://github.com/es-shims/es5-shim
@@ -14341,10 +14342,34 @@ module.exports = Array.isArray || function (arr) {
 };
 
 },{}],49:[function(_dereq_,module,exports){
+(function (process){
+'use strict';
+
+function posix(path) {
+	return path.charAt(0) === '/';
+};
+
+function win32(path) {
+	// https://github.com/joyent/node/blob/b3fcc245fb25539909ef1d5eaa01dbf92e168633/lib/path.js#L56
+	var splitDeviceRe = /^([a-zA-Z]:|[\\\/]{2}[^\\\/]+[\\\/]+[^\\\/]+)?([\\\/])?([\s\S]*?)$/;
+	var result = splitDeviceRe.exec(path);
+	var device = result[1] || '';
+	var isUnc = !!device && device.charAt(1) !== ':';
+
+	// UNC paths are always absolute
+	return !!result[2] || isUnc;
+};
+
+module.exports = process.platform === 'win32' ? win32 : posix;
+module.exports.posix = posix;
+module.exports.win32 = win32;
+
+}).call(this,_dereq_('_process'))
+},{"_process":11}],50:[function(_dereq_,module,exports){
 arguments[4][28][0].apply(exports,arguments)
-},{"./source-map/source-map-consumer":55,"./source-map/source-map-generator":56,"./source-map/source-node":57,"dup":28}],50:[function(_dereq_,module,exports){
+},{"./source-map/source-map-consumer":56,"./source-map/source-map-generator":57,"./source-map/source-node":58,"dup":28}],51:[function(_dereq_,module,exports){
 arguments[4][29][0].apply(exports,arguments)
-},{"./util":58,"amdefine":59,"dup":29}],51:[function(_dereq_,module,exports){
+},{"./util":59,"amdefine":60,"dup":29}],52:[function(_dereq_,module,exports){
 /* -*- Mode: js; js-indent-level: 2; -*- */
 /*
  * Copyright 2011 Mozilla Foundation and contributors
@@ -14487,9 +14512,9 @@ define(function (_dereq_, exports, module) {
 
 });
 
-},{"./base64":52,"amdefine":59}],52:[function(_dereq_,module,exports){
+},{"./base64":53,"amdefine":60}],53:[function(_dereq_,module,exports){
 arguments[4][31][0].apply(exports,arguments)
-},{"amdefine":59,"dup":31}],53:[function(_dereq_,module,exports){
+},{"amdefine":60,"dup":31}],54:[function(_dereq_,module,exports){
 /* -*- Mode: js; js-indent-level: 2; -*- */
 /*
  * Copyright 2011 Mozilla Foundation and contributors
@@ -14608,9 +14633,9 @@ define(function (_dereq_, exports, module) {
 
 });
 
-},{"amdefine":59}],54:[function(_dereq_,module,exports){
+},{"amdefine":60}],55:[function(_dereq_,module,exports){
 arguments[4][33][0].apply(exports,arguments)
-},{"./util":58,"amdefine":59,"dup":33}],55:[function(_dereq_,module,exports){
+},{"./util":59,"amdefine":60,"dup":33}],56:[function(_dereq_,module,exports){
 /* -*- Mode: js; js-indent-level: 2; -*- */
 /*
  * Copyright 2011 Mozilla Foundation and contributors
@@ -15570,7 +15595,7 @@ define(function (_dereq_, exports, module) {
 
 });
 
-},{"./array-set":50,"./base64-vlq":51,"./binary-search":53,"./util":58,"amdefine":59}],56:[function(_dereq_,module,exports){
+},{"./array-set":51,"./base64-vlq":52,"./binary-search":54,"./util":59,"amdefine":60}],57:[function(_dereq_,module,exports){
 /* -*- Mode: js; js-indent-level: 2; -*- */
 /*
  * Copyright 2011 Mozilla Foundation and contributors
@@ -15972,9 +15997,9 @@ define(function (_dereq_, exports, module) {
 
 });
 
-},{"./array-set":50,"./base64-vlq":51,"./mapping-list":54,"./util":58,"amdefine":59}],57:[function(_dereq_,module,exports){
+},{"./array-set":51,"./base64-vlq":52,"./mapping-list":55,"./util":59,"amdefine":60}],58:[function(_dereq_,module,exports){
 arguments[4][36][0].apply(exports,arguments)
-},{"./source-map-generator":56,"./util":58,"amdefine":59,"dup":36}],58:[function(_dereq_,module,exports){
+},{"./source-map-generator":57,"./util":59,"amdefine":60,"dup":36}],59:[function(_dereq_,module,exports){
 /* -*- Mode: js; js-indent-level: 2; -*- */
 /*
  * Copyright 2011 Mozilla Foundation and contributors
@@ -16295,7 +16320,7 @@ define(function (_dereq_, exports, module) {
 
 });
 
-},{"amdefine":59}],59:[function(_dereq_,module,exports){
+},{"amdefine":60}],60:[function(_dereq_,module,exports){
 (function (process,__filename){
 /** vim: et:ts=4:sw=4:sts=4
  * @license amdefine 0.1.0 Copyright (c) 2011, The Dojo Foundation All Rights Reserved.
@@ -16598,7 +16623,7 @@ function amdefine(module, requireFn) {
 module.exports = amdefine;
 
 }).call(this,_dereq_('_process'),"/node_modules/source-map/node_modules/amdefine/amdefine.js")
-},{"_process":11,"path":10}],60:[function(_dereq_,module,exports){
+},{"_process":11,"path":10}],61:[function(_dereq_,module,exports){
 /**
  * type-name - Just a reasonable typeof
  * 
@@ -16638,7 +16663,7 @@ function typeName (val) {
 
 module.exports = typeName;
 
-},{}],61:[function(_dereq_,module,exports){
+},{}],62:[function(_dereq_,module,exports){
 module.exports = extend
 
 function extend() {
