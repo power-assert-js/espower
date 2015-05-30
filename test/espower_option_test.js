@@ -318,22 +318,21 @@ describe('incoming SourceMap support', function () {
         it(testName, function () {
             var originalCode = 'var str = "foo";\nvar anotherStr = "bar"\n\nassert.equal(\nstr,\nanotherStr\n);';
 
-            var compactResult = escodegen.generate(acorn.parse(originalCode, {ecmaVersion: 6, locations: true, sourceFile: opts.filepath}), {
+            var incomingCodeAndMap = escodegen.generate(acorn.parse(originalCode, {ecmaVersion: 6, locations: true, sourceFile: opts.filepath}), {
                 format: {
                     compact: true
                 },
-                sourceMap: true,
+                sourceMap: opts.filepath,
                 sourceMapRoot: opts.sourceMapRoot,
+                sourceContent: originalCode,
                 sourceMapWithCode: true
             });
 
-            var compactCode = compactResult.code;
-            // console.log(compactCode);
-            var incomingSourceMap = compactResult.map.toString();
-            // console.log(incomingSourceMap);
+            var compactCode = incomingCodeAndMap.code;
+            var incomingSourceMap = incomingCodeAndMap.map.toString();
 
-            var transformedPath = '/path/to/absolute/intermediate/transformed_test.js';
-            var espoweredAST = espower(acorn.parse(compactCode, {ecmaVersion: 6, locations: true, sourceFile: transformedPath}), {
+            var intermediateFilepath = '/path/to/absolute/intermediate/transformed_test.js';
+            var espoweredAST = espower(acorn.parse(compactCode, {ecmaVersion: 6, locations: true, sourceFile: intermediateFilepath}), {
                 patterns: [
                     'assert.equal(actual, expected, [message])'
                 ],
@@ -388,39 +387,59 @@ describe('incoming SourceMap support', function () {
         espowerSourceRoot: '/path/to/project/test/already/relative',
         expectedPath: 'already/relative/test.js'
     });
+
+    incomingSourceMapTest('broken sourceMap: when both sources and sourceRoot in SourceMap is absolute and conflicted, fallback to basename', {
+        filepath: '/some/path/to/project/test/original_test.js',
+        sourceMapRoot: '/another/path/to/project/',
+        espowerSourceRoot: null,
+        expectedPath: 'original_test.js'
+    });
+
+    incomingSourceMapTest('conflicted sourceRoot: when both sources and options.sourceRoot is absolute and conflicted, fallback to basename', {
+        filepath: '/some/path/to/project/test/original_test.js',
+        sourceMapRoot: null,
+        espowerSourceRoot: '/another/path/to/project/',
+        expectedPath: 'original_test.js'
+    });
 });
 
 
 describe('sourceRoot option', function () {
-    function instrumentCodeWithOptions (espowerOptions) {
-        var jsCode = 'assert(falsyStr);';
-        var jsAST = acorn.parse(jsCode, {ecmaVersion: 6, locations: true, sourceFile: espowerOptions.path});
-        var espoweredAST = espower(jsAST, espowerOptions);
-        return escodegen.generate(espoweredAST, {format: {compact: true}});
+    function sourceRootTest (testName, config) {
+        it(testName, function () {
+            var jsCode = 'assert(falsyStr);';
+            var jsAST = acorn.parse(jsCode, {ecmaVersion: 6, locations: true, sourceFile: config.path});
+            var espoweredAST = espower(jsAST, {
+                path: config.incomingFilepath,
+                sourceRoot: config.espowerSourceRoot
+            });
+            var instrumentedCode = escodegen.generate(espoweredAST, {format: {compact: true}});
+            assert.equal(instrumentedCode, "assert(assert._expr(assert._capt(falsyStr,'arguments/0'),{content:'assert(falsyStr)',filepath:'" + config.filepathInGeneratedCode + "',line:1}));");
+        });
     }
 
-    it('when sourceRoot ends with slash', function () {
-        var instrumentedCode = instrumentCodeWithOptions({
-            path: '/path/to/project/test/some_test.js',
-            sourceRoot: '/path/to/project/'
-        });
-        assert.equal(instrumentedCode, "assert(assert._expr(assert._capt(falsyStr,'arguments/0'),{content:'assert(falsyStr)',filepath:'test/some_test.js',line:1}));");
+    sourceRootTest('when sourceRoot ends with slash', {
+        incomingFilepath: '/path/to/project/test/some_test.js',
+        espowerSourceRoot: '/path/to/project/',
+        filepathInGeneratedCode: 'test/some_test.js'
     });
 
-    it('when sourceRoot does not end with slash', function () {
-        var instrumentedCode = instrumentCodeWithOptions({
-            path: '/path/to/project/test/some_test.js',
-            sourceRoot: '/path/to/project'
-        });
-        assert.equal(instrumentedCode, "assert(assert._expr(assert._capt(falsyStr,'arguments/0'),{content:'assert(falsyStr)',filepath:'test/some_test.js',line:1}));");
+    sourceRootTest('when sourceRoot does not end with slash', {
+        incomingFilepath: '/path/to/project/test/some_test.js',
+        espowerSourceRoot: '/path/to/project',
+        filepathInGeneratedCode: 'test/some_test.js'
     });
 
-    it('when path is already relative, just use it even if sourceRoot exists', function () {
-        var instrumentedCode = instrumentCodeWithOptions({
-            path: 'any/test/some_test.js',
-            sourceRoot: '/path/to/any/test'
-        });
-        assert.equal(instrumentedCode, "assert(assert._expr(assert._capt(falsyStr,'arguments/0'),{content:'assert(falsyStr)',filepath:'any/test/some_test.js',line:1}));");
+    sourceRootTest('when path is already relative, just use it even if sourceRoot exists', {
+        incomingFilepath: 'any/test/some_test.js',
+        espowerSourceRoot: '/path/to/any/test',
+        filepathInGeneratedCode: 'any/test/some_test.js'
+    });
+
+    sourceRootTest('when incoming absolute filepath conflicts with options.sourceRoot, fallback to basename', {
+        incomingFilepath: '/some/path/to/project/test/original_test.js',
+        espowerSourceRoot: '/another/path/to/project/',
+        filepathInGeneratedCode: 'original_test.js'
     });
 });
 
