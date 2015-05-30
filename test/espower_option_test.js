@@ -401,6 +401,34 @@ describe('incoming SourceMap support', function () {
         espowerSourceRoot: '/another/path/to/project/',
         expectedPath: 'original_test.js'
     });
+
+    incomingSourceMapTest('when filepath is relative and sourceMap.sourceRoot is locating source files on a server, then fallback on basename', {
+        filepath: 'test/original_test.js',
+        sourceMapRoot: 'http://example.com/www/js/',
+        espowerSourceRoot: null,
+        expectedPath: 'original_test.js'
+    });
+
+    incomingSourceMapTest('when filepath is absolute and sourceMap.sourceRoot is locating source files on a server, then fallback on basename', {
+        filepath: '/path/to/absolute/original_test.js',
+        sourceMapRoot: 'http://example.com/www/js/',
+        espowerSourceRoot: null,
+        expectedPath: 'original_test.js'
+    });
+
+    incomingSourceMapTest('when filepath is relative and sourceMap.sourceRoot is locating source files on a server, and options.sourceRoot is given, then fallback on basename', {
+        filepath: 'test/original_test.js',
+        sourceMapRoot: 'http://example.com/www/js/',
+        espowerSourceRoot: '/path/to/project/',
+        expectedPath: 'original_test.js'
+    });
+
+    incomingSourceMapTest('when filepath is absolute and sourceMap.sourceRoot is locating source files on a server, and options.sourceRoot is given, then fallback on basename', {
+        filepath: '/path/to/project/test/original_test.js',
+        sourceMapRoot: 'http://example.com/www/js/',
+        espowerSourceRoot: '/path/to/project/',
+        expectedPath: 'original_test.js'
+    });
 });
 
 
