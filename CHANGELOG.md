@@ -1,15 +1,17 @@
+### [1.0.3](https://github.com/power-assert-js/espower/releases/tag/v1.0.3) (2015-05-31)
+
+
+  * use basename when `sourceRoot` in `options.sourceMap` is locating source files on a server ([7822df1b](https://github.com/power-assert-js/espower/commit/7822df1b2097625231b2d70f71c5909851399f1d))
+
+
 ### [1.0.2](https://github.com/power-assert-js/espower/releases/tag/v1.0.2) (2015-05-30)
 
-
-#### Bug Fixes
 
   * use basename when incoming `options.path` is absolute and it conflicts with `options.sourceRoot` or `sourceRoot` in `options.sourceMap` ([02f7b35a](https://github.com/power-assert-js/espower/commit/02f7b35a5acad20994b745de32cf512c2b95f57a))
 
 
 ### [1.0.1](https://github.com/power-assert-js/espower/releases/tag/v1.0.1) (2015-05-29)
 
-
-#### Bug Fixes
 
   * apply `options.sourceRoot` if and only if incoming `options.path` is absolute ([65b4012a](https://github.com/power-assert-js/espower/commit/65b4012ab4ef71131fa5c4ea3090ab3f625e32d9))
 
