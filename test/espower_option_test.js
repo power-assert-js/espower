@@ -156,8 +156,8 @@ describe('instrumentation tests for options', function () {
             assert.equal(instrumentedCode, "assert(assert._expr(assert._capt(falsyStr,'arguments/0'),{content:'assert(falsyStr)',line:1}));");
         });
         it('with path', function () {
-            var instrumentedCode = instrument('assert(falsyStr);', {path: '/path/to/baz_test.js'});
-            assert.equal(instrumentedCode, "assert(assert._expr(assert._capt(falsyStr,'arguments/0'),{content:'assert(falsyStr)',filepath:'/path/to/baz_test.js',line:1}));");
+            var instrumentedCode = instrument('assert(falsyStr);', {path: 'path/to/baz_test.js'});
+            assert.equal(instrumentedCode, "assert(assert._expr(assert._capt(falsyStr,'arguments/0'),{content:'assert(falsyStr)',filepath:'path/to/baz_test.js',line:1}));");
         });
     });
 });
@@ -350,7 +350,7 @@ describe('incoming SourceMap support', function () {
         filepath: '/path/to/absolute/original_test.js',
         sourceMapRoot: null,
         espowerSourceRoot: null,
-        expectedPath: '/path/to/absolute/original_test.js'
+        expectedPath: 'original_test.js'
     });
 
     incomingSourceMapTest('filepath in sourceMap is relative', {
