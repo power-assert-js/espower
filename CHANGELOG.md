@@ -1,4 +1,4 @@
-### [1.0.4](https://github.com/power-assert-js/espower/releases/tag/v1.0.4) (2015-06-03)
+### [1.0.4](https://github.com/power-assert-js/espower/releases/tag/v1.0.4) (2015-06-04)
 
 
   * try to create relative path if sourceMap.sourceRoot is locating source files on on a server ([ec0a91ba](https://github.com/power-assert-js/espower/commit/ec0a91baac5f747bd49ca88ea963141485bdddde))
