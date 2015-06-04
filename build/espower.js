@@ -34,7 +34,7 @@ espower.AssertionVisitor = _dereq_('./lib/assertion-visitor');
 espower.EspowerError = _dereq_('./lib/espower-error');
 module.exports = espower;
 
-},{"./lib/assertion-visitor":2,"./lib/default-options":4,"./lib/espower-error":5,"./lib/instrumentor":6,"xtend":62}],2:[function(_dereq_,module,exports){
+},{"./lib/assertion-visitor":2,"./lib/default-options":4,"./lib/espower-error":5,"./lib/instrumentor":6,"xtend":63}],2:[function(_dereq_,module,exports){
 'use strict';
 
 var estraverse = _dereq_('estraverse');
@@ -59,6 +59,7 @@ var canonicalCodeOptions = {
 };
 var _path = _dereq_('path');
 var isAbsolute = _dereq_('path-is-absolute');
+var isUrl = _dereq_('is-url');
 
 function astEqual (ast1, ast2) {
     return deepEqual(espurify(ast1), espurify(ast2));
@@ -94,8 +95,12 @@ AssertionVisitor.prototype.enter = function (currentNode, parentNode) {
             if (pos.source) {
                 if (this.options.sourceRoot && isAbsolute(pos.source)) {
                     this.filepath = _path.relative(this.options.sourceRoot, pos.source);
+                } else if (isUrl(this.sourceMapConsumer.sourceRoot)) {
+                    this.filepath = _path.relative(this.sourceMapConsumer.sourceRoot, pos.source);
                 } else if (this.sourceMapConsumer.sourceRoot && isAbsolute(pos.source)) {
                     this.filepath = _path.relative(this.sourceMapConsumer.sourceRoot, pos.source);
+                } else if (isUrl(pos.source)) {
+                    this.filepath = _path.basename(pos.source);
                 } else {
                     this.filepath = pos.source;
                 }
@@ -113,6 +118,9 @@ AssertionVisitor.prototype.enter = function (currentNode, parentNode) {
             this.filepath = this.options.path;
         }
     }
+
+    this.filepath = fallbackOnBasename(this.filepath);
+
     if (!this.lineNum) {
         this.lineNum = currentNode.loc.start.line;
     }
@@ -237,6 +245,19 @@ AssertionVisitor.prototype.toBeCaptured = function (currentNode, parentNode, cur
     return toBeCaptured(currentNode, parentNode, currentKey);
 };
 
+function fallbackOnBasename (filepath) {
+    if (filepath) {
+        if (filepath.split(_path.sep).indexOf('..') !== -1) {
+            return _path.basename(filepath);
+        } else if (isUrl(filepath)) {
+            return _path.basename(filepath);
+        } else if (isAbsolute(filepath)) {
+            return _path.basename(filepath);
+        }
+    }
+    return filepath;
+}
+
 function guessPowerAssertCalleeObjectFor (node) {
     switch(node.type) {
     case syntax.Identifier:
@@ -340,7 +361,7 @@ function newNodeWithLocationCopyOf (original) {
 
 module.exports = AssertionVisitor;
 
-},{"./espower-error":5,"./rules/to-be-captured":8,"./rules/to-be-skipped":9,"deep-equal":12,"escodegen":22,"espurify":40,"estraverse":46,"isarray":48,"path":10,"path-is-absolute":49,"source-map":50}],3:[function(_dereq_,module,exports){
+},{"./espower-error":5,"./rules/to-be-captured":8,"./rules/to-be-skipped":9,"deep-equal":12,"escodegen":22,"espurify":40,"estraverse":46,"is-url":48,"isarray":49,"path":10,"path-is-absolute":50,"source-map":51}],3:[function(_dereq_,module,exports){
 /**
  * Copyright (C) 2012 Yusuke Suzuki (twitter: @Constellation) and other contributors.
  * Released under the BSD license.
@@ -377,7 +398,7 @@ function deepCopy (obj) {
 
 module.exports = deepCopy;
 
-},{"isarray":48}],4:[function(_dereq_,module,exports){
+},{"isarray":49}],4:[function(_dereq_,module,exports){
 'use strict';
 
 module.exports = function defaultOptions () {
@@ -532,7 +553,7 @@ function verifyOptionPrerequisites (options) {
 
 module.exports = Instrumentor;
 
-},{"./assertion-visitor":2,"./clone-ast":3,"./espower-error":5,"escallmatch":15,"estraverse":46,"type-name":61}],7:[function(_dereq_,module,exports){
+},{"./assertion-visitor":2,"./clone-ast":3,"./espower-error":5,"escallmatch":15,"estraverse":46,"type-name":62}],7:[function(_dereq_,module,exports){
 'use strict';
 
 var estraverse = _dereq_('estraverse');
@@ -13297,7 +13318,7 @@ module.exports = function cloneWithWhitelist (whitelist) {
     return cloneRoot;
 };
 
-},{"isarray":48}],43:[function(_dereq_,module,exports){
+},{"isarray":49}],43:[function(_dereq_,module,exports){
 'use strict';
 
 var defaultProps = _dereq_('./ast-properties');
@@ -13316,7 +13337,7 @@ module.exports = function createWhitelist (options) {
     return result;
 };
 
-},{"./ast-properties":41,"object-keys":44,"xtend":62}],44:[function(_dereq_,module,exports){
+},{"./ast-properties":41,"object-keys":44,"xtend":63}],44:[function(_dereq_,module,exports){
 'use strict';
 
 // modified from https://github.com/es-shims/es5-shim
@@ -14337,11 +14358,36 @@ module.exports={
 }
 
 },{}],48:[function(_dereq_,module,exports){
+
+/**
+ * Expose `isUrl`.
+ */
+
+module.exports = isUrl;
+
+/**
+ * Matcher.
+ */
+
+var matcher = /^(?:\w+:)?\/\/([^\s\.]+\.\S{2}|localhost[\:?\d]*)\S*$/;
+
+/**
+ * Loosely validate a URL `string`.
+ *
+ * @param {String} string
+ * @return {Boolean}
+ */
+
+function isUrl(string){
+  return matcher.test(string);
+}
+
+},{}],49:[function(_dereq_,module,exports){
 module.exports = Array.isArray || function (arr) {
   return Object.prototype.toString.call(arr) == '[object Array]';
 };
 
-},{}],49:[function(_dereq_,module,exports){
+},{}],50:[function(_dereq_,module,exports){
 (function (process){
 'use strict';
 
@@ -14365,11 +14411,11 @@ module.exports.posix = posix;
 module.exports.win32 = win32;
 
 }).call(this,_dereq_('_process'))
-},{"_process":11}],50:[function(_dereq_,module,exports){
+},{"_process":11}],51:[function(_dereq_,module,exports){
 arguments[4][28][0].apply(exports,arguments)
-},{"./source-map/source-map-consumer":56,"./source-map/source-map-generator":57,"./source-map/source-node":58,"dup":28}],51:[function(_dereq_,module,exports){
+},{"./source-map/source-map-consumer":57,"./source-map/source-map-generator":58,"./source-map/source-node":59,"dup":28}],52:[function(_dereq_,module,exports){
 arguments[4][29][0].apply(exports,arguments)
-},{"./util":59,"amdefine":60,"dup":29}],52:[function(_dereq_,module,exports){
+},{"./util":60,"amdefine":61,"dup":29}],53:[function(_dereq_,module,exports){
 /* -*- Mode: js; js-indent-level: 2; -*- */
 /*
  * Copyright 2011 Mozilla Foundation and contributors
@@ -14512,9 +14558,9 @@ define(function (_dereq_, exports, module) {
 
 });
 
-},{"./base64":53,"amdefine":60}],53:[function(_dereq_,module,exports){
+},{"./base64":54,"amdefine":61}],54:[function(_dereq_,module,exports){
 arguments[4][31][0].apply(exports,arguments)
-},{"amdefine":60,"dup":31}],54:[function(_dereq_,module,exports){
+},{"amdefine":61,"dup":31}],55:[function(_dereq_,module,exports){
 /* -*- Mode: js; js-indent-level: 2; -*- */
 /*
  * Copyright 2011 Mozilla Foundation and contributors
@@ -14633,9 +14679,9 @@ define(function (_dereq_, exports, module) {
 
 });
 
-},{"amdefine":60}],55:[function(_dereq_,module,exports){
+},{"amdefine":61}],56:[function(_dereq_,module,exports){
 arguments[4][33][0].apply(exports,arguments)
-},{"./util":59,"amdefine":60,"dup":33}],56:[function(_dereq_,module,exports){
+},{"./util":60,"amdefine":61,"dup":33}],57:[function(_dereq_,module,exports){
 /* -*- Mode: js; js-indent-level: 2; -*- */
 /*
  * Copyright 2011 Mozilla Foundation and contributors
@@ -15595,7 +15641,7 @@ define(function (_dereq_, exports, module) {
 
 });
 
-},{"./array-set":51,"./base64-vlq":52,"./binary-search":54,"./util":59,"amdefine":60}],57:[function(_dereq_,module,exports){
+},{"./array-set":52,"./base64-vlq":53,"./binary-search":55,"./util":60,"amdefine":61}],58:[function(_dereq_,module,exports){
 /* -*- Mode: js; js-indent-level: 2; -*- */
 /*
  * Copyright 2011 Mozilla Foundation and contributors
@@ -15997,9 +16043,9 @@ define(function (_dereq_, exports, module) {
 
 });
 
-},{"./array-set":51,"./base64-vlq":52,"./mapping-list":55,"./util":59,"amdefine":60}],58:[function(_dereq_,module,exports){
+},{"./array-set":52,"./base64-vlq":53,"./mapping-list":56,"./util":60,"amdefine":61}],59:[function(_dereq_,module,exports){
 arguments[4][36][0].apply(exports,arguments)
-},{"./source-map-generator":57,"./util":59,"amdefine":60,"dup":36}],59:[function(_dereq_,module,exports){
+},{"./source-map-generator":58,"./util":60,"amdefine":61,"dup":36}],60:[function(_dereq_,module,exports){
 /* -*- Mode: js; js-indent-level: 2; -*- */
 /*
  * Copyright 2011 Mozilla Foundation and contributors
@@ -16320,7 +16366,7 @@ define(function (_dereq_, exports, module) {
 
 });
 
-},{"amdefine":60}],60:[function(_dereq_,module,exports){
+},{"amdefine":61}],61:[function(_dereq_,module,exports){
 (function (process,__filename){
 /** vim: et:ts=4:sw=4:sts=4
  * @license amdefine 0.1.0 Copyright (c) 2011, The Dojo Foundation All Rights Reserved.
@@ -16623,7 +16669,7 @@ function amdefine(module, requireFn) {
 module.exports = amdefine;
 
 }).call(this,_dereq_('_process'),"/node_modules/source-map/node_modules/amdefine/amdefine.js")
-},{"_process":11,"path":10}],61:[function(_dereq_,module,exports){
+},{"_process":11,"path":10}],62:[function(_dereq_,module,exports){
 /**
  * type-name - Just a reasonable typeof
  * 
@@ -16663,7 +16709,7 @@ function typeName (val) {
 
 module.exports = typeName;
 
-},{}],62:[function(_dereq_,module,exports){
+},{}],63:[function(_dereq_,module,exports){
 module.exports = extend
 
 function extend() {
