@@ -1,3 +1,10 @@
+### [1.0.5](https://github.com/power-assert-js/espower/releases/tag/v1.0.5) (2015-06-05)
+
+
+  * update escallmatch to 1.4.2 and espurify to 1.3.0 ([62973ed](https://github.com/power-assert-js/espower/commit/62973ed7392037e46dedf9d8c5e02a2c28ed95c2))
+  * use licensify to prepend license header ([d3bc5e8](https://github.com/power-assert-js/espower/commit/d3bc5e860126826b60ef3108add145c5c076e9bf))
+
+
 ### [1.0.4](https://github.com/power-assert-js/espower/releases/tag/v1.0.4) (2015-06-04)
 
 
