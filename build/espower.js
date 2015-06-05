@@ -1,3 +1,112 @@
+/**
+ * Modules in this bundle
+ * 
+ * amdefine:
+ *   licenses: BSD, MIT
+ *   author: James Burke <jrburke@gmail.com>
+ * 
+ * array-filter:
+ *   license: MIT
+ *   author: Julian Gruber <mail@juliangruber.com>
+ *   maintainers: juliangruber <julian@juliangruber.com>
+ * 
+ * array-foreach:
+ *   license: MIT
+ *   author: Takuto Wada <takuto.wada@gmail.com>
+ * 
+ * array-map:
+ *   license: MIT
+ *   author: James Halliday <mail@substack.net>
+ *   maintainers: substack <mail@substack.net>
+ * 
+ * array-reduce:
+ *   license: MIT
+ *   author: James Halliday <mail@substack.net>
+ *   maintainers: substack <mail@substack.net>
+ * 
+ * deep-equal:
+ *   license: MIT
+ *   author: James Halliday <mail@substack.net>
+ *   maintainers: substack <mail@substack.net>
+ * 
+ * escallmatch:
+ *   license: MIT
+ *   author: Takuto Wada <takuto.wada@gmail.com>
+ * 
+ * escodegen:
+ *   licenses: BSD
+ *   maintainers: constellation <utatane.tea@gmail.com>
+ * 
+ * espower:
+ *   license: MIT
+ *   author: Takuto Wada <takuto.wada@gmail.com>
+ * 
+ * esprima:
+ *   licenses: BSD
+ *   author: Ariya Hidayat <ariya.hidayat@gmail.com>
+ *   maintainers: ariya <ariya.hidayat@gmail.com>
+ * 
+ * espurify:
+ *   license: MIT
+ *   author: Takuto Wada <takuto.wada@gmail.com>
+ * 
+ * estraverse:
+ *   licenses: BSD
+ *   maintainers: constellation <utatane.tea@gmail.com>, michaelficarra <npm@michael.ficarra.me>
+ * 
+ * esutils:
+ *   licenses: BSD
+ *   maintainers: constellation <utatane.tea@gmail.com>
+ * 
+ * indexof:
+ *   maintainers: tjholowaychuk <tj@vision-media.ca>
+ * 
+ * is-url:
+ *   license: MIT
+ *   maintainers: segmentio <friends@segment.io>, zeke <zeke@sikelianos.com>
+ * 
+ * isarray:
+ *   license: MIT
+ *   author: Julian Gruber <mail@juliangruber.com>
+ *   maintainers: juliangruber <julian@juliangruber.com>
+ * 
+ * object-keys:
+ *   license: MIT
+ *   author: Jordan Harband
+ *   maintainers: ljharb <ljharb@gmail.com>
+ * 
+ * path-browserify:
+ *   license: MIT
+ *   author: James Halliday <mail@substack.net>
+ *   maintainers: substack <mail@substack.net>
+ * 
+ * path-is-absolute:
+ *   license: MIT
+ *   author: Sindre Sorhus <sindresorhus@gmail.com>
+ *   maintainers: sindresorhus <sindresorhus@gmail.com>
+ * 
+ * process:
+ *   author: Roman Shtylman <shtylman@gmail.com>
+ *   maintainers: coolaj86 <coolaj86@gmail.com>, defunctzombie <shtylman@gmail.com>
+ * 
+ * source-map:
+ *   licenses: BSD
+ *   author: Nick Fitzgerald <nfitzgerald@mozilla.com>
+ *   maintainers: mozilla-devtools <mozilla-developer-tools@googlegroups.com>, mozilla <dherman@mozilla.com>, nickfitzgerald <fitzgen@gmail.com>
+ *   contributors: Tobias Koppers <tobias.koppers@googlemail.com>, Duncan Beevers <duncan@dweebd.com>, Stephen Crane <scrane@mozilla.com>, Ryan Seddon <seddon.ryan@gmail.com>, Miles Elam <miles.elam@deem.com>, Mihai Bazon <mihai.bazon@gmail.com>, Michael Ficarra <github.public.email@michael.ficarra.me>, Todd Wolfson <todd@twolfson.com>, Alexander Solovyov <alexander@solovyov.net>, Felix Gnass <fgnass@gmail.com>, Conrad Irwin <conrad.irwin@gmail.com>, usrbincc <usrbincc@yahoo.com>, David Glasser <glasser@davidglasser.net>, Chase Douglas <chase@newrelic.com>, Evan Wallace <evan.exe@gmail.com>, Heather Arthur <fayearthur@gmail.com>, Hugh Kennedy <hughskennedy@gmail.com>, David Glasser <glasser@davidglasser.net>, Simon Lydell <simon.lydell@gmail.com>, Jmeas Smith <jellyes2@gmail.com>, Michael Z Goddard <mzgoddard@gmail.com>, azu <azu@users.noreply.github.com>, John Gozde <john@gozde.ca>, Adam Kirkton <akirkton@truefitinnovation.com>, Chris Montgomery <christopher.montgomery@dowjones.com>, J. Ryan Stinnett <jryans@gmail.com>, Jack Herrington <jherrington@walmartlabs.com>, Chris Truter <jeffpalentine@gmail.com>, Daniel Espeset <daniel@danielespeset.com>, Jamie Wong <jamie.lf.wong@gmail.com>, Eddy Bruël <ejpbruel@mozilla.com>, Hawken Rives <hawkrives@gmail.com>
+ * 
+ * type-name:
+ *   license: MIT
+ *   author: Takuto Wada <takuto.wada@gmail.com>
+ *   maintainers: twada <takuto.wada@gmail.com>
+ *   contributors: azu, Yosuke Furukawa
+ * 
+ * xtend:
+ *   licenses: MIT
+ *   author: Raynos <raynos2@gmail.com>
+ *   contributors: Jake Verbaten, Matt Esch
+ * 
+ */
 (function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.espower = f()}})(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw (f.code="MODULE_NOT_FOUND", f)}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(_dereq_,module,exports){
 /**
  * espower - Power Assert feature instrumentor based on the ECMAScript AST.
@@ -13249,7 +13358,7 @@ module.exports = {
     VariableDeclarator: ['type', 'id', 'init'],
     WhileStatement: ['type', 'test', 'body'],
     WithStatement: ['type', 'object', 'body'],
-    YieldExpression: ['type', 'argument']
+    YieldExpression: ['type', 'argument', 'delegate']
 };
 
 },{}],42:[function(_dereq_,module,exports){
