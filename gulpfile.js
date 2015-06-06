@@ -1,44 +1,44 @@
-var gulp = require('gulp'),
-    gutil = require('gulp-util'),
-    jshint = require('gulp-jshint'),
-    stylish = require('jshint-stylish'),
-    mocha = require('gulp-mocha'),
-    mochaPhantomJS = require('gulp-mocha-phantomjs'),
-    webserver = require('gulp-webserver'),
-    del = require('del'),
-    path = require('path'),
-    source = require('vinyl-source-stream'),
-    through = require('through2'),
-    browserify = require('browserify'),
-    licensify = require('licensify'),
-    dereserve = require('gulp-dereserve'),
-    derequire = require('gulp-derequire'),
-    config = {
-        jshint: {
-            src: './lib/**/*.js'
-        },
-        bundle: {
-            standalone: 'espower',
-            srcFile: './index.js',
-            destDir: './build',
-            destName: 'espower.js'
-        },
-        source_map_bundle: {
-            standalone: 'sourceMap',
-            srcFile: './node_modules/source-map/lib/source-map.js',
-            destDir: './build',
-            destName: 'source-map.js'
-        },
-        coverage: {
-            filename: 'coverage.lcov'
-        },
-        test: {
-            base: './test/',
-            pattern: '**/*_test.js',
-            amd: 'test/test-amd.html',
-            browser: 'test/test-browser.html'
-        }
-    };
+var gulp = require('gulp');
+var gutil = require('gulp-util');
+var jshint = require('gulp-jshint');
+var stylish = require('jshint-stylish');
+var mocha = require('gulp-mocha');
+var mochaPhantomJS = require('gulp-mocha-phantomjs');
+var webserver = require('gulp-webserver');
+var del = require('del');
+var path = require('path');
+var source = require('vinyl-source-stream');
+var through = require('through2');
+var browserify = require('browserify');
+var licensify = require('licensify');
+var dereserve = require('gulp-dereserve');
+var derequire = require('gulp-derequire');
+var config = {
+    jshint: {
+        src: './lib/**/*.js'
+    },
+    bundle: {
+        standalone: 'espower',
+        srcFile: './index.js',
+        destDir: './build',
+        destName: 'espower.js'
+    },
+    source_map_bundle: {
+        standalone: 'sourceMap',
+        srcFile: './node_modules/source-map/lib/source-map.js',
+        destDir: './build',
+        destName: 'source-map.js'
+    },
+    coverage: {
+        filename: 'coverage.lcov'
+    },
+    test: {
+        base: './test/',
+        pattern: '**/*_test.js',
+        amd: 'test/test-amd.html',
+        browser: 'test/test-browser.html'
+    }
+};
 
 function captureStdout (filespec) {
     var orig, log = '';
@@ -68,12 +68,12 @@ function captureStdout (filespec) {
 }
 
 function runMochaWithBlanket() {
-    var blanket = require('./coverage/blanket'),
-        capt = captureStdout({
-            cwd: __dirname,
-            base: __dirname,
-            path: __dirname + '/' + config.coverage.filename
-        });
+    var blanket = require('./coverage/blanket');
+    var capt = captureStdout({
+        cwd: __dirname,
+        base: __dirname,
+        path: __dirname + '/' + config.coverage.filename
+    });
     return gulp
         .src(config.test.base + config.test.pattern, {read: false})
         .pipe(capt.start)
