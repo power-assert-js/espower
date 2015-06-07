@@ -148,13 +148,13 @@ gulp.task('coverage', ['clean_coverage'], function () {
     return runMochaWithBlanket();
 });
 
-gulp.task('test_amd', ['bundle', 'source_map_bundle'], function () {
+gulp.task('test_amd', ['source_map_bundle'], function () {
     return gulp
         .src(config.test.amd)
         .pipe(mochaPhantomJS({reporter: 'dot'}));
 });
 
-gulp.task('test_browser', ['bundle', 'source_map_bundle'], function () {
+gulp.task('test_browser', ['source_map_bundle'], function () {
     return gulp
         .src(config.test.browser)
         .pipe(mochaPhantomJS({reporter: 'dot'}));

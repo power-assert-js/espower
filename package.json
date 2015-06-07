@@ -76,9 +76,9 @@
   },
   "scripts": {
     "bower": "bower install --config.interactive=false",
-    "build": "gulp bundle",
+    "build": "npm prune && npm dedupe && gulp bundle",
     "lint": "gulp lint",
-    "test": "gulp test",
+    "test": "npm run lint && npm run build && gulp test",
     "unit": "gulp unit",
     "watch": "gulp watch",
     "coveralls": "gulp coverage && cat ./coverage.lcov | coveralls"
