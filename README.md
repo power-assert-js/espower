@@ -120,7 +120,7 @@ Filepath of `originalAst`. If passed, espower stores filepath information for re
 |:---------|:--------------|
 | `string` | N/A           |
 
-Root filepath for target test files. Only works with `options.path` or `options.sourceMap`. If set, filepath in power-assert output will be relative from `options.sourceRoot`. When both `options.sourceRoot` and sourceMap's sourceRoot are given, `options.sourceRoot` has precedence over sourceMap's sourceRoot. This property is optional.
+Root filepath for target test files. Only works with `options.path` or `options.sourceMap`. If set, filepath in power-assert output will be relative from `options.sourceRoot`. When both `options.sourceRoot` and sourceMap's sourceRoot are given and both are absolute filepath, `options.sourceRoot` has precedence over sourceMap's sourceRoot. This property is optional.
 
 
 #### (optional) options.sourceMap
