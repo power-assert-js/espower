@@ -1,3 +1,9 @@
+### [1.0.6](https://github.com/power-assert-js/espower/releases/tag/v1.0.6) (2015-06-07)
+
+
+  * SourceMap's `sourceRoot` should have precedence over `options.sourceRoot` if `sourceRoot` is URL ([dcf9642d](https://github.com/power-assert-js/espower/commit/dcf9642de0becb8239d4c3a1b8366a980bddb585))
+
+
 ### [1.0.5](https://github.com/power-assert-js/espower/releases/tag/v1.0.5) (2015-06-05)
 
 
