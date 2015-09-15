@@ -23,6 +23,12 @@ var config = {
         destDir: './build',
         destName: 'espower.js'
     },
+    assert_bundle: {
+        standalone: 'assert',
+        srcFile: './node_modules/assert/assert.js',
+        destDir: './build',
+        destName: 'assert.js'
+    },
     escodegen_bundle: {
         standalone: 'escodegen',
         srcFile: './node_modules/escodegen/escodegen.js',
@@ -51,7 +57,7 @@ var config = {
         browser: 'test/test-browser.html'
     }
 };
-var BUILDS = ['source_map', 'escodegen', 'estraverse'];
+var BUILDS = ['assert', 'escodegen', 'estraverse', 'source_map'];
 
 
 function captureStdout (filespec) {

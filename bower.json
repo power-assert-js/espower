@@ -33,7 +33,6 @@
   },
   "devDependencies": {
     "mocha": "~2.2.4",
-    "requirejs": "~2.1.17",
-    "assert": "Jxck/assert"
+    "requirejs": "~2.1.17"
   }
 }

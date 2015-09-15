@@ -7,3 +7,5 @@
 /expr.js
 /build/source-map.js
 /build/escodegen.js
+/build/estraverse.js
+/build/assert.js
