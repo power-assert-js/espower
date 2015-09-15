@@ -2,7 +2,7 @@ var require = {
     paths: {
         espower: '../build/espower',
         assert: '../bower_components/assert/assert',
-        escodegen: '../bower_components/escodegen/escodegen.browser',
+        escodegen: '../build/escodegen',
         acorn: '../node_modules/acorn/dist/acorn',
         estraverse: '../bower_components/estraverse/estraverse',
         "source-map": '../build/source-map',
