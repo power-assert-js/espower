@@ -29,6 +29,12 @@ var config = {
         destDir: './build',
         destName: 'escodegen.js'
     },
+    estraverse_bundle: {
+        standalone: 'estraverse',
+        srcFile: './node_modules/estraverse/estraverse.js',
+        destDir: './build',
+        destName: 'estraverse.js'
+    },
     source_map_bundle: {
         standalone: 'sourceMap',
         srcFile: './node_modules/source-map/lib/source-map.js',
@@ -45,6 +51,8 @@ var config = {
         browser: 'test/test-browser.html'
     }
 };
+var BUILDS = ['source_map', 'escodegen', 'estraverse'];
+
 
 function captureStdout (filespec) {
     var orig, log = '';
@@ -130,7 +138,7 @@ gulp.task('bundle', ['clean_bundle'], function() {
         .pipe(gulp.dest(config.bundle.destDir));
 });
 
-['source_map', 'escodegen'].forEach(function (name) {
+BUILDS.forEach(function (name) {
     gulp.task('clean_' + name + '_bundle', function (done) {
         del([path.join(config[name + '_bundle'].destDir, config[name + '_bundle'].destName)], done);
     });
@@ -143,9 +151,8 @@ gulp.task('bundle', ['clean_bundle'], function() {
             .pipe(gulp.dest(config[name + '_bundle'].destDir));
     });
 });
-
-gulp.task('clean_deps', ['clean_source_map_bundle', 'clean_escodegen_bundle']);
-gulp.task('build_deps', ['source_map_bundle', 'escodegen_bundle']);
+gulp.task('clean_deps', BUILDS.map(function (name) { return 'clean_' + name + '_bundle'; }));
+gulp.task('build_deps', BUILDS.map(function (name) { return name + '_bundle'; }));
 
 gulp.task('unit', function () {
     return runMochaSimply();
