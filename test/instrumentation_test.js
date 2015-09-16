@@ -115,6 +115,9 @@ describe('instrumentation spec', function () {
 
         inst("assert(ary1.length === ary2.length);",
              "assert(assert._expr(assert._capt(assert._capt(assert._capt(ary1,'arguments/0/left/object').length,'arguments/0/left')===assert._capt(assert._capt(ary2,'arguments/0/right/object').length,'arguments/0/right'),'arguments/0'),{content:'assert(ary1.length === ary2.length)',filepath:'path/to/some_test.js',line:1}));");
+
+        inst("assert(foo instanceof Foo);",
+             "assert(assert._expr(assert._capt(assert._capt(foo,'arguments/0/left')instanceof assert._capt(Foo,'arguments/0/right'),'arguments/0'),{content:'assert(foo instanceof Foo)',filepath:'path/to/some_test.js',line:1}));");
     });
 
 
