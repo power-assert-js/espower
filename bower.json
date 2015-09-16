@@ -32,10 +32,7 @@
     "url": "git://github.com/power-assert-js/espower.git"
   },
   "devDependencies": {
-    "escodegen": "1.4.1",
-    "estraverse": "~1.9.0",
-    "mocha": "~2.2.4",
-    "requirejs": "~2.1.17",
-    "assert": "Jxck/assert"
+    "mocha": "~2.3.2",
+    "requirejs": "~2.1.20"
   }
 }

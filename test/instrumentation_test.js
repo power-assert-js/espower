@@ -14,11 +14,6 @@
     assert
 ) {
 
-// see: https://github.com/Constellation/escodegen/issues/115
-if (typeof define === 'function' && define.amd) {
-    escodegen = window.escodegen;
-}
-
 describe('instrumentation spec', function () {
     function testWithParserOptions (jsCode, expected, options) {
         it(jsCode, function () {

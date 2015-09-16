@@ -18,15 +18,6 @@
 
 var EspowerError = espower.EspowerError;
 
-if (typeof define === 'function' && define.amd) {
-    // see: https://github.com/Constellation/escodegen/issues/115
-    escodegen = window.escodegen;
-    // TypeError: 'undefined' is not an object (evaluating 'global.sourceMap.SourceNode')
-    // at generate (bower_components/escodegen/escodegen.browser.js:1845)
-    window.sourceMap = sourceMap;
-}
-
-
 function instrument (jsCode, options) {
     var jsAST = acorn.parse(jsCode, {ecmaVersion: 6, locations: true});
     var espoweredAST = espower(jsAST, options);
