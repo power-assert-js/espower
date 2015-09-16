@@ -329,10 +329,10 @@ describe('instrumentation spec', function () {
 
     describe('Literal: multibyte string literal', function () {
         inst("assert(fuga !== 'ふが');",
-             "assert(assert._expr(assert._capt(assert._capt(fuga,'arguments/0/left')!=='\\u3075\\u304C','arguments/0'),{content:'assert(fuga !== \\'\\u3075\\u304C\\')',filepath:'path/to/some_test.js',line:1}));");
+             "assert(assert._expr(assert._capt(assert._capt(fuga,'arguments/0/left')!=='ふが','arguments/0'),{content:'assert(fuga !== \\'ふが\\')',filepath:'path/to/some_test.js',line:1}));");
 
         inst("assert('ほげ' !== 'ふが');",
-             "assert(assert._expr(assert._capt('\\u307B\\u3052'!=='\\u3075\\u304C','arguments/0'),{content:'assert(\\'\\u307B\\u3052\\' !== \\'\\u3075\\u304C\\')',filepath:'path/to/some_test.js',line:1}));");
+             "assert(assert._expr(assert._capt('ほげ'!=='ふが','arguments/0'),{content:'assert(\\'ほげ\\' !== \\'ふが\\')',filepath:'path/to/some_test.js',line:1}));");
     });
 
 
