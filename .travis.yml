@@ -3,7 +3,7 @@ sudo: false
 node_js:
   - "0.10"
   - "0.12"
-  - "iojs"
+  - "stable"
 before_install:
   - "npm install -g gulp"
   - "npm install -g bower"
