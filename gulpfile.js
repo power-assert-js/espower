@@ -129,8 +129,8 @@ gulp.task('watch', function () {
     runMochaSimply();
 });
 
-gulp.task('clean_bundle', function (done) {
-    del([path.join(config.bundle.destDir, config.bundle.destName)], done);
+gulp.task('clean_bundle', function () {
+    del.sync([path.join(config.bundle.destDir, config.bundle.destName)]);
 });
 
 gulp.task('bundle', ['clean_bundle'], function() {
@@ -145,8 +145,8 @@ gulp.task('bundle', ['clean_bundle'], function() {
 });
 
 BUILDS.forEach(function (name) {
-    gulp.task('clean_' + name + '_bundle', function (done) {
-        del([path.join(config[name + '_bundle'].destDir, config[name + '_bundle'].destName)], done);
+    gulp.task('clean_' + name + '_bundle', function () {
+        del.sync([path.join(config[name + '_bundle'].destDir, config[name + '_bundle'].destName)]);
     });
 
     gulp.task(name + '_bundle', ['clean_' + name + '_bundle'], function() {
@@ -164,8 +164,8 @@ gulp.task('unit', function () {
     return runMochaSimply();
 });
 
-gulp.task('clean_coverage', function (done) {
-    del([config.coverage.filename], done);
+gulp.task('clean_coverage', function () {
+    del.sync([config.coverage.filename]);
 });
 
 gulp.task('coverage', ['clean_coverage'], function () {
