@@ -43,7 +43,7 @@ var config = {
     },
     source_map_bundle: {
         standalone: 'sourceMap',
-        srcFile: './node_modules/source-map/lib/source-map.js',
+        srcFile: './node_modules/source-map/source-map.js',
         destDir: './build',
         destName: 'source-map.js'
     },

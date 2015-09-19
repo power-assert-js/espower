@@ -19,7 +19,7 @@
     "is-url": "^1.2.1",
     "isarray": "^0.0.1",
     "path-is-absolute": "^1.0.0",
-    "source-map": "^0.4.2",
+    "source-map": "^0.5.0",
     "type-name": "^1.0.1",
     "xtend": "^4.0.0"
   },
