@@ -1,3 +1,10 @@
+### [1.0.7](https://github.com/power-assert-js/espower/releases/tag/v1.0.7) (2015-09-21)
+
+
+  * update escodegen to 1.7.0 ([feb96b0](https://github.com/power-assert-js/espower/commit/feb96b004acd0c540ab76a2529d91582b2095433))
+  * update source-map to 0.5.0 ([7bc824b](https://github.com/power-assert-js/espower/commit/7bc824ba9d808be7d25959822acceb9e04422373))
+
+
 ### [1.0.6](https://github.com/power-assert-js/espower/releases/tag/v1.0.6) (2015-06-07)
 
 
