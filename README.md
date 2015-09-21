@@ -188,7 +188,7 @@ var path = require('path');
 
 var filepath = path.join(__dirname, 'example_test.js');
 var jsAst = esprima.parse(fs.readFileSync(filepath), {tolerant: true, loc: true, tokens: true});
-var modifiedAst = espower(jsAst, {path: filepath});
+var modifiedAst = espower(jsAst, {path: filepath, sourceRoot: __dirname});
 
 console.log(escodegen.generate(modifiedAst));
 ```
@@ -201,16 +201,16 @@ var truthy = 'true';
 var falsy = 'false';
 assert(assert._expr(assert._capt(falsy, 'arguments/0'), {
     content: 'assert(falsy)',
-    filepath: '/path/to/example_test.js',
+    filepath: 'example_test.js',
     line: 4
 }));
 assert.equal(assert._expr(assert._capt(truthy, 'arguments/0'), {
     content: 'assert.equal(truthy, falsy)',
-    filepath: '/path/to/example_test.js',
+    filepath: 'example_test.js',
     line: 5
 }), assert._expr(assert._capt(falsy, 'arguments/1'), {
     content: 'assert.equal(truthy, falsy)',
-    filepath: '/path/to/example_test.js',
+    filepath: 'example_test.js',
     line: 5
 }));
 ```
