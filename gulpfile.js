@@ -172,13 +172,13 @@ gulp.task('coverage', ['clean_coverage'], function () {
     return runMochaWithBlanket();
 });
 
-gulp.task('test_amd', ['build_deps'], function () {
+gulp.task('test_amd', ['bundle', 'build_deps'], function () {
     return gulp
         .src(config.test.amd)
         .pipe(mochaPhantomJS({reporter: 'dot'}));
 });
 
-gulp.task('test_browser', ['build_deps'], function () {
+gulp.task('test_browser', ['bundle', 'build_deps'], function () {
     return gulp
         .src(config.test.browser)
         .pipe(mochaPhantomJS({reporter: 'dot'}));
