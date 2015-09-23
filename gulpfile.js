@@ -25,7 +25,7 @@ var config = {
     },
     assert_bundle: {
         standalone: 'assert',
-        srcFile: './node_modules/assert/assert.js',
+        require: 'assert',
         destDir: './build',
         destName: 'assert.js'
     },
@@ -148,10 +148,15 @@ BUILDS.forEach(function (name) {
     gulp.task('clean_' + name + '_bundle', function () {
         del.sync([path.join(config[name + '_bundle'].destDir, config[name + '_bundle'].destName)]);
     });
-
     gulp.task(name + '_bundle', ['clean_' + name + '_bundle'], function() {
-        var bundleStream = browserify({entries: config[name + '_bundle'].srcFile, standalone: config[name + '_bundle'].standalone}).bundle();
-        return bundleStream
+        var b = browserify({standalone: config[name + '_bundle'].standalone});
+        if (config[name + '_bundle'].srcFile) {
+            b.add(config[name + '_bundle'].srcFile);
+        }
+        if (config[name + '_bundle'].require) {
+            b.require(config[name + '_bundle'].require);
+        }
+        return b.bundle()
             .pipe(source(config[name + '_bundle'].destName))
             .pipe(derequire())
             .pipe(gulp.dest(config[name + '_bundle'].destDir));

@@ -26,7 +26,6 @@
   "devDependencies": {
     "acorn": "^2.4.0",
     "amdefine": "^1.0.0",
-    "assert": "^1.3.0",
     "blanket": "^1.1.7",
     "browserify": "^11.1.0",
     "del": "^2.0.2",
