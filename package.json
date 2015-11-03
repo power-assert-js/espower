@@ -10,6 +10,12 @@
   "bugs": {
     "url": "http://github.com/power-assert-js/espower/issues"
   },
+  "contributors": [
+    {
+      "name": "James Talmage",
+      "url": "https://github.com/jamestalmage"
+    }
+  ],
   "dependencies": {
     "deep-equal": "^1.0.0",
     "escallmatch": "^1.4.2",

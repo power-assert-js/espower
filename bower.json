@@ -24,6 +24,10 @@
       "name": "Takuto Wada",
       "email": "takuto.wada@gmail.com",
       "homepage": "https://github.com/twada"
+    },
+    {
+      "name": "James Talmage",
+      "homepage": "https://github.com/jamestalmage"
     }
   ],
   "homepage": "https://github.com/power-assert-js/espower",
