@@ -5,8 +5,9 @@
  * espower:
  *   license: MIT
  *   author: Takuto Wada <takuto.wada@gmail.com>
+ *   contributors: James Talmage
  *   homepage: http://github.com/power-assert-js/espower
- *   version: 1.0.7
+ *   version: 1.1.0
  * 
  * amdefine:
  *   license: BSD-3-Clause AND MIT
@@ -66,7 +67,7 @@
  *   author: Ariya Hidayat <ariya.hidayat@gmail.com>
  *   maintainers: ariya <ariya.hidayat@gmail.com>
  *   homepage: http://esprima.org
- *   version: 2.6.0
+ *   version: 2.7.0
  * 
  * espurify:
  *   license: MIT
@@ -75,10 +76,10 @@
  *   version: 1.3.0
  * 
  * estraverse:
- *   licenses: BSD
- *   maintainers: constellation <utatane.tea@gmail.com>, michaelficarra <npm@michael.ficarra.me>
+ *   license: BSD-2-Clause
+ *   maintainers: constellation <utatane.tea@gmail.com>, michaelficarra <npm@michael.ficarra.me>, nzakas <nicholas@nczconsulting.com>
  *   homepage: https://github.com/estools/estraverse
- *   version: 4.1.0
+ *   version: 4.1.1
  * 
  * esutils:
  *   licenses: BSD
@@ -105,10 +106,11 @@
  * 
  * object-keys:
  *   license: MIT
- *   author: Jordan Harband
+ *   author: Jordan Harband <ljharb@gmail.com>
  *   maintainers: ljharb <ljharb@gmail.com>
+ *   contributors: Jordan Harband <ljharb@gmail.com>, Raynos <raynos2@gmail.com>, Nathan Rajlich <nathan@tootallnate.net>, Ivan Starkov <istarkov@gmail.com>, Gary Katsevman <git@gkatsev.com>
  *   homepage: https://github.com/ljharb/object-keys#readme
- *   version: 1.0.7
+ *   version: 1.0.9
  * 
  * path-browserify:
  *   license: MIT
@@ -135,24 +137,24 @@
  *   license: BSD-3-Clause
  *   author: Nick Fitzgerald <nfitzgerald@mozilla.com>
  *   maintainers: mozilla-devtools <mozilla-developer-tools@googlegroups.com>, mozilla <dherman@mozilla.com>, nickfitzgerald <fitzgen@gmail.com>
- *   contributors: Tobias Koppers <tobias.koppers@googlemail.com>, Duncan Beevers <duncan@dweebd.com>, Stephen Crane <scrane@mozilla.com>, Ryan Seddon <seddon.ryan@gmail.com>, Miles Elam <miles.elam@deem.com>, Mihai Bazon <mihai.bazon@gmail.com>, Michael Ficarra <github.public.email@michael.ficarra.me>, Todd Wolfson <todd@twolfson.com>, Alexander Solovyov <alexander@solovyov.net>, Felix Gnass <fgnass@gmail.com>, Conrad Irwin <conrad.irwin@gmail.com>, usrbincc <usrbincc@yahoo.com>, David Glasser <glasser@davidglasser.net>, Chase Douglas <chase@newrelic.com>, Evan Wallace <evan.exe@gmail.com>, Heather Arthur <fayearthur@gmail.com>, Hugh Kennedy <hughskennedy@gmail.com>, David Glasser <glasser@davidglasser.net>, Simon Lydell <simon.lydell@gmail.com>, Jmeas Smith <jellyes2@gmail.com>, Michael Z Goddard <mzgoddard@gmail.com>, azu <azu@users.noreply.github.com>, John Gozde <john@gozde.ca>, Adam Kirkton <akirkton@truefitinnovation.com>, Chris Montgomery <christopher.montgomery@dowjones.com>, J. Ryan Stinnett <jryans@gmail.com>, Jack Herrington <jherrington@walmartlabs.com>, Chris Truter <jeffpalentine@gmail.com>, Daniel Espeset <daniel@danielespeset.com>, Jamie Wong <jamie.lf.wong@gmail.com>, Eddy Bruël <ejpbruel@mozilla.com>, Hawken Rives <hawkrives@gmail.com>, Gilad Peleg <giladp007@gmail.com>
+ *   contributors: Tobias Koppers <tobias.koppers@googlemail.com>, Duncan Beevers <duncan@dweebd.com>, Stephen Crane <scrane@mozilla.com>, Ryan Seddon <seddon.ryan@gmail.com>, Miles Elam <miles.elam@deem.com>, Mihai Bazon <mihai.bazon@gmail.com>, Michael Ficarra <github.public.email@michael.ficarra.me>, Todd Wolfson <todd@twolfson.com>, Alexander Solovyov <alexander@solovyov.net>, Felix Gnass <fgnass@gmail.com>, Conrad Irwin <conrad.irwin@gmail.com>, usrbincc <usrbincc@yahoo.com>, David Glasser <glasser@davidglasser.net>, Chase Douglas <chase@newrelic.com>, Evan Wallace <evan.exe@gmail.com>, Heather Arthur <fayearthur@gmail.com>, Hugh Kennedy <hughskennedy@gmail.com>, David Glasser <glasser@davidglasser.net>, Simon Lydell <simon.lydell@gmail.com>, Jmeas Smith <jellyes2@gmail.com>, Michael Z Goddard <mzgoddard@gmail.com>, azu <azu@users.noreply.github.com>, John Gozde <john@gozde.ca>, Adam Kirkton <akirkton@truefitinnovation.com>, Chris Montgomery <christopher.montgomery@dowjones.com>, J. Ryan Stinnett <jryans@gmail.com>, Jack Herrington <jherrington@walmartlabs.com>, Chris Truter <jeffpalentine@gmail.com>, Daniel Espeset <daniel@danielespeset.com>, Jamie Wong <jamie.lf.wong@gmail.com>, Eddy Bruël <ejpbruel@mozilla.com>, Hawken Rives <hawkrives@gmail.com>, Gilad Peleg <giladp007@gmail.com>, djchie <djchie.dev@gmail.com>, Gary Ye <garysye@gmail.com>, Nicolas Lalevée <nicolas.lalevee@hibnet.org>
  *   homepage: https://github.com/mozilla/source-map
- *   version: 0.5.0
+ *   version: 0.5.3
  * 
  * type-name:
  *   license: MIT
  *   author: Takuto Wada <takuto.wada@gmail.com>
- *   maintainers: twada <takuto.wada@gmail.com>
  *   contributors: azu, Yosuke Furukawa
  *   homepage: https://github.com/twada/type-name
- *   version: 1.0.1
+ *   version: 1.1.0
  * 
  * xtend:
- *   licenses: MIT
+ *   license: MIT
  *   author: Raynos <raynos2@gmail.com>
+ *   maintainers: raynos <raynos2@gmail.com>
  *   contributors: Jake Verbaten, Matt Esch
  *   homepage: https://github.com/Raynos/xtend
- *   version: 4.0.0
+ *   version: 4.0.1
  * 
  * This header is generated by licensify (https://github.com/twada/licensify)
  */
@@ -235,8 +237,8 @@ function AssertionVisitor (matcher, assertionPath, options) {
 }
 
 AssertionVisitor.prototype.enter = function (currentNode, parentNode) {
-    this.canonicalCode = generateCanonicalCode(currentNode, this.options.visitorKeys);
-    this.powerAssertCalleeObject = guessPowerAssertCalleeObjectFor(currentNode.callee);
+    this.canonicalCode = this.generateCanonicalCode(currentNode);
+    this.powerAssertCalleeObject = this.guessPowerAssertCalleeObjectFor(currentNode.callee);
 
     if (this.sourceMapConsumer) {
         var pos = this.sourceMapConsumer.originalPositionFor({
@@ -398,30 +400,8 @@ AssertionVisitor.prototype.toBeCaptured = function (currentNode, parentNode, cur
     return toBeCaptured(currentNode, parentNode, currentKey);
 };
 
-function fallbackOnBasename (filepath) {
-    if (filepath) {
-        if (filepath.split(_path.sep).indexOf('..') !== -1) {
-            return _path.basename(filepath);
-        } else if (isUrl(filepath)) {
-            return _path.basename(filepath);
-        } else if (isAbsolute(filepath)) {
-            return _path.basename(filepath);
-        }
-    }
-    return filepath;
-}
-
-function guessPowerAssertCalleeObjectFor (node) {
-    switch(node.type) {
-    case syntax.Identifier:
-        return node;
-    case syntax.MemberExpression:
-        return node.object; // Returns browser.assert when browser.assert.element(selector)
-    }
-    return null;
-}
-
-function generateCanonicalCode (node, visitorKeys) {
+AssertionVisitor.prototype.generateCanonicalCode = function (node) {
+    var visitorKeys = this.options.visitorKeys;
     var ast = espurifyWithRaw(node);
     var visitor = {
         leave: function (currentNode, parentNode) {
@@ -441,6 +421,29 @@ function generateCanonicalCode (node, visitorKeys) {
     }
     estraverse.replace(ast, visitor);
     return escodegen.generate(ast, canonicalCodeOptions);
+};
+
+AssertionVisitor.prototype.guessPowerAssertCalleeObjectFor = function (node) {
+    switch(node.type) {
+    case syntax.Identifier:
+        return node;
+    case syntax.MemberExpression:
+        return node.object; // Returns browser.assert when browser.assert.element(selector)
+    }
+    return null;
+};
+
+function fallbackOnBasename (filepath) {
+    if (filepath) {
+        if (filepath.split(_path.sep).indexOf('..') !== -1) {
+            return _path.basename(filepath);
+        } else if (isUrl(filepath)) {
+            return _path.basename(filepath);
+        } else if (isAbsolute(filepath)) {
+            return _path.basename(filepath);
+        }
+    }
+    return filepath;
 }
 
 function addLiteralTo (props, createNode, name, data) {
@@ -728,6 +731,7 @@ module.exports = [
     syntax.TemplateLiteral,
     syntax.TaggedTemplateExpression,
     syntax.SpreadElement,
+    syntax.YieldExpression,
     syntax.Property
 ];
 
@@ -750,6 +754,7 @@ var caputuringTargetTypes = [
     syntax.AssignmentExpression,
     syntax.NewExpression,
     syntax.UpdateExpression,
+    syntax.YieldExpression,
     syntax.TemplateLiteral,
     syntax.TaggedTemplateExpression
 ];
@@ -766,8 +771,14 @@ function isChildOfTaggedTemplateExpression(parentNode) {
     return parentNode.type === syntax.TaggedTemplateExpression;
 }
 
+function isYieldArgument(parentNode, currentKey) {
+    // capture the yielded result, not the promise
+    return parentNode.type === syntax.YieldExpression && currentKey === 'argument';
+}
+
 module.exports = function toBeCaptured (currentNode, parentNode, currentKey) {
     return isCaputuringTargetType(currentNode) &&
+        !isYieldArgument(parentNode, currentKey) &&
         !isCalleeOfParent(parentNode, currentKey) &&
         !isChildOfTaggedTemplateExpression(parentNode);
 };
@@ -2238,11 +2249,6 @@ module.exports = function (xs, f, acc) {
     // ECMA-262 11.6.2.1 Keywords
 
     function isKeyword(id) {
-
-        // 'const' is specialized as Keyword in V8.
-        // 'yield' and 'let' are for compatibility with SpiderMonkey and ES.next.
-        // Some others are from future reserved words.
-
         switch (id.length) {
         case 2:
             return (id === 'if') || (id === 'in') || (id === 'do');
@@ -2293,6 +2299,13 @@ module.exports = function (xs, f, acc) {
         if (extra.attachComment) {
             extra.leadingComments.push(comment);
             extra.trailingComments.push(comment);
+        }
+        if (extra.tokenize) {
+            comment.type = comment.type + 'Comment';
+            if (extra.delegate) {
+                comment = extra.delegate(comment);
+            }
+            extra.tokens.push(comment);
         }
     }
 
@@ -2646,14 +2659,14 @@ module.exports = function (xs, f, acc) {
 
         case '(':
             if (extra.tokenize) {
-                extra.openParenToken = extra.tokens.length;
+                extra.openParenToken = extra.tokenValues.length;
             }
             ++index;
             break;
 
         case '{':
             if (extra.tokenize) {
-                extra.openCurlyToken = extra.tokens.length;
+                extra.openCurlyToken = extra.tokenValues.length;
             }
             state.curlyStack.push('{');
             ++index;
@@ -3389,67 +3402,46 @@ module.exports = function (xs, f, acc) {
             token.type === Token.NullLiteral;
     }
 
+    // Using the following algorithm:
+    // https://github.com/mozilla/sweet.js/wiki/design
+
     function advanceSlash() {
-        var prevToken,
-            checkToken;
-        // Using the following algorithm:
-        // https://github.com/mozilla/sweet.js/wiki/design
-        prevToken = extra.tokens[extra.tokens.length - 1];
-        if (!prevToken) {
-            // Nothing before that: it cannot be a division.
-            return collectRegex();
+        var regex, previous, check;
+
+        function testKeyword(value) {
+            return value && (value.length > 1) && (value[0] >= 'a') && (value[0] <= 'z');
         }
-        if (prevToken.type === 'Punctuator') {
-            if (prevToken.value === ']') {
-                return scanPunctuator();
+
+        previous = extra.tokenValues[extra.tokens.length - 1];
+        regex = (previous !== null);
+
+        switch (previous) {
+        case 'this':
+        case ']':
+            regex = false;
+            break;
+
+        case ')':
+            check = extra.tokenValues[extra.openParenToken - 1];
+            regex = (check === 'if' || check === 'while' || check === 'for' || check === 'with');
+            break;
+
+        case '}':
+            // Dividing a function by anything makes little sense,
+            // but we have to check for that.
+            regex = false;
+            if (testKeyword(extra.tokenValues[extra.openCurlyToken - 3])) {
+                // Anonymous function, e.g. function(){} /42
+                check = extra.tokenValues[extra.openCurlyToken - 4];
+                regex = check ? (FnExprTokens.indexOf(check) < 0) : false;
+            } else if (testKeyword(extra.tokenValues[extra.openCurlyToken - 4])) {
+                // Named function, e.g. function f(){} /42/
+                check = extra.tokenValues[extra.openCurlyToken - 5];
+                regex = check ? (FnExprTokens.indexOf(check) < 0) : true;
             }
-            if (prevToken.value === ')') {
-                checkToken = extra.tokens[extra.openParenToken - 1];
-                if (checkToken &&
-                        checkToken.type === 'Keyword' &&
-                        (checkToken.value === 'if' ||
-                         checkToken.value === 'while' ||
-                         checkToken.value === 'for' ||
-                         checkToken.value === 'with')) {
-                    return collectRegex();
-                }
-                return scanPunctuator();
-            }
-            if (prevToken.value === '}') {
-                // Dividing a function by anything makes little sense,
-                // but we have to check for that.
-                if (extra.tokens[extra.openCurlyToken - 3] &&
-                        extra.tokens[extra.openCurlyToken - 3].type === 'Keyword') {
-                    // Anonymous function.
-                    checkToken = extra.tokens[extra.openCurlyToken - 4];
-                    if (!checkToken) {
-                        return scanPunctuator();
-                    }
-                } else if (extra.tokens[extra.openCurlyToken - 4] &&
-                        extra.tokens[extra.openCurlyToken - 4].type === 'Keyword') {
-                    // Named function.
-                    checkToken = extra.tokens[extra.openCurlyToken - 5];
-                    if (!checkToken) {
-                        return collectRegex();
-                    }
-                } else {
-                    return scanPunctuator();
-                }
-                // checkToken determines whether the function is
-                // a declaration or an expression.
-                if (FnExprTokens.indexOf(checkToken.value) >= 0) {
-                    // It is an expression.
-                    return scanPunctuator();
-                }
-                // It is a declaration.
-                return collectRegex();
-            }
-            return collectRegex();
         }
-        if (prevToken.type === 'Keyword' && prevToken.value !== 'this') {
-            return collectRegex();
-        }
-        return scanPunctuator();
+
+        return regex ? collectRegex() : scanPunctuator();
     }
 
     function advance() {
@@ -3550,6 +3542,20 @@ module.exports = function (xs, f, acc) {
                     flags: token.regex.flags
                 };
             }
+            if (extra.tokenValues) {
+                extra.tokenValues.push((entry.type === 'Punctuator' || entry.type === 'Keyword') ? entry.value : null);
+            }
+            if (extra.tokenize) {
+                if (!extra.range) {
+                    delete entry.range;
+                }
+                if (!extra.loc) {
+                    delete entry.loc;
+                }
+                if (extra.delegate) {
+                    entry = extra.delegate(entry);
+                }
+            }
             extra.tokens.push(entry);
         }
 
@@ -3634,6 +3640,7 @@ module.exports = function (xs, f, acc) {
 
         processComment: function () {
             var lastChild,
+                innerComments,
                 leadingComments,
                 trailingComments,
                 bottomRight = extra.bottomRightStack,
@@ -3643,6 +3650,27 @@ module.exports = function (xs, f, acc) {
 
             if (this.type === Syntax.Program) {
                 if (this.body.length > 0) {
+                    return;
+                }
+            }
+            /**
+             * patch innnerComments for properties empty block
+             * `function a() {/** comments **\/}`
+             */
+
+            if (this.type === Syntax.BlockStatement && this.body.length === 0) {
+                innerComments = [];
+                for (i = extra.leadingComments.length - 1; i >= 0; --i) {
+                    comment = extra.leadingComments[i];
+                    if (this.range[1] >= comment.range[1]) {
+                        innerComments.unshift(comment);
+                        extra.leadingComments.splice(i, 1);
+                        extra.trailingComments.splice(i, 1);
+                    }
+                }
+                if (innerComments.length) {
+                    this.innerComments = innerComments;
+                    //bottomRight.push(this);
                     return;
                 }
             }
@@ -4562,7 +4590,7 @@ module.exports = function (xs, f, acc) {
                     restNode = new Node();
                     lex();
                     params.push(lookahead);
-                    rest = parseVariableIdentifier(params, kind);
+                    rest = parseVariableIdentifier(kind);
                     elements.push(restNode.finishRestElement(rest));
                     break;
                 } else {
@@ -4598,7 +4626,7 @@ module.exports = function (xs, f, acc) {
                 return node.finishProperty('init', key, false, key, false, true);
             }
         } else {
-            key = parseObjectPropertyKey(params, kind);
+            key = parseObjectPropertyKey();
         }
         expect(':');
         init = parsePatternWithDefault(params, kind);
@@ -4627,7 +4655,12 @@ module.exports = function (xs, f, acc) {
             return parseArrayPattern(params, kind);
         } else if (match('{')) {
             return parseObjectPattern(params, kind);
+        } else if (matchKeyword('let')) {
+            if (kind === 'const' || kind === 'let') {
+                tolerateUnexpectedToken(lookahead, Messages.UnexpectedToken);
+            }
         }
+
         params.push(lookahead);
         return parseVariableIdentifier(kind);
     }
@@ -5132,6 +5165,9 @@ module.exports = function (xs, f, acc) {
             }
             if (matchKeyword('class')) {
                 return parseClassExpression();
+            }
+            if (!strict && matchKeyword('let')) {
+                return node.finishIdentifier(lex().value);
             }
             throwUnexpectedToken(lex());
         } else if (type === Token.BooleanLiteral) {
@@ -5827,13 +5863,16 @@ module.exports = function (xs, f, acc) {
                 }
                 return parseImportDeclaration();
             case 'const':
-            case 'let':
                 return parseLexicalDeclaration({inFor: false});
             case 'function':
                 return parseFunctionDeclaration(new Node());
             case 'class':
                 return parseClassDeclaration();
             }
+        }
+
+        if (matchKeyword('let') && isLexicalDeclaration()) {
+            return parseLexicalDeclaration({inFor: false});
         }
 
         return parseStatement();
@@ -5974,6 +6013,55 @@ module.exports = function (xs, f, acc) {
         } while (startIndex < length);
 
         return list;
+    }
+
+
+    function tokenizerState() {
+        return {
+            index: index,
+            lineNumber: lineNumber,
+            lineStart: lineStart,
+            hasLineTerminator: hasLineTerminator,
+            lastIndex: lastIndex,
+            lastLineNumber: lastLineNumber,
+            lastLineStart: lastLineStart,
+            startIndex: startIndex,
+            startLineNumber: startLineNumber,
+            startLineStart: startLineStart,
+            lookahead: lookahead,
+            tokenCount: extra.tokens ? extra.tokens.length : 0
+        };
+    }
+
+    function resetTokenizerState(ts) {
+        index = ts.index;
+        lineNumber = ts.lineNumber;
+        lineStart = ts.lineStart;
+        hasLineTerminator = ts.hasLineTerminator;
+        lastIndex = ts.lastIndex;
+        lastLineNumber = ts.lastLineNumber;
+        lastLineStart = ts.lastLineStart;
+        startIndex = ts.startIndex;
+        startLineNumber = ts.startLineNumber;
+        startLineStart = ts.startLineStart;
+        lookahead = ts.lookahead;
+        if (extra.tokens) {
+            extra.tokens.splice(ts.tokenCount, extra.tokens.length);
+        }
+    }
+
+    function isLexicalDeclaration() {
+        var lexical, ts;
+
+        ts = tokenizerState();
+
+        lex();
+        lexical = (lookahead.type === Token.Identifier) || match('[') || match('{') ||
+            matchKeyword('let') || matchKeyword('yield');
+
+        resetTokenizerState(ts);
+
+        return lexical;
     }
 
     function parseLexicalDeclaration(options) {
@@ -6146,26 +6234,34 @@ module.exports = function (xs, f, acc) {
                 init = new Node();
                 kind = lex().value;
 
-                state.allowIn = false;
-                declarations = parseBindingList(kind, {inFor: true});
-                state.allowIn = previousAllowIn;
-
-                if (declarations.length === 1 && declarations[0].init === null && matchKeyword('in')) {
-                    init = init.finishLexicalDeclaration(declarations, kind);
+                if (!strict && lookahead.value === 'in') {
+                    init = init.finishIdentifier(kind);
                     lex();
                     left = init;
                     right = parseExpression();
                     init = null;
-                } else if (declarations.length === 1 && declarations[0].init === null && matchContextualKeyword('of')) {
-                    init = init.finishLexicalDeclaration(declarations, kind);
-                    lex();
-                    left = init;
-                    right = parseAssignmentExpression();
-                    init = null;
-                    forIn = false;
                 } else {
-                    consumeSemicolon();
-                    init = init.finishLexicalDeclaration(declarations, kind);
+                    state.allowIn = false;
+                    declarations = parseBindingList(kind, {inFor: true});
+                    state.allowIn = previousAllowIn;
+
+                    if (declarations.length === 1 && declarations[0].init === null && matchKeyword('in')) {
+                        init = init.finishLexicalDeclaration(declarations, kind);
+                        lex();
+                        left = init;
+                        right = parseExpression();
+                        init = null;
+                    } else if (declarations.length === 1 && declarations[0].init === null && matchContextualKeyword('of')) {
+                        init = init.finishLexicalDeclaration(declarations, kind);
+                        lex();
+                        left = init;
+                        right = parseAssignmentExpression();
+                        init = null;
+                        forIn = false;
+                    } else {
+                        consumeSemicolon();
+                        init = init.finishLexicalDeclaration(declarations, kind);
+                    }
                 }
             } else {
                 initStartToken = lookahead;
@@ -6301,11 +6397,7 @@ module.exports = function (xs, f, acc) {
             if (!(state.inIteration || state.inSwitch)) {
                 throwError(Messages.IllegalBreak);
             }
-
-            return node.finishBreakStatement(null);
-        }
-
-        if (lookahead.type === Token.Identifier) {
+        } else if (lookahead.type === Token.Identifier) {
             label = parseVariableIdentifier();
 
             key = '$' + label.name;
@@ -7037,6 +7129,8 @@ module.exports = function (xs, f, acc) {
             switch (lookahead.value) {
                 case 'let':
                 case 'const':
+                    declaration = parseLexicalDeclaration({inFor: false});
+                    return node.finishExportNamedDeclaration(declaration, specifiers, null);
                 case 'var':
                 case 'class':
                 case 'function':
@@ -7335,7 +7429,7 @@ module.exports = function (xs, f, acc) {
         extra.tokens = tokens;
     }
 
-    function tokenize(code, options) {
+    function tokenize(code, options, delegate) {
         var toString,
             tokens;
 
@@ -7372,7 +7466,10 @@ module.exports = function (xs, f, acc) {
         // Of course we collect tokens here.
         options.tokens = true;
         extra.tokens = [];
+        extra.tokenValues = [];
         extra.tokenize = true;
+        extra.delegate = delegate;
+
         // The following two fields are necessary to compute the Regex tokens.
         extra.openParenToken = -1;
         extra.openCurlyToken = -1;
@@ -7409,11 +7506,7 @@ module.exports = function (xs, f, acc) {
                 }
             }
 
-            filterTokenLocation();
             tokens = extra.tokens;
-            if (typeof extra.comments !== 'undefined') {
-                tokens.comments = extra.comments;
-            }
             if (typeof extra.errors !== 'undefined') {
                 tokens.errors = extra.errors;
             }
@@ -7510,7 +7603,7 @@ module.exports = function (xs, f, acc) {
     }
 
     // Sync with *.json manifests.
-    exports.version = '2.6.0';
+    exports.version = '2.7.0';
 
     exports.tokenize = tokenize;
 
@@ -14295,7 +14388,7 @@ var has = Object.prototype.hasOwnProperty;
 var toStr = Object.prototype.toString;
 var slice = Array.prototype.slice;
 var isArgs = _dereq_('./isArguments');
-var hasDontEnumBug = !({ 'toString': null }).propertyIsEnumerable('toString');
+var hasDontEnumBug = !({ toString: null }).propertyIsEnumerable('toString');
 var hasProtoEnumBug = function () {}.propertyIsEnumerable('prototype');
 var dontEnums = [
 	'toString',
@@ -14311,31 +14404,37 @@ var equalsConstructorPrototype = function (o) {
 	return ctor && ctor.prototype === o;
 };
 var blacklistedKeys = {
-	$window: true,
 	$console: true,
+	$frame: true,
+	$frameElement: true,
+	$frames: true,
 	$parent: true,
 	$self: true,
-	$frames: true,
 	$webkitIndexedDB: true,
-	$webkitStorageInfo: true
+	$webkitStorageInfo: true,
+	$window: true
 };
 var hasAutomationEqualityBug = (function () {
 	/* global window */
 	if (typeof window === 'undefined') { return false; }
 	for (var k in window) {
-		if (!blacklistedKeys['$' + k] && has.call(window, k) && window[k] !== null && typeof window[k] === 'object') {
-			try {
-				equalsConstructorPrototype(window[k]);
-			} catch (e) {
-				return true;
+		try {
+			if (!blacklistedKeys['$' + k] && has.call(window, k) && window[k] !== null && typeof window[k] === 'object') {
+				try {
+					equalsConstructorPrototype(window[k]);
+				} catch (e) {
+					return true;
+				}
 			}
+		} catch (e) {
+			return true;
 		}
 	}
 	return false;
 }());
 var equalsConstructorPrototypeIfNotBuggy = function (o) {
 	/* global window */
-	if (typeof window === 'undefined' && !hasAutomationEqualityBug) {
+	if (typeof window === 'undefined' || !hasAutomationEqualityBug) {
 		return equalsConstructorPrototype(o);
 	}
 	try {
@@ -14388,9 +14487,7 @@ var keysShim = function keys(object) {
 };
 
 keysShim.shim = function shimObjectKeys() {
-	if (!Object.keys) {
-		Object.keys = keysShim;
-	} else {
+	if (Object.keys) {
 		var keysWorksWithArguments = (function () {
 			// Safari 5.0 bug
 			return (Object.keys(arguments) || '').length === 2;
@@ -14405,6 +14502,8 @@ keysShim.shim = function shimObjectKeys() {
 				}
 			};
 		}
+	} else {
+		Object.keys = keysShim;
 	}
 	return Object.keys || keysShim;
 };
@@ -14939,7 +15038,7 @@ module.exports = function isArguments(value) {
                 }
 
                 node = element.node;
-                nodeType = element.wrap || node.type;
+                nodeType = node.type || element.wrap;
                 candidates = this.__keys[nodeType];
                 if (!candidates) {
                     if (this.__fallback) {
@@ -15093,7 +15192,7 @@ module.exports = function isArguments(value) {
                 continue;
             }
 
-            nodeType = element.wrap || node.type;
+            nodeType = node.type || element.wrap;
             candidates = this.__keys[nodeType];
             if (!candidates) {
                 if (this.__fallback) {
@@ -15281,7 +15380,7 @@ module.exports={
   "description": "ECMAScript JS AST traversal functions",
   "homepage": "https://github.com/estools/estraverse",
   "main": "estraverse.js",
-  "version": "4.1.0",
+  "version": "4.1.1",
   "engines": {
     "node": ">=0.10.0"
   },
@@ -15293,6 +15392,10 @@ module.exports={
     {
       "name": "michaelficarra",
       "email": "npm@michael.ficarra.me"
+    },
+    {
+      "name": "nzakas",
+      "email": "nicholas@nczconsulting.com"
     }
   ],
   "repository": {
@@ -15311,36 +15414,31 @@ module.exports={
     "jshint": "^2.5.6",
     "mocha": "^2.1.0"
   },
-  "licenses": [
-    {
-      "type": "BSD",
-      "url": "http://github.com/estools/estraverse/raw/master/LICENSE.BSD"
-    }
-  ],
+  "license": "BSD-2-Clause",
   "scripts": {
     "test": "npm run-script lint && npm run-script unit-test",
     "lint": "jshint estraverse.js",
     "unit-test": "mocha --compilers coffee:coffee-script/register"
   },
-  "gitHead": "347d52996336719b5910c7ffb5ff3ea8ecb87cf3",
+  "gitHead": "bbcccbfe98296585e4311c8755e1d00dcd581e3c",
   "bugs": {
     "url": "https://github.com/estools/estraverse/issues"
   },
-  "_id": "estraverse@4.1.0",
-  "_shasum": "40f23a76092041be6467d7f235c933b670766e05",
+  "_id": "estraverse@4.1.1",
+  "_shasum": "f6caca728933a850ef90661d0e17982ba47111a2",
   "_from": "estraverse@>=4.1.0 <5.0.0",
-  "_npmVersion": "2.8.3",
-  "_nodeVersion": "1.8.1",
+  "_npmVersion": "2.14.4",
+  "_nodeVersion": "4.1.1",
   "_npmUser": {
     "name": "constellation",
     "email": "utatane.tea@gmail.com"
   },
   "dist": {
-    "shasum": "40f23a76092041be6467d7f235c933b670766e05",
-    "tarball": "http://registry.npmjs.org/estraverse/-/estraverse-4.1.0.tgz"
+    "shasum": "f6caca728933a850ef90661d0e17982ba47111a2",
+    "tarball": "http://registry.npmjs.org/estraverse/-/estraverse-4.1.1.tgz"
   },
   "directories": {},
-  "_resolved": "https://registry.npmjs.org/estraverse/-/estraverse-4.1.0.tgz",
+  "_resolved": "https://registry.npmjs.org/estraverse/-/estraverse-4.1.1.tgz",
   "readme": "ERROR: No README data found!"
 }
 
@@ -16690,7 +16788,7 @@ module.exports.win32 = win32;
   /**
    * Returns the original source content. The only argument is the url of the
    * original source file. Returns null if no original source content is
-   * availible.
+   * available.
    */
   BasicSourceMapConsumer.prototype.sourceContentFor =
     function SourceMapConsumer_sourceContentFor(aSource, nullOnMissing) {
@@ -17070,7 +17168,7 @@ module.exports.win32 = win32;
         var section = this._sections[i];
         var sectionMappings = section.consumer._generatedMappings;
         for (var j = 0; j < sectionMappings.length; j++) {
-          var mapping = sectionMappings[i];
+          var mapping = sectionMappings[j];
 
           var source = section.consumer._sources.at(mapping.source);
           if (section.consumer.sourceRoot !== null) {
@@ -17091,10 +17189,10 @@ module.exports.win32 = win32;
             source: source,
             generatedLine: mapping.generatedLine +
               (section.generatedOffset.generatedLine - 1),
-            generatedColumn: mapping.column +
-              (section.generatedOffset.generatedLine === mapping.generatedLine)
+            generatedColumn: mapping.generatedColumn +
+              (section.generatedOffset.generatedLine === mapping.generatedLine
               ? section.generatedOffset.generatedColumn - 1
-              : 0,
+              : 0),
             originalLine: mapping.originalLine,
             originalColumn: mapping.originalColumn,
             name: name
@@ -17597,7 +17695,6 @@ module.exports.win32 = win32;
           // We add the code from "lastMapping" to "mapping":
           // First check if there is a new line in between.
           if (lastGeneratedLine < mapping.generatedLine) {
-            var code = "";
             // Associate first line with "lastMapping"
             addMappingWithCode(lastMapping, shiftNextLine());
             lastGeneratedLine++;
@@ -18310,9 +18407,9 @@ exports.SourceNode = _dereq_('./lib/source-node').SourceNode;
  * 
  * https://github.com/twada/type-name
  *
- * Copyright (c) 2014 Takuto Wada
+ * Copyright (c) 2014-2015 Takuto Wada
  * Licensed under the MIT license.
- *   http://twada.mit-license.org/
+ *   http://twada.mit-license.org/2014-2015
  */
 'use strict';
 
@@ -18347,6 +18444,8 @@ module.exports = typeName;
 },{}],65:[function(_dereq_,module,exports){
 module.exports = extend
 
+var hasOwnProperty = Object.prototype.hasOwnProperty;
+
 function extend() {
     var target = {}
 
@@ -18354,7 +18453,7 @@ function extend() {
         var source = arguments[i]
 
         for (var key in source) {
-            if (source.hasOwnProperty(key)) {
+            if (hasOwnProperty.call(source, key)) {
                 target[key] = source[key]
             }
         }
