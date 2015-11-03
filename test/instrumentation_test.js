@@ -395,6 +395,11 @@ describe('instrumentation spec', function () {
                  "assert(assert._expr(assert._capt(f(assert._capt(head,'arguments/0/arguments/0'),...assert._capt(iter(),'arguments/0/arguments/1/argument'),...assert._capt([assert._capt(foo,'arguments/0/arguments/2/argument/elements/0'),assert._capt(bar,'arguments/0/arguments/2/argument/elements/1')],'arguments/0/arguments/2/argument')),'arguments/0'),{content:'assert(f(head, ...iter(), ...[foo,bar]))',filepath:'path/to/some_test.js',line:1}));");
         });
 
+        describe('YieldExpression', function () {
+            inst("function *gen() {assert((yield bigOrSmall(size)) === 'big')}",
+                 "function*gen(){assert(assert._expr(assert._capt(assert._capt(yield bigOrSmall(assert._capt(size,'arguments/0/left/argument/arguments/0')),'arguments/0/left')==='big','arguments/0'),{content:'assert((yield bigOrSmall(size)) === \\'big\\')',filepath:'path/to/some_test.js',line:1}));}");
+        });
+
         describe('Enhanced Object Literals', function () {
 
             describe('Property: Computed (dynamic) property names', function () {
