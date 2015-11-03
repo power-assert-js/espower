@@ -1,3 +1,10 @@
+## [1.1.0](https://github.com/power-assert-js/espower/releases/tag/v1.1.0) (2015-11-03)
+
+
+  * [capture YieldExpressions](https://github.com/power-assert-js/espower/pull/20) (by [@jamestalmage](https://github.com/jamestalmage))
+  * [make AssertionVisitor more overridable](https://github.com/power-assert-js/espower/pull/19)
+
+
 ### [1.0.7](https://github.com/power-assert-js/espower/releases/tag/v1.0.7) (2015-09-21)
 
 
