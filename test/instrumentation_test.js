@@ -1,18 +1,21 @@
 (function (root, factory) {
     'use strict';
     if (typeof define === 'function' && define.amd) {
-        define(['espower', 'acorn', 'escodegen', 'assert'], factory);
+        define(['espower', 'acorn', 'acorn-es7-plugin', 'escodegen', 'assert'], factory);
     } else if (typeof exports === 'object') {
-        factory(require('..'), require('acorn'), require('escodegen'), require('assert'));
+        factory(require('..'), require('acorn'), require('acorn-es7-plugin'), require('escodegen'), require('assert'));
     } else {
-        factory(root.espower, root.acorn, root.escodegen, root.assert);
+        factory(root.espower, root.acorn, root.acornEs7Plugin, root.escodegen, root.assert);
     }
 }(this, function (
     espower,
     acorn,
+    acornEs7Plugin,
     escodegen,
     assert
 ) {
+
+acornEs7Plugin(acorn);
 
 describe('instrumentation spec', function () {
     function testWithParserOptions (jsCode, expected, options) {
@@ -27,11 +30,11 @@ describe('instrumentation spec', function () {
 
     function inst (jsCode, expected) {
         describe('with loc, range', function () {
-            var options = {ecmaVersion: 6, locations: true, ranges: true};
+            var options = {ecmaVersion: 7, locations: true, ranges: true, plugins: {asyncawait: {awaitAnywhere: true}}};
             testWithParserOptions(jsCode, expected, options);
         });
         describe('with loc', function () {
-            var options = {ecmaVersion: 6, locations: true};
+            var options = {ecmaVersion: 7, locations: true, plugins: {asyncawait: {awaitAnywhere: true}}};
             testWithParserOptions(jsCode, expected, options);
         });
     }
@@ -398,6 +401,11 @@ describe('instrumentation spec', function () {
         describe('YieldExpression', function () {
             inst("function *gen() {assert((yield bigOrSmall(size)) === 'big')}",
                  "function*gen(){assert(assert._expr(assert._capt(assert._capt(yield bigOrSmall(assert._capt(size,'arguments/0/left/argument/arguments/0')),'arguments/0/left')==='big','arguments/0'),{content:'assert((yield bigOrSmall(size)) === \\'big\\')',filepath:'path/to/some_test.js',line:1}));}");
+        });
+
+        describe('AwaitExpression', function () {
+            inst("function *gen() {assert((await bigOrSmall(size)) === 'big')}",
+                 "function*gen(){assert(assert._expr(assert._capt(assert._capt(await bigOrSmall(assert._capt(size,'arguments/0/left/argument/arguments/0')),'arguments/0/left')==='big','arguments/0'),{content:'assert((await bigOrSmall(size)) === \\'big\\')',filepath:'path/to/some_test.js',line:1}));}");
         });
 
         describe('Enhanced Object Literals', function () {

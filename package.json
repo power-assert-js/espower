@@ -31,6 +31,7 @@
   },
   "devDependencies": {
     "acorn": "^2.4.0",
+    "acorn-es7-plugin": "^1.0.7",
     "amdefine": "^1.0.0",
     "blanket": "^1.1.7",
     "browserify": "^11.1.0",
