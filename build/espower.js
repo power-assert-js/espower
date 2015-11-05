@@ -7,7 +7,7 @@
  *   author: Takuto Wada <takuto.wada@gmail.com>
  *   contributors: James Talmage
  *   homepage: http://github.com/power-assert-js/espower
- *   version: 1.1.0
+ *   version: 1.2.0
  * 
  * amdefine:
  *   license: BSD-3-Clause AND MIT
@@ -732,6 +732,7 @@ module.exports = [
     syntax.TaggedTemplateExpression,
     syntax.SpreadElement,
     syntax.YieldExpression,
+    syntax.AwaitExpression,
     syntax.Property
 ];
 
@@ -755,6 +756,7 @@ var caputuringTargetTypes = [
     syntax.NewExpression,
     syntax.UpdateExpression,
     syntax.YieldExpression,
+    syntax.AwaitExpression,
     syntax.TemplateLiteral,
     syntax.TaggedTemplateExpression
 ];
@@ -771,14 +773,14 @@ function isChildOfTaggedTemplateExpression(parentNode) {
     return parentNode.type === syntax.TaggedTemplateExpression;
 }
 
-function isYieldArgument(parentNode, currentKey) {
-    // capture the yielded result, not the promise
-    return parentNode.type === syntax.YieldExpression && currentKey === 'argument';
+function isYieldOrAwaitArgument(parentNode, currentKey) {
+    // capture the yielded/await result, not the promise
+    return (parentNode.type === syntax.YieldExpression || parentNode.type === syntax.AwaitExpression) && currentKey === 'argument';
 }
 
 module.exports = function toBeCaptured (currentNode, parentNode, currentKey) {
     return isCaputuringTargetType(currentNode) &&
-        !isYieldArgument(parentNode, currentKey) &&
+        !isYieldOrAwaitArgument(parentNode, currentKey) &&
         !isCalleeOfParent(parentNode, currentKey) &&
         !isChildOfTaggedTemplateExpression(parentNode);
 };
