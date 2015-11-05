@@ -1,3 +1,9 @@
+## [1.2.0](https://github.com/power-assert-js/espower/releases/tag/v1.2.0) (2015-11-05)
+
+
+  * [Instrument ES7 AwaitExpression Nodes](https://github.com/power-assert-js/espower/pull/21) (by [@jamestalmage](https://github.com/jamestalmage))
+
+
 ## [1.1.0](https://github.com/power-assert-js/espower/releases/tag/v1.1.0) (2015-11-03)
 
 
