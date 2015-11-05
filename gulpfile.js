@@ -47,6 +47,12 @@ var config = {
         destDir: './build',
         destName: 'source-map.js'
     },
+    acorn_es7_plugin_bundle: {
+        standalone: 'acornEs7Plugin',
+        require: 'acorn-es7-plugin',
+        destDir: './build',
+        destName: 'acorn-es7-plugin.js'
+    },
     coverage: {
         filename: 'coverage.lcov'
     },
@@ -57,7 +63,7 @@ var config = {
         browser: 'test/test-browser.html'
     }
 };
-var BUILDS = ['assert', 'escodegen', 'estraverse', 'source_map'];
+var BUILDS = ['assert', 'escodegen', 'estraverse', 'source_map', 'acorn_es7_plugin'];
 
 
 function captureStdout (filespec) {

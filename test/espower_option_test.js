@@ -1,25 +1,28 @@
 (function (root, factory) {
     'use strict';
     if (typeof define === 'function' && define.amd) {
-        define(['espower', 'acorn', 'escodegen', 'estraverse', 'source-map', 'assert'], factory);
+        define(['espower', 'acorn', 'acorn-es7-plugin', 'escodegen', 'estraverse', 'source-map', 'assert'], factory);
     } else if (typeof exports === 'object') {
-        factory(require('..'), require('acorn'), require('escodegen'), require('estraverse'), require('source-map'), require('assert'));
+        factory(require('..'), require('acorn'), require('acorn-es7-plugin'), require('escodegen'), require('estraverse'), require('source-map'), require('assert'));
     } else {
-        factory(root.espower, root.acorn, root.escodegen, root.estraverse, root.sourceMap, root.assert);
+        factory(root.espower, root.acorn, root.acornEs7Plugin, root.escodegen, root.estraverse, root.sourceMap, root.assert);
     }
 }(this, function (
     espower,
     acorn,
+    acornEs7Plugin,
     escodegen,
     estraverse,
     sourceMap,
     assert
 ) {
 
+acornEs7Plugin(acorn);
+
 var EspowerError = espower.EspowerError;
 
 function instrument (jsCode, options) {
-    var jsAST = acorn.parse(jsCode, {ecmaVersion: 6, locations: true});
+    var jsAST = acorn.parse(jsCode, {ecmaVersion: 7, locations: true, plugins: {asyncawait: true}});
     var espoweredAST = espower(jsAST, options);
     var instrumentedCode = escodegen.generate(espoweredAST, {format: {compact: true}});
     return instrumentedCode;
