@@ -1,3 +1,9 @@
+### [1.2.1](https://github.com/power-assert-js/espower/releases/tag/v1.2.1) (2015-11-06)
+
+
+  * [disambiguate between function calls and async/yield expressions](https://github.com/power-assert-js/espower/pull/23) (by [@jamestalmage](https://github.com/jamestalmage))
+
+
 ## [1.2.0](https://github.com/power-assert-js/espower/releases/tag/v1.2.0) (2015-11-05)
 
 
