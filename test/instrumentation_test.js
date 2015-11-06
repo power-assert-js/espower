@@ -30,11 +30,11 @@ describe('instrumentation spec', function () {
 
     function inst (jsCode, expected) {
         describe('with loc, range', function () {
-            var options = {ecmaVersion: 7, locations: true, ranges: true, plugins: {asyncawait: {awaitAnywhere: true}}};
+            var options = {ecmaVersion: 7, locations: true, ranges: true, plugins: {asyncawait: true}};
             testWithParserOptions(jsCode, expected, options);
         });
         describe('with loc', function () {
-            var options = {ecmaVersion: 7, locations: true, plugins: {asyncawait: {awaitAnywhere: true}}};
+            var options = {ecmaVersion: 7, locations: true, plugins: {asyncawait: true}};
             testWithParserOptions(jsCode, expected, options);
         });
     }
@@ -400,12 +400,46 @@ describe('instrumentation spec', function () {
 
         describe('YieldExpression', function () {
             inst("function *gen() {assert((yield bigOrSmall(size)) === 'big')}",
-                 "function*gen(){assert(assert._expr(assert._capt(assert._capt(yield bigOrSmall(assert._capt(size,'arguments/0/left/argument/arguments/0')),'arguments/0/left')==='big','arguments/0'),{content:'assert((yield bigOrSmall(size)) === \\'big\\')',filepath:'path/to/some_test.js',line:1}));}");
+                 "function*gen(){assert(assert._expr(assert._capt(assert._capt(yield bigOrSmall(assert._capt(size,'arguments/0/left/argument/arguments/0')),'arguments/0/left')==='big','arguments/0'),{content:'assert((yield bigOrSmall(size)) === \\'big\\')',filepath:'path/to/some_test.js',generator:true,line:1}));}");
+        });
+
+        describe('YieldExpression vs FunctionCall disambiguation', function () {
+            inst("function baz() {assert((yield (foo)) === bar)}",
+                 "function baz(){assert(assert._expr(assert._capt(assert._capt(yield(assert._capt(foo,'arguments/0/left/arguments/0')),'arguments/0/left')===assert._capt(bar,'arguments/0/right'),'arguments/0'),{content:'assert(yield(foo) === bar)',filepath:'path/to/some_test.js',line:1}));}");
+
+            inst("function *baz() {assert((yield (foo)) === bar)}",
+                 "function*baz(){assert(assert._expr(assert._capt(assert._capt(yield foo,'arguments/0/left')===assert._capt(bar,'arguments/0/right'),'arguments/0'),{content:'assert((yield foo) === bar)',filepath:'path/to/some_test.js',generator:true,line:1}));}");
+
+            inst("var baz = function () {assert((yield (foo)) === bar)}",
+                 "var baz=function(){assert(assert._expr(assert._capt(assert._capt(yield(assert._capt(foo,'arguments/0/left/arguments/0')),'arguments/0/left')===assert._capt(bar,'arguments/0/right'),'arguments/0'),{content:'assert(yield(foo) === bar)',filepath:'path/to/some_test.js',line:1}));};");
+
+            inst("var baz = function *() {assert((yield (foo)) === bar)}",
+                 "var baz=function*(){assert(assert._expr(assert._capt(assert._capt(yield foo,'arguments/0/left')===assert._capt(bar,'arguments/0/right'),'arguments/0'),{content:'assert((yield foo) === bar)',filepath:'path/to/some_test.js',generator:true,line:1}));};");
         });
 
         describe('AwaitExpression', function () {
-            inst("function *gen() {assert((await bigOrSmall(size)) === 'big')}",
-                 "function*gen(){assert(assert._expr(assert._capt(assert._capt(await bigOrSmall(assert._capt(size,'arguments/0/left/argument/arguments/0')),'arguments/0/left')==='big','arguments/0'),{content:'assert((await bigOrSmall(size)) === \\'big\\')',filepath:'path/to/some_test.js',line:1}));}");
+            inst("async function gen() {assert((await bigOrSmall(size)) === 'big')}",
+                 "async function gen(){assert(assert._expr(assert._capt(assert._capt(await bigOrSmall(assert._capt(size,'arguments/0/left/argument/arguments/0')),'arguments/0/left')==='big','arguments/0'),{async:true,content:'assert((await bigOrSmall(size)) === \\'big\\')',filepath:'path/to/some_test.js',line:1}));}");
+        });
+
+        describe('AwaitExpression vs FunctionCall disambiguation', function () {
+            inst("function baz() {assert((await (foo)) === bar)}",
+                 "function baz(){assert(assert._expr(assert._capt(assert._capt(await(assert._capt(foo,'arguments/0/left/arguments/0')),'arguments/0/left')===assert._capt(bar,'arguments/0/right'),'arguments/0'),{content:'assert(await(foo) === bar)',filepath:'path/to/some_test.js',line:1}));}");
+
+            inst("async function baz() {assert((await (foo)) === bar)}",
+                 "async function baz(){assert(assert._expr(assert._capt(assert._capt(await foo,'arguments/0/left')===assert._capt(bar,'arguments/0/right'),'arguments/0'),{async:true,content:'assert((await foo) === bar)',filepath:'path/to/some_test.js',line:1}));}");
+
+            inst("var baz = function () {assert((await (foo)) === bar)}",
+                 "var baz=function(){assert(assert._expr(assert._capt(assert._capt(await(assert._capt(foo,'arguments/0/left/arguments/0')),'arguments/0/left')===assert._capt(bar,'arguments/0/right'),'arguments/0'),{content:'assert(await(foo) === bar)',filepath:'path/to/some_test.js',line:1}));};");
+
+            inst("var baz = async function () {assert((await (foo)) === bar)}",
+                 "var baz=async function(){assert(assert._expr(assert._capt(assert._capt(await foo,'arguments/0/left')===assert._capt(bar,'arguments/0/right'),'arguments/0'),{async:true,content:'assert((await foo) === bar)',filepath:'path/to/some_test.js',line:1}));};");
+
+            inst("var baz = () => {assert((await (foo)) === bar)};",
+                 "var baz=()=>{assert(assert._expr(assert._capt(assert._capt(await(assert._capt(foo,'arguments/0/left/arguments/0')),'arguments/0/left')===assert._capt(bar,'arguments/0/right'),'arguments/0'),{content:'assert(await(foo) === bar)',filepath:'path/to/some_test.js',line:1}));};");
+
+            inst("var baz = async () => {assert((await (foo)) === bar)}",
+                 "var baz=async()=>{assert(assert._expr(assert._capt(assert._capt(await foo,'arguments/0/left')===assert._capt(bar,'arguments/0/right'),'arguments/0'),{async:true,content:'assert((await foo) === bar)',filepath:'path/to/some_test.js',line:1}));};");
         });
 
         describe('Enhanced Object Literals', function () {
