@@ -7,7 +7,7 @@
  *   author: Takuto Wada <takuto.wada@gmail.com>
  *   contributors: James Talmage
  *   homepage: http://github.com/power-assert-js/espower
- *   version: 1.2.0
+ *   version: 1.2.1
  * 
  * amdefine:
  *   license: BSD-3-Clause AND MIT
@@ -225,7 +225,7 @@ function astEqual (ast1, ast2) {
     return deepEqual(espurify(ast1), espurify(ast2));
 }
 
-function AssertionVisitor (matcher, assertionPath, options) {
+function AssertionVisitor (matcher, assertionPath, enclosingFunc, options) {
     this.matcher = matcher;
     this.assertionPath = [].concat(assertionPath);
     this.options = options || {};
@@ -234,6 +234,8 @@ function AssertionVisitor (matcher, assertionPath, options) {
     }
     this.currentArgumentPath = null;
     this.argumentModified = false;
+    this.withinGenerator = enclosingFunc && enclosingFunc.generator;
+    this.withinAsync = enclosingFunc && enclosingFunc.async;
 }
 
 AssertionVisitor.prototype.enter = function (currentNode, parentNode) {
@@ -345,8 +347,14 @@ AssertionVisitor.prototype.captureArgument = function (node) {
     var n = newNodeWithLocationCopyOf(node);
     var props = [];
     var newCalleeObject = updateLocRecursively(espurify(this.powerAssertCalleeObject), n, this.options.visitorKeys);
+    if (this.withinAsync) {
+        addLiteralTo(props, n, 'async', true);
+    }
     addLiteralTo(props, n, 'content', this.canonicalCode);
     addLiteralTo(props, n, 'filepath', this.filepath);
+    if (this.withinGenerator) {
+        addLiteralTo(props, n, 'generator', true);
+    }
     addLiteralTo(props, n, 'line', this.lineNum);
     return n({
         type: syntax.CallExpression,
@@ -641,7 +649,8 @@ Instrumentor.prototype.instrument = function (ast) {
                 var candidates = that.matchers.filter(function (matcher) { return matcher.test(currentNode); });
                 if (candidates.length === 1) {
                     // entering target assertion
-                    assertionVisitor = new AssertionVisitor(candidates[0], path, that.options);
+                    var enclosingFunc = findEnclosingFunction(controller.parents());
+                    assertionVisitor = new AssertionVisitor(candidates[0], path, enclosingFunc, that.options);
                     assertionVisitor.enter(currentNode, parentNode);
                     return undefined;
                 }
@@ -685,6 +694,23 @@ Instrumentor.prototype.instrument = function (ast) {
 
 function isCalleeOfParentCallExpression (parentNode, currentKey) {
     return parentNode.type === syntax.CallExpression && currentKey === 'callee';
+}
+
+function isFunction(node) {
+    return [
+          syntax.FunctionDeclaration,
+          syntax.FunctionExpression,
+          syntax.ArrowFunctionExpression
+      ].indexOf(node.type) !== -1;
+}
+
+function findEnclosingFunction(parents) {
+    for (var i = parents.length - 1; i >= 0; i--) {
+        if (isFunction(parents[i])) {
+            return parents[i];
+        }
+    }
+    return null;
 }
 
 function verifyAstPrerequisites (ast, options) {
