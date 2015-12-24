@@ -430,7 +430,7 @@ describe('sourceRoot option', function () {
     function sourceRootTest (testName, config) {
         it(testName, function () {
             var jsCode = 'assert(falsyStr);';
-            var jsAST = acorn.parse(jsCode, {ecmaVersion: 6, locations: true, sourceFile: config.path});
+            var jsAST = acorn.parse(jsCode, {ecmaVersion: 6, locations: true, sourceFile: config.incomingFilepath});
             var espoweredAST = espower(jsAST, {
                 path: config.incomingFilepath,
                 sourceRoot: config.espowerSourceRoot
