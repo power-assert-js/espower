@@ -148,42 +148,60 @@ describe('EspowerLocationDetector: incoming SourceMap support', function () {
 });
 
 
-// describe('sourceRoot option', function () {
-//     function sourceRootTest (testName, config) {
-//         it(testName, function () {
-//             var jsCode = 'assert(falsyStr);';
-//             var jsAST = acorn.parse(jsCode, {ecmaVersion: 6, locations: true, sourceFile: config.path});
-//             var espoweredAST = espower(jsAST, {
-//                 path: config.incomingFilepath,
-//                 sourceRoot: config.espowerSourceRoot
-//             });
-//             var instrumentedCode = escodegen.generate(espoweredAST, {format: {compact: true}});
-//             assert.equal(instrumentedCode, "assert(assert._expr(assert._capt(falsyStr,'arguments/0'),{content:'assert(falsyStr)',filepath:'" + config.filepathInGeneratedCode + "',line:1}));");
-//         });
-//     }
+describe('sourceRoot option', function () {
 
-//     sourceRootTest('when sourceRoot ends with slash', {
-//         incomingFilepath: '/path/to/project/test/some_test.js',
-//         espowerSourceRoot: '/path/to/project/',
-//         filepathInGeneratedCode: 'test/some_test.js'
-//     });
+    function sourceRootTest (testName, opts) {
+        it(testName, function () {
+            var jsCode = 'assert(falsyStr);';
+            var jsAST = acorn.parse(jsCode, {ecmaVersion: 6, locations: true, sourceFile: opts.incomingFilepath});
 
-//     sourceRootTest('when sourceRoot does not end with slash', {
-//         incomingFilepath: '/path/to/project/test/some_test.js',
-//         espowerSourceRoot: '/path/to/project',
-//         filepathInGeneratedCode: 'test/some_test.js'
-//     });
+            var matcher = escallmatch('assert(value, [message])');
+            var callexp;
+            estraverse.traverse(jsAST, {
+                enter: function (currentNode) {
+                    if (matcher.test(currentNode)) {
+                        callexp = currentNode;
+                        return this.break();
+                    }
+                    return undefined;
+                }
+            });
 
-//     sourceRootTest('when path is already relative, just use it even if sourceRoot exists', {
-//         incomingFilepath: 'any/test/some_test.js',
-//         espowerSourceRoot: '/path/to/any/test',
-//         filepathInGeneratedCode: 'any/test/some_test.js'
-//     });
+            var detector = new EspowerLocationDetector({
+                path: opts.incomingFilepath,
+                sourceRoot: opts.espowerSourceRoot
+            });
+            var result = detector.locationFor(callexp);
+            assert.deepEqual(result, {
+                source: opts.filepathInGeneratedCode,
+                line: 1,
+                column: 0
+            });
+        });
+    }
 
-//     sourceRootTest('when incoming absolute filepath conflicts with options.sourceRoot, fallback to basename', {
-//         incomingFilepath: '/some/path/to/project/test/original_test.js',
-//         espowerSourceRoot: '/another/path/to/project/',
-//         filepathInGeneratedCode: 'original_test.js'
-//     });
-// });
+    sourceRootTest('when sourceRoot ends with slash', {
+        incomingFilepath: '/path/to/project/test/some_test.js',
+        espowerSourceRoot: '/path/to/project/',
+        filepathInGeneratedCode: 'test/some_test.js'
+    });
+
+    sourceRootTest('when sourceRoot does not end with slash', {
+        incomingFilepath: '/path/to/project/test/some_test.js',
+        espowerSourceRoot: '/path/to/project',
+        filepathInGeneratedCode: 'test/some_test.js'
+    });
+
+    sourceRootTest('when path is already relative, just use it even if sourceRoot exists', {
+        incomingFilepath: 'any/test/some_test.js',
+        espowerSourceRoot: '/path/to/any/test',
+        filepathInGeneratedCode: 'any/test/some_test.js'
+    });
+
+    sourceRootTest('when incoming absolute filepath conflicts with options.sourceRoot, fallback to basename', {
+        incomingFilepath: '/some/path/to/project/test/original_test.js',
+        espowerSourceRoot: '/another/path/to/project/',
+        filepathInGeneratedCode: 'original_test.js'
+    });
+});
 
