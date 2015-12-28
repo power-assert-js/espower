@@ -56,7 +56,8 @@ describe('EspowerLocationDetector: incoming SourceMap support', function () {
             var result = detector.locationFor(callexp);
             assert.deepEqual(result, {
                 source: opts.expectedPath,
-                line: 4
+                line: 4,
+                column: 0
             });
         });
     }
