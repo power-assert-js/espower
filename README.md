@@ -16,13 +16,13 @@ Power Assert feature instrumentor based on the [ECMAScript AST](https://github.c
 
 DESCRIPTION
 ---------------------------------------
-`espower` is a core module of [power-assert](http://github.com/power-assert-js/power-assert) family. 
+`espower` is a core module of [power-assert](https://github.com/power-assert-js/power-assert) family. 
 
 
 `espower` detects and manipulates assertion expression (JavaScript Code) in the form of ECMAScript AST defined in [The ESTree Spec](https://github.com/estree/estree) (formerly known as [Mozilla SpiderMonkey Parser API](https://developer.mozilla.org/en-US/docs/SpiderMonkey/Parser_API)), to instrument power-assert feature into returned new AST object. AST in, AST out. Since 0.11.0, `espower` can transform ES6 AST as well.
 
 
-Pull-requests, issue reports and patches are always welcomed. See [power-assert](http://github.com/power-assert-js/power-assert) project for more documentation.
+Pull-requests, issue reports and patches are always welcomed. See [power-assert](https://github.com/power-assert-js/power-assert) project for more documentation.
 
 
 CHANGELOG
@@ -102,7 +102,7 @@ If `false`, espower clones `originalAst` deeply, so `originalAst` will be unchan
 Target patterns for power assert feature instrumentation.
 
 If callee name (for example, `assert.equal`) matches exactly and number of arguments is satisfied, then the assertion will be modified.
-Detection is done by [escallmatch](http://github.com/twada/escallmatch). Any arguments enclosed in bracket (for example, `[message]`) means optional parameters. Without bracket means mandatory parameters.
+Detection is done by [escallmatch](https://github.com/twada/escallmatch). Any arguments enclosed in bracket (for example, `[message]`) means optional parameters. Without bracket means mandatory parameters.
 
 
 #### (optional) options.path
@@ -245,7 +245,7 @@ Then load (`espower` function is exported)
 
 AUTHOR
 ---------------------------------------
-* [Takuto Wada](http://github.com/twada)
+* [Takuto Wada](https://github.com/twada)
 
 
 CONTRIBUTORS
@@ -261,17 +261,17 @@ Licensed under the [MIT](https://github.com/power-assert-js/espower/blob/master/
 [npm-url]: https://npmjs.org/package/espower
 [npm-image]: https://badge.fury.io/js/espower.svg
 
-[bower-url]: http://badge.fury.io/bo/espower
+[bower-url]: https://badge.fury.io/bo/espower
 [bower-image]: https://badge.fury.io/bo/espower.svg
 
-[travis-url]: http://travis-ci.org/power-assert-js/espower
+[travis-url]: https://travis-ci.org/power-assert-js/espower
 [travis-image]: https://secure.travis-ci.org/power-assert-js/espower.svg?branch=master
 
 [depstat-url]: https://gemnasium.com/power-assert-js/espower
 [depstat-image]: https://gemnasium.com/power-assert-js/espower.svg
 
 [license-url]: https://github.com/power-assert-js/espower/blob/master/MIT-LICENSE.txt
-[license-image]: http://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat
+[license-image]: https://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat
 
 [codeclimate-url]: https://codeclimate.com/github/power-assert-js/espower
 [codeclimate-image]: https://codeclimate.com/github/power-assert-js/espower/badges/gpa.svg
@@ -280,4 +280,4 @@ Licensed under the [MIT](https://github.com/power-assert-js/espower/blob/master/
 [coverage-image]: https://coveralls.io/repos/power-assert-js/espower/badge.svg?branch=master
 
 [gulp-url]: http://gulpjs.com/
-[gulp-image]: http://img.shields.io/badge/built_with-gulp-brightgreen.svg
+[gulp-image]: https://img.shields.io/badge/built_with-gulp-brightgreen.svg
