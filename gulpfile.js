@@ -17,40 +17,44 @@ var config = {
     jshint: {
         src: './lib/**/*.js'
     },
+    dist: {
+        destDir: './build',
+        destName: 'espower.js'
+    },
     bundle: {
         standalone: 'espower',
         srcFile: './index.js',
-        destDir: './build',
+        destDir: './local_build',
         destName: 'espower.js'
     },
     assert_bundle: {
         standalone: 'assert',
         require: 'assert',
-        destDir: './build',
+        destDir: './local_build',
         destName: 'assert.js'
     },
     escodegen_bundle: {
         standalone: 'escodegen',
         srcFile: './node_modules/escodegen/escodegen.js',
-        destDir: './build',
+        destDir: './local_build',
         destName: 'escodegen.js'
     },
     estraverse_bundle: {
         standalone: 'estraverse',
         srcFile: './node_modules/estraverse/estraverse.js',
-        destDir: './build',
+        destDir: './local_build',
         destName: 'estraverse.js'
     },
     source_map_bundle: {
         standalone: 'sourceMap',
         srcFile: './node_modules/source-map/source-map.js',
-        destDir: './build',
+        destDir: './local_build',
         destName: 'source-map.js'
     },
     acorn_es7_plugin_bundle: {
         standalone: 'acornEs7Plugin',
         require: 'acorn-es7-plugin',
-        destDir: './build',
+        destDir: './local_build',
         destName: 'acorn-es7-plugin.js'
     },
     coverage: {
@@ -63,7 +67,7 @@ var config = {
         browser: 'test/test-browser.html'
     }
 };
-var BUILDS = ['assert', 'escodegen', 'estraverse', 'source_map', 'acorn_es7_plugin'];
+var LOCAL_BUILDS = ['assert', 'escodegen', 'estraverse', 'source_map', 'acorn_es7_plugin'];
 
 
 function captureStdout (filespec) {
@@ -150,7 +154,7 @@ gulp.task('bundle', ['clean_bundle'], function() {
         .pipe(gulp.dest(config.bundle.destDir));
 });
 
-BUILDS.forEach(function (name) {
+LOCAL_BUILDS.forEach(function (name) {
     gulp.task('clean_' + name + '_bundle', function () {
         del.sync([path.join(config[name + '_bundle'].destDir, config[name + '_bundle'].destName)]);
     });
@@ -168,8 +172,8 @@ BUILDS.forEach(function (name) {
             .pipe(gulp.dest(config[name + '_bundle'].destDir));
     });
 });
-gulp.task('clean_deps', BUILDS.map(function (name) { return 'clean_' + name + '_bundle'; }));
-gulp.task('build_deps', BUILDS.map(function (name) { return name + '_bundle'; }));
+gulp.task('clean_deps', LOCAL_BUILDS.map(function (name) { return 'clean_' + name + '_bundle'; }));
+gulp.task('build_deps', LOCAL_BUILDS.map(function (name) { return name + '_bundle'; }));
 
 gulp.task('unit', function () {
     return runMochaSimply();
@@ -201,6 +205,16 @@ gulp.task('lint', function() {
         .pipe(jshint.reporter(stylish));
 });
 
-gulp.task('clean', ['clean_coverage', 'clean_bundle', 'clean_deps']);
+gulp.task('clean_dist', function () {
+    del.sync([config.dist.destDir]);
+});
+
+gulp.task('dist', ['clean_dist', 'bundle'], function () {
+    return gulp
+        .src(path.join(config.bundle.destDir, config.bundle.destName))
+        .pipe(gulp.dest(config.dist.destDir));
+});
+
+gulp.task('clean', ['clean_dist', 'clean_coverage', 'clean_bundle', 'clean_deps']);
 
 gulp.task('test', ['unit','test_browser','test_amd']);

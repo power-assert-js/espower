@@ -84,11 +84,14 @@
     "url": "http://github.com/power-assert-js/espower.git"
   },
   "scripts": {
+    "preversion": "npm test",
+    "version": "npm run dist && git add -A build",
     "bower": "bower install --config.interactive=false",
+    "dist": "npm run build && gulp dist",
     "build": "npm prune && npm dedupe && gulp bundle",
     "clean": "gulp clean",
     "lint": "gulp lint",
-    "test": "npm run clean && npm run lint && npm run build && gulp test",
+    "test": "npm run lint && npm run build && gulp test",
     "unit": "gulp unit",
     "watch": "gulp watch",
     "coveralls": "gulp coverage && cat ./coverage.lcov | coveralls"
