@@ -59,12 +59,10 @@
     "CHANGELOG.md",
     "MIT-LICENSE.txt",
     "README.md",
-    "gulpfile.js",
     "index.js",
     "build/espower.js",
     "lib",
-    "package.json",
-    "test"
+    "package.json"
   ],
   "homepage": "http://github.com/power-assert-js/espower",
   "keywords": [
