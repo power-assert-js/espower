@@ -1,3 +1,4 @@
+'use strict';
 var _PowerAssertRecorder1 = function () {
     function PowerAssertRecorder() {
         this.captured = [];
@@ -20,7 +21,6 @@ var _PowerAssertRecorder1 = function () {
     };
     return PowerAssertRecorder;
 }();
-'use strict';
 var assert = require('power-assert');
 describe('Array#indexOf()', function () {
     beforeEach(function () {

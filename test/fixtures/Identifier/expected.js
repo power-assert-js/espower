@@ -1,3 +1,4 @@
+'use strict';
 var _PowerAssertRecorder1 = function () {
     function PowerAssertRecorder() {
         this.captured = [];
@@ -32,7 +33,6 @@ var _rec9 = new _PowerAssertRecorder1();
 var _rec10 = new _PowerAssertRecorder1();
 var _rec11 = new _PowerAssertRecorder1();
 var _rec12 = new _PowerAssertRecorder1();
-'use strict';
 assert(_rec1._expr(_rec1._capt(falsyStr, 'arguments/0'), {
     content: 'assert(falsyStr)',
     filepath: 'path/to/some_test.js',
