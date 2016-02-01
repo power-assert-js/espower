@@ -54,3 +54,7 @@ describe('espower', function () {
     testTransform('Property');
     testTransform('YieldExpression');
 });
+
+describe.only('recorder per argument', function () {
+    testTransform('Mocha');
+});
