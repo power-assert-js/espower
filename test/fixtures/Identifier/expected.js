@@ -1,3 +1,15 @@
+var _rec = new _powerAssertRecorder();
+var _rec = new _powerAssertRecorder();
+var _rec = new _powerAssertRecorder();
+var _rec = new _powerAssertRecorder();
+var _rec = new _powerAssertRecorder();
+var _rec = new _powerAssertRecorder();
+var _rec = new _powerAssertRecorder();
+var _rec = new _powerAssertRecorder();
+var _rec = new _powerAssertRecorder();
+var _rec = new _powerAssertRecorder();
+var _rec = new _powerAssertRecorder();
+var _rec = new _powerAssertRecorder();
 'use strict';
 assert(assert._expr(assert._capt(falsyStr, 'arguments/0'), {
     content: 'assert(falsyStr)',

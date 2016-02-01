@@ -57,4 +57,5 @@ describe('espower', function () {
 
 describe.only('recorder per argument', function () {
     testTransform('Mocha');
+    testTransform('Identifier');
 });
