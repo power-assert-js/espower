@@ -59,4 +59,5 @@ describe.only('recorder per argument', function () {
     testTransform('Mocha');
     testTransform('Identifier');
     testTransform('BinaryExpression');
+    testTransform('UnaryExpression');
 });
