@@ -75,4 +75,6 @@ describe.only('recorder per argument', function () {
     testTransform('FunctionExpression');
     testTransform('ArrowFunctionExpression');
     testTransform('ClassExpression');
+    testTransform('TemplateLiteral');
+    testTransform('TaggedTemplateExpression');
 });
