@@ -57,6 +57,7 @@ describe('espower', function () {
 
 describe.only('recorder per argument', function () {
     testTransform('Mocha');
+    testTransform('NonTarget');
     testTransform('Identifier');
     testTransform('BinaryExpression');
     testTransform('UnaryExpression');
@@ -71,4 +72,5 @@ describe.only('recorder per argument', function () {
     testTransform('UpdateExpression');
     testTransform('FunctionExpression');
     testTransform('ArrowFunctionExpression');
+    testTransform('ClassExpression');
 });
