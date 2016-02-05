@@ -60,4 +60,5 @@ describe.only('recorder per argument', function () {
     testTransform('Identifier');
     testTransform('BinaryExpression');
     testTransform('UnaryExpression');
+    testTransform('MemberExpression');
 });
