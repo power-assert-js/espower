@@ -62,4 +62,7 @@ describe.only('recorder per argument', function () {
     testTransform('UnaryExpression');
     testTransform('MemberExpression');
     testTransform('CallExpression');
+    testTransform('ArrayExpression');
+    testTransform('ObjectExpression');
+    testTransform('Property');
 });
