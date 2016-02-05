@@ -79,4 +79,5 @@ describe.only('recorder per argument', function () {
     testTransform('TaggedTemplateExpression');
     testTransform('SpreadElement');
     testTransform('YieldExpression');
+    testTransform('AwaitExpression');
 });
