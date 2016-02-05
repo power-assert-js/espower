@@ -77,4 +77,5 @@ describe.only('recorder per argument', function () {
     testTransform('ClassExpression');
     testTransform('TemplateLiteral');
     testTransform('TaggedTemplateExpression');
+    testTransform('SpreadElement');
 });
