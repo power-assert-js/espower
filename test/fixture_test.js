@@ -29,33 +29,7 @@ function testTransform (fixtureName, extraOptions) {
     });
 }
 
-describe('espower', function () {
-    testTransform('Mocha');
-    testTransform('NonTarget');
-    testTransform('Literal');
-    testTransform('Identifier');
-    testTransform('BinaryExpression');
-    testTransform('UnaryExpression');
-    testTransform('LogicalExpression');
-    testTransform('MemberExpression');
-    testTransform('CallExpression');
-    testTransform('AssignmentExpression');
-    testTransform('ArrayExpression');
-    testTransform('UpdateExpression');
-    testTransform('ConditionalExpression');
-    testTransform('ObjectExpression');
-    testTransform('NewExpression');
-    testTransform('FunctionExpression');
-    testTransform('TemplateLiteral');
-    testTransform('TaggedTemplateExpression');
-    testTransform('ArrowFunctionExpression');
-    testTransform('ClassExpression');
-    testTransform('SpreadElement');
-    testTransform('Property');
-    testTransform('YieldExpression');
-});
-
-describe.only('recorder per argument', function () {
+describe('fixtures', function () {
     testTransform('Mocha');
     testTransform('NonTarget');
     testTransform('Literal');
