@@ -65,4 +65,6 @@ describe.only('recorder per argument', function () {
     testTransform('ArrayExpression');
     testTransform('ObjectExpression');
     testTransform('Property');
+    testTransform('LogicalExpression');
+    testTransform('ConditionalExpression');
 });
