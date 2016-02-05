@@ -58,11 +58,13 @@ describe('espower', function () {
 describe.only('recorder per argument', function () {
     testTransform('Mocha');
     testTransform('NonTarget');
+    testTransform('Literal');
     testTransform('Identifier');
     testTransform('BinaryExpression');
     testTransform('UnaryExpression');
     testTransform('MemberExpression');
     testTransform('CallExpression');
+    testTransform('NewExpression');
     testTransform('ArrayExpression');
     testTransform('ObjectExpression');
     testTransform('Property');
