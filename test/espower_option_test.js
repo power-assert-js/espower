@@ -236,7 +236,7 @@ describe('AST prerequisites. Error should be thrown if AST is already instrument
     });
 
     it('when going to instrument "browser.assert.element(foo);" twice', function () {
-        var alreadyEspoweredCode = "browser.assert.element(browser._rec1._expr(browser._rec1._capt(foo,'arguments/0'),{content:'browser.assert.element(foo)',line:1}));";
+        var alreadyEspoweredCode = "browser.assert.element(_rec1._expr(_rec1._capt(foo,'arguments/0'),{content:'browser.assert.element(foo)',line:1}));";
         var ast = acorn.parse(alreadyEspoweredCode, {ecmaVersion: 6, locations: true});
         try {
             espower(ast, {
