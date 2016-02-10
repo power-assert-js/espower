@@ -28,6 +28,16 @@ function instrument (jsCode, options) {
     return instrumentedCode;
 }
 
+function rec(num) {
+    return 'var _rec' + num + '=new _PowerAssertRecorder1();';
+}
+function prelude(num) {
+    var decl = "var _PowerAssertRecorder1=function(){function PowerAssertRecorder(){this.captured=[];}PowerAssertRecorder.prototype._capt=function _capt(value,espath){this.captured.push({value:value,espath:espath});return value;};PowerAssertRecorder.prototype._expr=function _expr(value,source){return{powerAssertContext:{value:value,events:this.captured},source:source};};return PowerAssertRecorder;}();";
+    for (var i = 1; i <= num; i+=1) {
+        decl += rec(i);
+    }
+    return decl;
+}
 
 describe('espower.defaultOptions()', function () {
     beforeEach(function () {
@@ -121,7 +131,8 @@ describe('instrumentation tests for options', function () {
                     'refute(value)'
                 ]
             });
-            assert.equal(instrumentedCode, "refute(_rec1._expr(_rec1._capt(falsyStr,'arguments/0'),{content:'refute(falsyStr)',line:1}));");
+            assert.equal(instrumentedCode,
+                         prelude(1) + "refute(_rec1._expr(_rec1._capt(falsyStr,'arguments/0'),{content:'refute(falsyStr)',line:1}));");
         });
 
         it('matches method call', function () {
@@ -130,7 +141,8 @@ describe('instrumentation tests for options', function () {
                     'refute.equal(actual, expected)'
                 ]
             });
-            assert.equal(instrumentedCode, "refute.equal(_rec1._expr(_rec1._capt(foo,'arguments/0'),{content:'refute.equal(foo, bar)',line:1}),_rec2._expr(_rec2._capt(bar,'arguments/1'),{content:'refute.equal(foo, bar)',line:1}));");
+            assert.equal(instrumentedCode,
+                         prelude(2) + "refute.equal(_rec1._expr(_rec1._capt(foo,'arguments/0'),{content:'refute.equal(foo, bar)',line:1}),_rec2._expr(_rec2._capt(bar,'arguments/1'),{content:'refute.equal(foo, bar)',line:1}));");
         });
 
         it('deep callee chain', function () {
@@ -139,7 +151,8 @@ describe('instrumentation tests for options', function () {
                     'browser.assert.element(selection, [message])'
                 ]
             });
-            assert.equal(instrumentedCode, "browser.assert.element(_rec1._expr(_rec1._capt(foo,'arguments/0'),{content:'browser.assert.element(foo)',line:1}));");
+            assert.equal(instrumentedCode,
+                         prelude(1) + "browser.assert.element(_rec1._expr(_rec1._capt(foo,'arguments/0'),{content:'browser.assert.element(foo)',line:1}));");
         });
     });
 
@@ -147,11 +160,13 @@ describe('instrumentation tests for options', function () {
     describe('path option.', function () {
         it('path: null', function () {
             var instrumentedCode = instrument('assert(falsyStr);', {});
-            assert.equal(instrumentedCode, "assert(_rec1._expr(_rec1._capt(falsyStr,'arguments/0'),{content:'assert(falsyStr)',line:1}));");
+            assert.equal(instrumentedCode,
+                         prelude(1) + "assert(_rec1._expr(_rec1._capt(falsyStr,'arguments/0'),{content:'assert(falsyStr)',line:1}));");
         });
         it('with path', function () {
             var instrumentedCode = instrument('assert(falsyStr);', {path: 'path/to/baz_test.js'});
-            assert.equal(instrumentedCode, "assert(_rec1._expr(_rec1._capt(falsyStr,'arguments/0'),{content:'assert(falsyStr)',filepath:'path/to/baz_test.js',line:1}));");
+            assert.equal(instrumentedCode,
+                         prelude(1) + "assert(_rec1._expr(_rec1._capt(falsyStr,'arguments/0'),{content:'assert(falsyStr)',filepath:'path/to/baz_test.js',line:1}));");
         });
     });
 });
@@ -437,7 +452,8 @@ describe('sourceRoot option', function () {
                 sourceRoot: config.espowerSourceRoot
             });
             var instrumentedCode = escodegen.generate(espoweredAST, {format: {compact: true}});
-            assert.equal(instrumentedCode, "assert(_rec1._expr(_rec1._capt(falsyStr,'arguments/0'),{content:'assert(falsyStr)',filepath:'" + config.filepathInGeneratedCode + "',line:1}));");
+            assert.equal(instrumentedCode,
+                         prelude(1) + "assert(_rec1._expr(_rec1._capt(falsyStr,'arguments/0'),{content:'assert(falsyStr)',filepath:'" + config.filepathInGeneratedCode + "',line:1}));");
         });
     }
 
