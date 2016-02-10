@@ -44,6 +44,9 @@ function testTransform (fixtureName, extraOptions) {
 }
 
 describe('fixtures', function () {
+    testTransform('WithoutUseStrict');
+    testTransform('WithoutRequireAssert');
+    testTransform('WithoutUseStrictNorRequireAssert');
     testTransform('Mocha');
     testTransform('NonTarget');
     testTransform('Literal');
