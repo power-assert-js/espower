@@ -18,7 +18,6 @@
   ],
   "dependencies": {
     "array-find": "^1.0.0",
-    "deep-equal": "^1.0.0",
     "escallmatch": "^1.4.2",
     "escodegen": "^1.7.0",
     "escope": "^3.3.0",
