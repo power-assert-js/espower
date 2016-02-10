@@ -3,20 +3,21 @@
 var espower = require('..');
 var acorn = require('acorn');
 require('acorn-es7-plugin')(acorn);
+var esprima = require('esprima');
 var escodegen = require('escodegen');
 var assert = require('assert');
 var fs = require('fs');
 var path = require('path');
 var extend = require('xtend');
 
-function testTransform (fixtureName, extraOptions) {
-    it(fixtureName, function () {
+
+function testWithParser (fixtureName, parse) {
+    it(parse.name + ' ' + fixtureName, function () {
         var fixtureFilepath = path.resolve(__dirname, 'fixtures', fixtureName, 'fixture.js');
         var expectedFilepath = path.resolve(__dirname, 'fixtures', fixtureName, 'expected.js');
         var actualFilepath = path.resolve(__dirname, 'fixtures', fixtureName, 'actual.js');
 
-        var parserOptions = {ecmaVersion: 7, locations: true, plugins: { asyncawait: true }};
-        var jsAST = acorn.parse(fs.readFileSync(fixtureFilepath, 'utf8'), parserOptions);
+        var jsAST = parse(fixtureFilepath);
         var espoweredAST = espower(jsAST, {path: 'path/to/some_test.js'});
         var output = escodegen.generate(espoweredAST);
 
@@ -27,6 +28,19 @@ function testTransform (fixtureName, extraOptions) {
         }
         assert.equal(actual, expected);
     });
+}
+
+function testTransform (fixtureName, extraOptions) {
+    testWithParser(fixtureName, function by_acorn (filepath) {
+        var parserOptions = {ecmaVersion: 7, locations: true, plugins: { asyncawait: true }};
+        return acorn.parse(fs.readFileSync(filepath, 'utf8'), parserOptions);
+    });
+    if (fixtureName !== 'AwaitExpression') {
+        testWithParser(fixtureName, function by_esprima (filepath) {
+            var parserOptions = {tolerant: true, loc: true};
+            return esprima.parse(fs.readFileSync(filepath, 'utf8'), parserOptions);
+        });
+    }
 }
 
 describe('fixtures', function () {
