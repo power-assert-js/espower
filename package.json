@@ -35,7 +35,7 @@
     "acorn": "^2.4.0",
     "acorn-es7-plugin": "^1.0.7",
     "amdefine": "^1.0.0",
-    "blanket": "^1.1.7",
+    "blanket": "1.1.9",
     "browserify": "^13.0.0",
     "del": "^2.0.2",
     "esprima": "^2.7.2",
