@@ -51,6 +51,7 @@
     "licensify": "^3.1.2",
     "mocha": "^2.5.3",
     "mocha-lcov-reporter": "^1.2.0",
+    "package-json-versionify": "^1.0.2",
     "through2": "^2.0.0",
     "vinyl-source-stream": "^1.1.0"
   },
