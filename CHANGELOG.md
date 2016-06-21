@@ -1,3 +1,9 @@
+## [1.3.0](https://github.com/power-assert-js/espower/releases/tag/v1.3.0) (2016-06-21)
+
+
+  * [Support SequenceExpression (i.e., comma operator)](https://github.com/power-assert-js/espower/pull/27)
+
+
 ### [1.2.1](https://github.com/power-assert-js/espower/releases/tag/v1.2.1) (2015-11-06)
 
 
