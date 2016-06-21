@@ -45,6 +45,7 @@ describe('espower', function () {
     testTransform('ConditionalExpression');
     testTransform('ObjectExpression');
     testTransform('NewExpression');
+    testTransform('SequenceExpression');
     testTransform('FunctionExpression');
     testTransform('TemplateLiteral');
     testTransform('TaggedTemplateExpression');
