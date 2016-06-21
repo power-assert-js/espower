@@ -1,3 +1,9 @@
+### [1.3.1](https://github.com/power-assert-js/espower/releases/tag/v1.3.1) (2016-06-21)
+
+
+  * stop capturing SequenceExpression itself since SequenceExpressions are not enclosed in parentheses in some cases ([e8acbc61](https://github.com/power-assert-js/espower/commit/e8acbc61810454da05098baf6624b57d68deb3f9))
+
+
 ## [1.3.0](https://github.com/power-assert-js/espower/releases/tag/v1.3.0) (2016-06-21)
 
 
