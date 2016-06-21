@@ -7,7 +7,7 @@
  *   author: Takuto Wada <takuto.wada@gmail.com>
  *   contributors: James Talmage
  *   homepage: https://github.com/power-assert-js/espower
- *   version: 1.3.0
+ *   version: 1.3.1
  *
  * amdefine:
  *   license: BSD-3-Clause AND MIT
@@ -755,7 +755,6 @@ var caputuringTargetTypes = [
     // syntax.Property,
     syntax.ObjectExpression,
     syntax.ArrayExpression,
-    syntax.SequenceExpression,
     // syntax.ConditionalExpression,
     syntax.Identifier,
     syntax.MemberExpression,
