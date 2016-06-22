@@ -7,6 +7,7 @@ var mochaPhantomJS = require('gulp-mocha-phantomjs');
 var webserver = require('gulp-webserver');
 var del = require('del');
 var path = require('path');
+var fs = require('fs');
 var source = require('vinyl-source-stream');
 var through = require('through2');
 var browserify = require('browserify');
@@ -14,6 +15,8 @@ var licensify = require('licensify');
 var packageJsonVersionify = require('package-json-versionify');
 var dereserve = require('gulp-dereserve');
 var derequire = require('gulp-derequire');
+var acorn = require('acorn');
+var espurify = require('espurify');
 var config = {
     jshint: {
         src: './lib/**/*.js'
@@ -178,7 +181,15 @@ LOCAL_BUILDS.forEach(function (name) {
 gulp.task('clean_deps', LOCAL_BUILDS.map(function (name) { return 'clean_' + name + '_bundle'; }));
 gulp.task('build_deps', LOCAL_BUILDS.map(function (name) { return name + '_bundle'; }));
 
-gulp.task('unit', function () {
+gulp.task('generate_recorder_json', function (done) {
+    var filepath = path.join(__dirname, 'power-assert-recorder.js');
+    var ast = acorn.parse(fs.readFileSync(filepath), { ecmaVersion: 6, locations: true });
+    var callexp = espurify(ast).body[0].expression;
+    fs.writeFileSync(path.join(__dirname, 'lib', 'power-assert-recorder.json'), JSON.stringify(callexp, null, 2));
+    done();
+});
+
+gulp.task('unit', ['generate_recorder_json'], function () {
     return runMochaSimply();
 });
 

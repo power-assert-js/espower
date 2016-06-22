@@ -1,59 +1,93 @@
 'use strict';
-assert(assert._expr(assert._capt(func(), 'arguments/0'), {
+var _PowerAssertRecorder1 = function () {
+    function PowerAssertRecorder() {
+        this.captured = [];
+    }
+    PowerAssertRecorder.prototype._capt = function _capt(value, espath) {
+        this.captured.push({
+            value: value,
+            espath: espath
+        });
+        return value;
+    };
+    PowerAssertRecorder.prototype._expr = function _expr(value, source) {
+        return {
+            powerAssertContext: {
+                value: value,
+                events: this.captured
+            },
+            source: source
+        };
+    };
+    return PowerAssertRecorder;
+}();
+var _rec1 = new _PowerAssertRecorder1();
+var _rec2 = new _PowerAssertRecorder1();
+var _rec3 = new _PowerAssertRecorder1();
+var _rec4 = new _PowerAssertRecorder1();
+var _rec5 = new _PowerAssertRecorder1();
+var _rec6 = new _PowerAssertRecorder1();
+var _rec7 = new _PowerAssertRecorder1();
+var _rec8 = new _PowerAssertRecorder1();
+var _rec9 = new _PowerAssertRecorder1();
+var _rec10 = new _PowerAssertRecorder1();
+var _rec11 = new _PowerAssertRecorder1();
+var _rec12 = new _PowerAssertRecorder1();
+assert(_rec1._expr(_rec1._capt(func(), 'arguments/0'), {
     content: 'assert(func())',
     filepath: 'path/to/some_test.js',
     line: 3
 }));
-assert(assert._expr(assert._capt(assert._capt(obj, 'arguments/0/callee/object').age(), 'arguments/0'), {
+assert(_rec2._expr(_rec2._capt(_rec2._capt(obj, 'arguments/0/callee/object').age(), 'arguments/0'), {
     content: 'assert(obj.age())',
     filepath: 'path/to/some_test.js',
     line: 5
 }));
-assert(assert._expr(assert._capt(isFalsy(assert._capt(positiveInt, 'arguments/0/arguments/0')), 'arguments/0'), {
+assert(_rec3._expr(_rec3._capt(isFalsy(_rec3._capt(positiveInt, 'arguments/0/arguments/0')), 'arguments/0'), {
     content: 'assert(isFalsy(positiveInt))',
     filepath: 'path/to/some_test.js',
     line: 7
 }));
-assert(assert._expr(assert._capt(assert._capt(foo, 'arguments/0/callee/object')[assert._capt(propName, 'arguments/0/callee/property')](), 'arguments/0'), {
+assert(_rec4._expr(_rec4._capt(_rec4._capt(foo, 'arguments/0/callee/object')[_rec4._capt(propName, 'arguments/0/callee/property')](), 'arguments/0'), {
     content: 'assert(foo[propName]())',
     filepath: 'path/to/some_test.js',
     line: 9
 }));
-assert(assert._expr(assert._capt(assert._capt(foo, 'arguments/0/callee/object')[assert._capt(assert._capt(hoge, 'arguments/0/callee/property/object')[assert._capt(assert._capt(fuga, 'arguments/0/callee/property/property/object')[assert._capt(piyo, 'arguments/0/callee/property/property/property')], 'arguments/0/callee/property/property')], 'arguments/0/callee/property')](), 'arguments/0'), {
+assert(_rec5._expr(_rec5._capt(_rec5._capt(foo, 'arguments/0/callee/object')[_rec5._capt(_rec5._capt(hoge, 'arguments/0/callee/property/object')[_rec5._capt(_rec5._capt(fuga, 'arguments/0/callee/property/property/object')[_rec5._capt(piyo, 'arguments/0/callee/property/property/property')], 'arguments/0/callee/property/property')], 'arguments/0/callee/property')](), 'arguments/0'), {
     content: 'assert(foo[hoge[fuga[piyo]]]())',
     filepath: 'path/to/some_test.js',
     line: 11
 }));
-assert(assert._expr(assert._capt(assert._capt(sum(assert._capt(one, 'arguments/0/left/arguments/0'), assert._capt(two, 'arguments/0/left/arguments/1'), assert._capt(three, 'arguments/0/left/arguments/2')), 'arguments/0/left') === assert._capt(seven, 'arguments/0/right'), 'arguments/0'), {
+assert(_rec6._expr(_rec6._capt(_rec6._capt(sum(_rec6._capt(one, 'arguments/0/left/arguments/0'), _rec6._capt(two, 'arguments/0/left/arguments/1'), _rec6._capt(three, 'arguments/0/left/arguments/2')), 'arguments/0/left') === _rec6._capt(seven, 'arguments/0/right'), 'arguments/0'), {
     content: 'assert(sum(one, two, three) === seven)',
     filepath: 'path/to/some_test.js',
     line: 13
 }));
-assert(assert._expr(assert._capt(assert._capt(sum(assert._capt(sum(assert._capt(one, 'arguments/0/left/arguments/0/arguments/0'), assert._capt(two, 'arguments/0/left/arguments/0/arguments/1')), 'arguments/0/left/arguments/0'), assert._capt(three, 'arguments/0/left/arguments/1')), 'arguments/0/left') === assert._capt(sum(assert._capt(sum(assert._capt(two, 'arguments/0/right/arguments/0/arguments/0'), assert._capt(three, 'arguments/0/right/arguments/0/arguments/1')), 'arguments/0/right/arguments/0'), assert._capt(seven, 'arguments/0/right/arguments/1')), 'arguments/0/right'), 'arguments/0'), {
+assert(_rec7._expr(_rec7._capt(_rec7._capt(sum(_rec7._capt(sum(_rec7._capt(one, 'arguments/0/left/arguments/0/arguments/0'), _rec7._capt(two, 'arguments/0/left/arguments/0/arguments/1')), 'arguments/0/left/arguments/0'), _rec7._capt(three, 'arguments/0/left/arguments/1')), 'arguments/0/left') === _rec7._capt(sum(_rec7._capt(sum(_rec7._capt(two, 'arguments/0/right/arguments/0/arguments/0'), _rec7._capt(three, 'arguments/0/right/arguments/0/arguments/1')), 'arguments/0/right/arguments/0'), _rec7._capt(seven, 'arguments/0/right/arguments/1')), 'arguments/0/right'), 'arguments/0'), {
     content: 'assert(sum(sum(one, two), three) === sum(sum(two, three), seven))',
     filepath: 'path/to/some_test.js',
     line: 15
 }));
-assert(assert._expr(assert._capt(assert._capt(assert._capt(assert._capt(math, 'arguments/0/left/callee/object/object').calc, 'arguments/0/left/callee/object').sum(assert._capt(one, 'arguments/0/left/arguments/0'), assert._capt(two, 'arguments/0/left/arguments/1'), assert._capt(three, 'arguments/0/left/arguments/2')), 'arguments/0/left') === assert._capt(seven, 'arguments/0/right'), 'arguments/0'), {
+assert(_rec8._expr(_rec8._capt(_rec8._capt(_rec8._capt(_rec8._capt(math, 'arguments/0/left/callee/object/object').calc, 'arguments/0/left/callee/object').sum(_rec8._capt(one, 'arguments/0/left/arguments/0'), _rec8._capt(two, 'arguments/0/left/arguments/1'), _rec8._capt(three, 'arguments/0/left/arguments/2')), 'arguments/0/left') === _rec8._capt(seven, 'arguments/0/right'), 'arguments/0'), {
     content: 'assert(math.calc.sum(one, two, three) === seven)',
     filepath: 'path/to/some_test.js',
     line: 17
 }));
-assert(assert._expr(assert._capt(assert._capt(assert._capt(three, 'arguments/0/left/left') * assert._capt(assert._capt(seven, 'arguments/0/left/right/left') * assert._capt(ten, 'arguments/0/left/right/right'), 'arguments/0/left/right'), 'arguments/0/left') === assert._capt(three, 'arguments/0/right'), 'arguments/0'), {
+assert(_rec9._expr(_rec9._capt(_rec9._capt(_rec9._capt(three, 'arguments/0/left/left') * _rec9._capt(_rec9._capt(seven, 'arguments/0/left/right/left') * _rec9._capt(ten, 'arguments/0/left/right/right'), 'arguments/0/left/right'), 'arguments/0/left') === _rec9._capt(three, 'arguments/0/right'), 'arguments/0'), {
     content: 'assert(three * (seven * ten) === three)',
     filepath: 'path/to/some_test.js',
     line: 19
 }));
-assert(assert._expr(assert._capt(!assert._capt(concat(assert._capt(fuga, 'arguments/0/argument/arguments/0'), assert._capt(piyo, 'arguments/0/argument/arguments/1')), 'arguments/0/argument'), 'arguments/0'), {
+assert(_rec10._expr(_rec10._capt(!_rec10._capt(concat(_rec10._capt(fuga, 'arguments/0/argument/arguments/0'), _rec10._capt(piyo, 'arguments/0/argument/arguments/1')), 'arguments/0/argument'), 'arguments/0'), {
     content: 'assert(!concat(fuga, piyo))',
     filepath: 'path/to/some_test.js',
     line: 21
 }));
-assert.strictEqual(assert._expr(assert._capt(assert._capt(three, 'arguments/0/left') * assert._capt(assert._capt(seven, 'arguments/0/right/left') * assert._capt(ten, 'arguments/0/right/right'), 'arguments/0/right'), 'arguments/0'), {
+assert.strictEqual(_rec11._expr(_rec11._capt(_rec11._capt(three, 'arguments/0/left') * _rec11._capt(_rec11._capt(seven, 'arguments/0/right/left') * _rec11._capt(ten, 'arguments/0/right/right'), 'arguments/0/right'), 'arguments/0'), {
     content: 'assert.strictEqual(three * (seven * ten), math.calc.sum(one, two, three))',
     filepath: 'path/to/some_test.js',
     line: 23
-}), assert._expr(assert._capt(assert._capt(assert._capt(math, 'arguments/1/callee/object/object').calc, 'arguments/1/callee/object').sum(assert._capt(one, 'arguments/1/arguments/0'), assert._capt(two, 'arguments/1/arguments/1'), assert._capt(three, 'arguments/1/arguments/2')), 'arguments/1'), {
+}), _rec12._expr(_rec12._capt(_rec12._capt(_rec12._capt(math, 'arguments/1/callee/object/object').calc, 'arguments/1/callee/object').sum(_rec12._capt(one, 'arguments/1/arguments/0'), _rec12._capt(two, 'arguments/1/arguments/1'), _rec12._capt(three, 'arguments/1/arguments/2')), 'arguments/1'), {
     content: 'assert.strictEqual(three * (seven * ten), math.calc.sum(one, two, three))',
     filepath: 'path/to/some_test.js',
     line: 23

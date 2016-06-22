@@ -1,7 +1,7 @@
 {
   "name": "espower",
   "description": "Power Assert feature instrumentor based on the ECMAScript AST",
-  "version": "1.3.1",
+  "version": "1.3.2",
   "author": {
     "name": "Takuto Wada",
     "email": "takuto.wada@gmail.com",
@@ -18,10 +18,10 @@
   ],
   "dependencies": {
     "array-find": "^1.0.0",
-    "deep-equal": "^1.0.0",
     "escallmatch": "^1.4.2",
     "escodegen": "^1.7.0",
-    "espower-location-detector": "^0.1.1",
+    "escope": "^3.3.0",
+    "espower-location-detector": "^0.1.2",
     "espurify": "^1.3.0",
     "estraverse": "^4.1.0",
     "is-url": "^1.2.1",
@@ -38,6 +38,7 @@
     "blanket": "1.1.9",
     "browserify": "^13.0.1",
     "del": "^2.0.2",
+    "esprima": "^2.7.2",
     "gulp": "^3.9.0",
     "gulp-derequire": "^2.1.0",
     "gulp-dereserve": "^0.2.1",
