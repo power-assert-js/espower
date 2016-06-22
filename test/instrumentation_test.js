@@ -339,6 +339,21 @@ describe('instrumentation spec', function () {
     });
 
 
+    describe('SequenceExpression', function () {
+        inst("assert((2, 1, 0));",
+             "assert((2,1,0));");
+
+        inst("assert((foo, bar));",
+             "assert(assert._expr((assert._capt(foo,'arguments/0/expressions/0'),assert._capt(bar,'arguments/0/expressions/1')),{content:'assert((foo, bar))',filepath:'path/to/some_test.js',line:1}));");
+
+        inst("assert((foo, (bar, baz)));",
+             "assert(assert._expr((assert._capt(foo,'arguments/0/expressions/0'),(assert._capt(bar,'arguments/0/expressions/1/expressions/0'),assert._capt(baz,'arguments/0/expressions/1/expressions/1'))),{content:'assert((foo, (bar, baz)))',filepath:'path/to/some_test.js',line:1}));");
+
+        inst("assert((y = x, z));",
+             "assert(assert._expr((assert._capt(y=assert._capt(x,'arguments/0/expressions/0/right'),'arguments/0/expressions/0'),assert._capt(z,'arguments/0/expressions/1')),{content:'assert((y = x, z))',filepath:'path/to/some_test.js',line:1}));");
+    });
+
+
     describe('ES6', function () {
 
         describe('TemplateLiteral', function () {
