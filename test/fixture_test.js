@@ -63,6 +63,7 @@ describe('fixtures', function () {
     testTransform('ConditionalExpression');
     testTransform('AssignmentExpression');
     testTransform('UpdateExpression');
+    testTransform('SequenceExpression');
     testTransform('FunctionExpression');
     testTransform('ArrowFunctionExpression');
     testTransform('ClassExpression');
