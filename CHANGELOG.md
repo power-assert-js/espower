@@ -1,11 +1,23 @@
+### [1.3.2](https://github.com/power-assert-js/espower/releases/tag/v1.3.2) (2016-06-22)
+
+
+#### Bug Fixes
+
+  * fix breaking changes introduced in 1.3.0 and 1.3.1
+
+
 ### [1.3.1](https://github.com/power-assert-js/espower/releases/tag/v1.3.1) (2016-06-21)
 
+
+#### Bug Fixes
 
   * stop capturing SequenceExpression itself since SequenceExpressions are not enclosed in parentheses in some cases ([e8acbc61](https://github.com/power-assert-js/espower/commit/e8acbc61810454da05098baf6624b57d68deb3f9))
 
 
 ## [1.3.0](https://github.com/power-assert-js/espower/releases/tag/v1.3.0) (2016-06-21)
 
+
+#### Features
 
   * [Support SequenceExpression (i.e., comma operator)](https://github.com/power-assert-js/espower/pull/27)
 
