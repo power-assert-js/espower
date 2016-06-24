@@ -22,7 +22,6 @@ function testWithParser (fixtureName, parse) {
         var output = escodegen.generate(espoweredAST);
 
         var actual = output + '\n';
-        fs.writeFileSync(expectedFilepath, actual);
         var expected = fs.readFileSync(expectedFilepath, 'utf8');
         if (actual != expected) {
             fs.writeFileSync(actualFilepath, actual);
