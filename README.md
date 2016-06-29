@@ -33,29 +33,28 @@ See [CHANGELOG](https://github.com/power-assert-js/espower/blob/master/CHANGELOG
 API
 ---------------------------------------
 
-### var modifiedAst = espower(originalAst, [options])
+### var modifiedAst = espower(ast, [options])
 
 | return type |
 |:------------|
 | `object`    |
 
-`espower` function manipulates `originalAst` then returns `modifiedAst` that is also an AST node object defined in [The ESTree Spec](https://github.com/estree/estree).
-If `destructive` option is falsy, `originalAst` will be unchanged. If `destructive` option is truthy, `originalAst` will be manipulated directly and returned `modifiedAst` will be the same instance of `originalAst`.
+`espower` function manipulates `ast` then returns `modifiedAst` that is also an AST node object defined in [The ESTree Spec](https://github.com/estree/estree). `ast` will be manipulated directly and returned `modifiedAst` will be the same instance of `ast`.
 
 `espower` function throws `EspowerError` when
 
-* `originalAst` is already instrumented
-* `originalAst` does not contain location information
+* `ast` is already instrumented
+* `ast` does not contain location information
 * `options` argument is not valid
 
 
-#### originalAst
+#### ast
 
 | type     | default value |
 |:---------|:--------------|
 | `object` | N/A           |
 
-`originalAst` should be an AST node object defined in [The ESTree Spec](https://github.com/estree/estree).
+`ast` should be an AST node object defined in [The ESTree Spec](https://github.com/estree/estree).
 
 
 #### options
@@ -65,17 +64,6 @@ If `destructive` option is falsy, `originalAst` will be unchanged. If `destructi
 | `object` | (return value of `espower.defaultOptions()`) |
 
 Configuration options. If not passed, default options will be used.
-
-
-#### options.destructive
-
-| type      | default value |
-|:----------|:--------------|
-| `boolean` | `false`       |
-
-Modify `originalAst` destructively or not.
-
-If `false`, espower clones `originalAst` deeply, so `originalAst` will be unchanged. If `true`, `originalAst` will be manipulated directly and returned `modifiedAst` will be the same instance of `originalAst`.
 
 
 #### options.patterns
@@ -147,7 +135,6 @@ Returns default options object for `espower` function. In other words, returns
 
 ```javascript
 {
-    destructive: false,
     patterns: [
         'assert(value, [message])',
         'assert.ok(value, [message])',
