@@ -43,8 +43,8 @@ describe('espower.defaultOptions()', function () {
     beforeEach(function () {
         this.options = espower.defaultOptions();
     });
-    it('destructive: false', function () {
-        assert.equal(this.options.destructive, false);
+    it('destructive: undefined', function () {
+        assert.equal(this.options.destructive, undefined);
     });
     it('patterns: Array', function () {
         assert.deepEqual(this.options.patterns, [
@@ -97,7 +97,7 @@ describe('instrumentation tests for options', function () {
         return deepCopyInternal(obj, isArray(obj) ? [] : {});
     }
 
-    describe('destructive option', function () {
+    describe('deprecated: destructive option -> treated as destructive:true every time', function () {
         function destructiveOptionTest (testName, option, callback) {
             it(testName, function () {
                 var tree = acorn.parse('assert(falsyStr);', {ecmaVersion: 6, locations: true, ranges: true});
@@ -106,15 +106,16 @@ describe('instrumentation tests for options', function () {
                 callback(assert, saved, tree, result);
             });
         }
-        destructiveOptionTest('default is false', {}, function (assert, before, tree, after) {
-            assert.deepEqual(tree, before);
+        destructiveOptionTest('default is treated as destructive:true', {}, function (assert, before, tree, after) {
+            assert.notDeepEqual(tree, before);
             assert.notDeepEqual(after, before);
-            assert.notDeepEqual(after, tree);
+            assert.deepEqual(after, tree);
         });
-        destructiveOptionTest('destructive: false', {destructive: false}, function (assert, before, tree, after) {
-            assert.deepEqual(tree, before);
-            assert.notDeepEqual(after, before);
-            assert.notDeepEqual(after, tree);
+        it('options.destructive is deprecate and always treated as destructive:true', function () {
+            var tree = acorn.parse('assert(falsyStr);', {ecmaVersion: 6, locations: true, ranges: true});
+            assert.throws(function () {
+                espower(tree, {destructive: false});
+            }, EspowerError);
         });
         destructiveOptionTest('destructive: true', {destructive: true}, function (assert, before, tree, after) {
             assert.notDeepEqual(tree, before);
@@ -191,10 +192,6 @@ describe('option prerequisites', function () {
         });
     }
 
-    optionPrerequisitesTest('destructive option shoud be a boolean',
-                            {destructive: 1},
-                            '[espower] options.destructive should be a boolean value.');
-
     optionPrerequisitesTest('patterns option should be an array',
                             {patterns: 'hoge'},
                             '[espower] options.patterns should be an array.');
@@ -208,7 +205,7 @@ describe('AST prerequisites. Error should be thrown if location is missing.', fu
     });
     it('error message when path option is not specified', function () {
         try {
-            espower(this.tree, {destructive: false});
+            espower(this.tree);
             assert.ok(false, 'Error should be thrown');
         } catch (e) {
             assert.equal(e.name, 'EspowerError');
@@ -220,7 +217,7 @@ describe('AST prerequisites. Error should be thrown if location is missing.', fu
     });
     it('error message when path option is specified', function () {
         try {
-            espower(this.tree, {destructive: false, path: '/path/to/baz_test.js'});
+            espower(this.tree, {path: '/path/to/baz_test.js'});
             assert.ok(false, 'Error should be thrown');
         } catch (e) {
             assert.equal(e.name, 'EspowerError');
@@ -239,7 +236,7 @@ describe('AST prerequisites. Error should be thrown if AST is already instrument
         var alreadyEspoweredCode = "assert(_rec1._expr(_rec1._capt(falsyStr,'arguments/0'),{content:'assert(falsyStr)',filepath:'/path/to/some_test.js',line:1}));";
         var ast = acorn.parse(alreadyEspoweredCode, {ecmaVersion: 6, locations: true});
         try {
-            espower(ast, {destructive: false, path: '/path/to/baz_test.js'});
+            espower(ast, {path: '/path/to/baz_test.js'});
             assert.ok(false, 'Error should be thrown');
         } catch (e) {
             assert.equal(e.name, 'EspowerError');
@@ -255,7 +252,6 @@ describe('AST prerequisites. Error should be thrown if AST is already instrument
         var ast = acorn.parse(alreadyEspoweredCode, {ecmaVersion: 6, locations: true});
         try {
             espower(ast, {
-                destructive: false,
                 path: '/path/to/foo_test.js',
                 patterns: [
                     'browser.assert.element(selection, [message])'
@@ -278,7 +274,7 @@ describe('location information', function () {
     it('preserve location of instrumented nodes.', function () {
         var jsCode = 'assert((three * (seven * ten)) === three);';
         var tree = acorn.parse(jsCode, {ecmaVersion: 6, locations: true, ranges: true});
-        var result = espower(tree, {destructive: false, path: '/path/to/baz_test.js'});
+        var result = espower(tree, {path: '/path/to/baz_test.js'});
         estraverse.traverse(result, function (node) {
             if (typeof node.type === 'undefined') return;
             assert.ok(typeof node.loc !== 'undefined', 'type: ' + node.type);
