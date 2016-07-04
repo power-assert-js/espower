@@ -27,6 +27,11 @@ function espower (ast, options) {
     return instrumentor.instrument(ast);
 }
 
+espower.createVisitor = function (ast, options) {
+    var instrumentor = new Instrumentor(extend(defaultOptions(), options));
+    return instrumentor.createVisitor(ast);
+};
+
 espower.defaultOptions = defaultOptions;
 espower.Instrumentor = Instrumentor;
 espower.AssertionVisitor = require('./lib/assertion-visitor');
