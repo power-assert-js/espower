@@ -48,6 +48,15 @@ API
 * `options` argument is not valid
 
 
+### var visitor = espower.createVisitor(ast, [options])
+
+| return type |
+|:------------|
+| `object`    |
+
+`espower.createVisitor` generates visitor object to be used with `estraverse.replace`. Arguments are the same as `espower` function.
+
+
 #### ast
 
 | type     | default value |
