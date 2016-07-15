@@ -44,7 +44,5 @@ espower.createVisitor = function createVisitor (ast, options) {
 };
 
 espower.defaultOptions = defaultOptions;
-espower.Instrumentor = Instrumentor;
-espower.AssertionVisitor = require('./lib/assertion-visitor');
 espower.EspowerError = require('./lib/espower-error');
 module.exports = espower;
