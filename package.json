@@ -18,7 +18,7 @@
   ],
   "dependencies": {
     "array-find": "^1.0.0",
-    "escallmatch": "^1.4.2",
+    "escallmatch": "^1.5.0",
     "escodegen": "^1.7.0",
     "escope": "^3.3.0",
     "espower-location-detector": "^0.1.2",
