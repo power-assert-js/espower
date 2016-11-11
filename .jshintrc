@@ -20,8 +20,5 @@
     "node": true,
     "browser" : true,
     "onevar": true,
-    "quotmark": "single",
-    "globals": {
-        "define": false
-    }
+    "quotmark": "single"
 }
