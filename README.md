@@ -227,6 +227,16 @@ Install
     <script type="text/javascript" src="./path/to/node_modules/espower/build/espower.js"></script>
 
 
+OUR SUPPORT POLICY
+---------------------------------------
+
+We support Node under maintenance. In other words, we stop supporting old Node version when their maintenance ends.
+
+This means that any other environment is not supported.
+
+NOTE: If espower works in any of the unsupported environments, it is purely coincidental and has no bearing on future compatibility. Use at your own risk.
+
+
 AUTHOR
 ---------------------------------------
 * [Takuto Wada](https://github.com/twada)
