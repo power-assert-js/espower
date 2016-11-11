@@ -36,6 +36,7 @@
     "acorn-es7-plugin": "^1.0.14",
     "blanket": "1.1.9",
     "del": "^2.0.2",
+    "esprima": "^2.7.2",
     "gulp": "^3.9.0",
     "gulp-jshint": "^2.0.1",
     "gulp-mocha": "^2.1.3",
