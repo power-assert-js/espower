@@ -1,3 +1,36 @@
+## [2.0.0](https://github.com/power-assert-js/espower/releases/tag/v2.0.0) (2016-11-11)
+
+
+#### Features
+
+  * [Embed value capturing helper into transpiled code](https://github.com/power-assert-js/espower/pull/26)
+  * [Expose visitor object for estraverse](https://github.com/power-assert-js/espower/pull/31)
+  * stop exposing Instrumentor and AssertionVisitor ([afa380f9](https://github.com/power-assert-js/espower/commit/afa380f949acf4366d9226c44d89cb7ccdfd72c5))
+  * [Remove destructive option](https://github.com/power-assert-js/espower/pull/30)
+  * [Drop support for prebuilt bundle, bower and Node v0.10](https://github.com/power-assert-js/espower/pull/32)
+
+
+#### Breaking Changes
+
+* [Drop support for prebuilt bundle, bower and Node v0.10](https://github.com/power-assert-js/espower/pull/32)
+
+We stopped providing prebuilt bundle for browsers. Please build your own by using browserify, webpack and so on.
+We also dropped bower support. Please use npm instead.
+
+
+* Internal classes `espower.Instrumentor` and `espower.AssertionVisitor` are not exported any more.
+
+ ([afa380f9](https://github.com/power-assert-js/espower/commit/afa380f949acf4366d9226c44d89cb7ccdfd72c5))
+
+
+* [Remove destructive option](https://github.com/power-assert-js/espower/pull/30)
+
+The `destructive` option has been removed.
+
+New behavior is like `destructive: true`, means that passed AST is modified directly.
+If you do not want your AST to be modified directly, you should deep-clone your AST by yourself.
+
+
 ### [1.3.2](https://github.com/power-assert-js/espower/releases/tag/v1.3.2) (2016-06-22)
 
 
