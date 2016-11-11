@@ -230,7 +230,7 @@ Install
 OUR SUPPORT POLICY
 ---------------------------------------
 
-We support Node under maintenance. In other words, we stop supporting old Node version when their maintenance ends.
+We support Node under maintenance. In other words, we stop supporting old Node version when [their maintenance ends](https://github.com/nodejs/LTS).
 
 This means that any other environment is not supported.
 
