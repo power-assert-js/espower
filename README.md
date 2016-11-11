@@ -3,7 +3,6 @@ espower
 
 [![Build Status][travis-image]][travis-url]
 [![NPM package][npm-image]][npm-url]
-[![Bower package][bower-image]][bower-url]
 [![Dependency Status][depstat-image]][depstat-url]
 [![Coverage Status][coverage-image]][coverage-url]
 [![Code Climate][codeclimate-image]][codeclimate-url]
@@ -228,17 +227,6 @@ Install
     <script type="text/javascript" src="./path/to/node_modules/espower/build/espower.js"></script>
 
 
-### via bower
-
-Install
-
-    $ bower install --save-dev espower
-
-Then load (`espower` function is exported)
-
-    <script type="text/javascript" src="./path/to/bower_components/espower/build/espower.js"></script>
-
-
 AUTHOR
 ---------------------------------------
 * [Takuto Wada](https://github.com/twada)
@@ -256,9 +244,6 @@ Licensed under the [MIT](https://github.com/power-assert-js/espower/blob/master/
 
 [npm-url]: https://npmjs.org/package/espower
 [npm-image]: https://badge.fury.io/js/espower.svg
-
-[bower-url]: https://badge.fury.io/bo/espower
-[bower-image]: https://badge.fury.io/bo/espower.svg
 
 [travis-url]: https://travis-ci.org/power-assert-js/espower
 [travis-image]: https://secure.travis-ci.org/power-assert-js/espower.svg?branch=master

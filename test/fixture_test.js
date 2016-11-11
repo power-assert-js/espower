@@ -33,7 +33,7 @@ function testWithParser (fixtureName, parse, manipulate) {
 
 function testTransform (fixtureName, extraOptions) {
     function by_acorn (filepath) {
-        var parserOptions = {ecmaVersion: 7, locations: true, plugins: { asyncawait: true }};
+        var parserOptions = {ecmaVersion: 7, locations: true, plugins: {asyncawait: true}};
         return acorn.parse(fs.readFileSync(filepath, 'utf8'), parserOptions);
     }
     function by_esprima (filepath) {

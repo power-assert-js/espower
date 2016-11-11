@@ -1,14 +1,7 @@
 /.idea
 /node_modules
-/bower_components
 /npm-debug.log
 /coverage.lcov
 /coverage.html
 /expr.js
-/build/source-map.js
-/build/escodegen.js
-/build/estraverse.js
-/build/assert.js
-/build/acorn-es7-plugin.js
-/local_build
 /test/fixtures/*/actual*.js

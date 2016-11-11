@@ -1,21 +1,11 @@
-(function (root, factory) {
-    'use strict';
-    if (typeof define === 'function' && define.amd) {
-        define(['espower', 'acorn', 'acorn-es7-plugin', 'escodegen', 'assert'], factory);
-    } else if (typeof exports === 'object') {
-        factory(require('..'), require('acorn'), require('acorn-es7-plugin'), require('escodegen'), require('assert'));
-    } else {
-        factory(root.espower, root.acorn, root.acornEs7Plugin, root.escodegen, root.assert);
-    }
-}(this, function (
-    espower,
-    acorn,
-    acornEs7Plugin,
-    escodegen,
-    assert
-) {
+'use strict';
 
-acornEs7Plugin(acorn);
+var espower = require('..');
+var acorn = require('acorn');
+require('acorn-es7-plugin')(acorn);
+var escodegen = require('escodegen');
+var estraverse = require('estraverse');
+var assert = require('assert');
 
 describe('instrumentation spec', function () {
     function rec(num) {
@@ -477,5 +467,3 @@ describe('instrumentation spec', function () {
     });
 
 });
-
-}));

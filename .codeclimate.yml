@@ -1,7 +1,6 @@
 languages:
   JavaScript: true
 exclude_paths:
-  - build/*
   - coverage/blanket.js
   - esp.js
   - gulpfile.js
