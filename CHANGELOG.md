@@ -1,3 +1,11 @@
+### [2.0.1](https://github.com/power-assert-js/espower/releases/tag/v2.0.1) (2016-11-16)
+
+
+#### Bug Fixes
+
+* [Dealing with assertion that also is a concise body of ArrowFunctionExpression](https://github.com/power-assert-js/espower/pull/34)
+
+
 ## [2.0.0](https://github.com/power-assert-js/espower/releases/tag/v2.0.0) (2016-11-11)
 
 
