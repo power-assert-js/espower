@@ -22,6 +22,7 @@ var _PowerAssertRecorder1 = function () {
     return PowerAssertRecorder;
 }();
 var _rec1 = new _PowerAssertRecorder1();
+var _rec2 = new _PowerAssertRecorder1();
 assert(v => v + 1);
 assert((v, i) => v + i);
 assert(v => ({
@@ -33,3 +34,16 @@ assert(_rec1._expr(_rec1._capt(_rec1._capt(seven, 'arguments/0/left') === _rec1.
     filepath: 'path/to/some_test.js',
     line: 9
 }));
+test('test name', () => assert(_rec2._expr(_rec2._capt(_rec2._capt(_rec2._capt(user, 'arguments/0/left/object').name, 'arguments/0/left') === 'Bob', 'arguments/0'), {
+    content: 'assert(user.name === \'Bob\')',
+    filepath: 'path/to/some_test.js',
+    line: 11
+})));
+test('promise', () => {
+    var _rec3 = new _PowerAssertRecorder1();
+    return Promise.resolve().then(() => assert(_rec3._expr(_rec3._capt(true === false, 'arguments/0'), {
+        content: 'assert(true === false)',
+        filepath: 'path/to/some_test.js',
+        line: 14
+    })));
+});
