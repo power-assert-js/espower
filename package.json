@@ -21,11 +21,9 @@
     "escallmatch": "^1.5.0",
     "escodegen": "^1.7.0",
     "escope": "^3.3.0",
-    "espower-location-detector": "^0.1.2",
+    "espower-location-detector": "^1.0.0",
     "espurify": "^1.3.0",
     "estraverse": "^4.1.0",
-    "is-url": "^1.2.1",
-    "path-is-absolute": "^1.0.0",
     "source-map": "^0.5.0",
     "type-name": "^2.0.0",
     "xtend": "^4.0.0"
