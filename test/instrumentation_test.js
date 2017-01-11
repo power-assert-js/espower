@@ -12,7 +12,7 @@ describe('instrumentation spec', function () {
         return 'var _rec' + num + '=new _PowerAssertRecorder1();';
     }
     function prelude(num) {
-        var decl = "var _PowerAssertRecorder1=function(){function PowerAssertRecorder(){this.captured=[];}PowerAssertRecorder.prototype._capt=function _capt(value,espath){this.captured.push({value:value,espath:espath});return value;};PowerAssertRecorder.prototype._expr=function _expr(value,source){return{powerAssertContext:{value:value,events:this.captured},source:source};};return PowerAssertRecorder;}();";
+        var decl = "var _PowerAssertRecorder1=function(){function PowerAssertRecorder(){this.captured=[];}PowerAssertRecorder.prototype._capt=function _capt(value,espath){this.captured.push({value:value,espath:espath});return value;};PowerAssertRecorder.prototype._expr=function _expr(value,source){var capturedValues=this.captured;this.captured=[];return{powerAssertContext:{value:value,events:capturedValues},source:source};};return PowerAssertRecorder;}();";
         for (var i = 1; i <= num; i+=1) {
             decl += rec(i);
         }

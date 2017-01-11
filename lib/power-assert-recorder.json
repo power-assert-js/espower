@@ -207,6 +207,52 @@
                 "type": "BlockStatement",
                 "body": [
                   {
+                    "type": "VariableDeclaration",
+                    "declarations": [
+                      {
+                        "type": "VariableDeclarator",
+                        "id": {
+                          "type": "Identifier",
+                          "name": "capturedValues"
+                        },
+                        "init": {
+                          "type": "MemberExpression",
+                          "object": {
+                            "type": "ThisExpression"
+                          },
+                          "property": {
+                            "type": "Identifier",
+                            "name": "captured"
+                          },
+                          "computed": false
+                        }
+                      }
+                    ],
+                    "kind": "var"
+                  },
+                  {
+                    "type": "ExpressionStatement",
+                    "expression": {
+                      "type": "AssignmentExpression",
+                      "operator": "=",
+                      "left": {
+                        "type": "MemberExpression",
+                        "object": {
+                          "type": "ThisExpression"
+                        },
+                        "property": {
+                          "type": "Identifier",
+                          "name": "captured"
+                        },
+                        "computed": false
+                      },
+                      "right": {
+                        "type": "ArrayExpression",
+                        "elements": []
+                      }
+                    }
+                  },
+                  {
                     "type": "ReturnStatement",
                     "argument": {
                       "type": "ObjectExpression",
@@ -242,15 +288,8 @@
                                   "name": "events"
                                 },
                                 "value": {
-                                  "type": "MemberExpression",
-                                  "object": {
-                                    "type": "ThisExpression"
-                                  },
-                                  "property": {
-                                    "type": "Identifier",
-                                    "name": "captured"
-                                  },
-                                  "computed": false
+                                  "type": "Identifier",
+                                  "name": "capturedValues"
                                 },
                                 "kind": "init",
                                 "method": false,
