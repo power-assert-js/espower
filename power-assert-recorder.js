@@ -1,4 +1,4 @@
-(function () {
+module.exports = (function () {
     function PowerAssertRecorder() {
         this.captured = [];
     }
