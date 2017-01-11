@@ -1,3 +1,11 @@
+### [2.0.2](https://github.com/power-assert-js/espower/releases/tag/v2.0.2) (2017-01-12)
+
+
+#### Bug Fixes
+
+* [Value recorder should clean up captured values at the end of assertion expression](https://github.com/power-assert-js/espower/pull/35)
+
+
 ### [2.0.1](https://github.com/power-assert-js/espower/releases/tag/v2.0.1) (2016-11-16)
 
 
