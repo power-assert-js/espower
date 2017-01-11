@@ -36,4 +36,34 @@ describe('power-assert-recorder', function () {
             }
         });
     });
+
+    it('repro case: recorder reused in loop', function () {
+        var _rec = new PowerAssertRecorder();
+        var expected = {
+            powerAssertContext: {
+                events: [
+                    {
+                        espath: "arguments/0",
+                        value: "FOO"
+                    }
+                ],
+                value: "FOO"
+            },
+            source: {
+                content: "assert(foo)",
+                filepath: "path/to/some_test.js",
+                line: 1
+            }
+        };
+        var actual;
+        for (var i = 0; i < 3; i += 1) {
+            actual = _rec._expr(_rec._capt(foo, 'arguments/0'), {
+                content: 'assert(foo)',
+                filepath: 'path/to/some_test.js',
+                line: 1
+            });
+            assert.deepEqual(actual, expected);
+        }
+    });
+
 });
