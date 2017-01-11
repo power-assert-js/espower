@@ -12,12 +12,15 @@ assert(false, messageStr);
 
 assert.equal(foo, 'bar', 'msg');
 
+// regular expression will not be instrumented
 assert(/^not/.exec(str));
 
+// multibyte string literal
 assert(fuga !== 'ふが');
-
 assert('ほげ' !== 'ふが');
 
+// binary Literal
 assert(0b111110111);
 
+// octal Literal
 assert(0o767);

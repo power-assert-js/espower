@@ -30,5 +30,5 @@ assert(_rec1._expr(_rec1._capt(_rec1._capt(baz, 'arguments/0/left') === _rec1._c
 }(_rec1._capt(foo, 'arguments/0/right/arguments/0'), _rec1._capt(bar, 'arguments/0/right/arguments/1')), 'arguments/0/right'), 'arguments/0'), {
     content: 'assert(baz === function (a, b) {return a + b;}(foo, bar))',
     filepath: 'path/to/some_test.js',
-    line: 5
+    line: 6
 }));

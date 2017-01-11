@@ -29,22 +29,22 @@ var _rec5 = new _PowerAssertRecorder1();
 assert(_rec1._expr(_rec1._capt({ [_rec1._capt(num, 'arguments/0/properties/0/key')]: _rec1._capt(foo, 'arguments/0/properties/0/value') }, 'arguments/0'), {
     content: 'assert({ [num]: foo })',
     filepath: 'path/to/some_test.js',
-    line: 3
+    line: 4
 }));
 assert(_rec2._expr(_rec2._capt({ [_rec2._capt('prop_' + _rec2._capt((() => bar())(), 'arguments/0/properties/0/key/right'), 'arguments/0/properties/0/key')]: 42 }, 'arguments/0'), {
     content: 'assert({ [\'prop_\' + (() => bar())()]: 42 })',
     filepath: 'path/to/some_test.js',
-    line: 5
+    line: 6
 }));
 assert(_rec3._expr(_rec3._capt({ [_rec3._capt(`prop_${ _rec3._capt(generate(_rec3._capt(seed, 'arguments/0/properties/0/key/expressions/0/arguments/0')), 'arguments/0/properties/0/key/expressions/0') }`, 'arguments/0/properties/0/key')]: _rec3._capt(foo, 'arguments/0/properties/0/value') }, 'arguments/0'), {
     content: 'assert({ [`prop_${ generate(seed) }`]: foo })',
     filepath: 'path/to/some_test.js',
-    line: 7
+    line: 8
 }));
 assert(_rec4._expr(_rec4._capt({ foo }, 'arguments/0'), {
     content: 'assert({ foo })',
     filepath: 'path/to/some_test.js',
-    line: 9
+    line: 11
 }));
 assert(_rec5._expr(_rec5._capt({
     foo,
@@ -52,5 +52,5 @@ assert(_rec5._expr(_rec5._capt({
 }, 'arguments/0'), {
     content: 'assert({foo,bar: baz})',
     filepath: 'path/to/some_test.js',
-    line: 11
+    line: 13
 }));

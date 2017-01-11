@@ -1,5 +1,6 @@
 'use strict';
 
+// function body will not be instrumented
 assert(v => v + 1);
 
 assert((v, i) => v + i);

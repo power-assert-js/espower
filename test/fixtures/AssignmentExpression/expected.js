@@ -55,10 +55,10 @@ assert.strictEqual(_rec4._expr(_rec4._capt(dog.age += 1, 'arguments/0'), {
 assert(_rec6._expr(_rec6._capt([x] = _rec6._capt([3], 'arguments/0/right'), 'arguments/0'), {
     content: 'assert([x] = [3])',
     filepath: 'path/to/some_test.js',
-    line: 11
+    line: 12
 }));
 assert(_rec7._expr(_rec7._capt([x] = _rec7._capt([_rec7._capt(foo, 'arguments/0/right/elements/0')], 'arguments/0/right'), 'arguments/0'), {
     content: 'assert([x] = [foo])',
     filepath: 'path/to/some_test.js',
-    line: 13
+    line: 14
 }));

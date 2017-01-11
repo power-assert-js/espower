@@ -32,18 +32,18 @@ assert(v => ({
 assert(_rec1._expr(_rec1._capt(_rec1._capt(seven, 'arguments/0/left') === _rec1._capt(((v, i) => v + i)(_rec1._capt(four, 'arguments/0/right/arguments/0'), _rec1._capt(five, 'arguments/0/right/arguments/1')), 'arguments/0/right'), 'arguments/0'), {
     content: 'assert(seven === ((v, i) => v + i)(four, five))',
     filepath: 'path/to/some_test.js',
-    line: 9
+    line: 10
 }));
 test('test name', () => assert(_rec2._expr(_rec2._capt(_rec2._capt(_rec2._capt(user, 'arguments/0/left/object').name, 'arguments/0/left') === 'Bob', 'arguments/0'), {
     content: 'assert(user.name === \'Bob\')',
     filepath: 'path/to/some_test.js',
-    line: 11
+    line: 12
 })));
 test('promise', () => {
     var _rec3 = new _PowerAssertRecorder1();
     return Promise.resolve().then(() => assert(_rec3._expr(_rec3._capt(true === false, 'arguments/0'), {
         content: 'assert(true === false)',
         filepath: 'path/to/some_test.js',
-        line: 14
+        line: 15
     })));
 });

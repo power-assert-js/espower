@@ -38,17 +38,17 @@ assert.equal(_rec1._expr(_rec1._capt(foo, 'arguments/0'), {
 assert(_rec2._expr(_rec2._capt(/^not/.exec(_rec2._capt(str, 'arguments/0/arguments/0')), 'arguments/0'), {
     content: 'assert(/^not/.exec(str))',
     filepath: 'path/to/some_test.js',
-    line: 15
+    line: 16
 }));
 assert(_rec3._expr(_rec3._capt(_rec3._capt(fuga, 'arguments/0/left') !== 'ふが', 'arguments/0'), {
     content: 'assert(fuga !== \'ふが\')',
     filepath: 'path/to/some_test.js',
-    line: 17
+    line: 19
 }));
 assert(_rec4._expr(_rec4._capt('ほげ' !== 'ふが', 'arguments/0'), {
     content: 'assert(\'ほげ\' !== \'ふが\')',
     filepath: 'path/to/some_test.js',
-    line: 19
+    line: 20
 }));
 assert(503);
 assert(503);
