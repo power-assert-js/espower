@@ -7,10 +7,12 @@ module.exports = (function () {
         return value;
     };
     PowerAssertRecorder.prototype._expr = function _expr(value, source) {
+        var capturedValues = this.captured;
+        this.captured = [];
         return {
             powerAssertContext: {
                 value: value,
-                events: this.captured
+                events: capturedValues
             },
             source: source
         };
