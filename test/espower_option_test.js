@@ -21,7 +21,7 @@ function rec(num) {
     return 'var _rec' + num + '=new _PowerAssertRecorder1();';
 }
 function prelude(num) {
-    var decl = "var _PowerAssertRecorder1=function(){function PowerAssertRecorder(){this.captured=[];}PowerAssertRecorder.prototype._capt=function _capt(value,espath){this.captured.push({value:value,espath:espath});return value;};PowerAssertRecorder.prototype._expr=function _expr(value,source){return{powerAssertContext:{value:value,events:this.captured},source:source};};return PowerAssertRecorder;}();";
+    var decl = "var _PowerAssertRecorder1=function(){function PowerAssertRecorder(){this.captured=[];}PowerAssertRecorder.prototype._capt=function _capt(value,espath){this.captured.push({value:value,espath:espath});return value;};PowerAssertRecorder.prototype._expr=function _expr(value,source){var capturedValues=this.captured;this.captured=[];return{powerAssertContext:{value:value,events:capturedValues},source:source};};return PowerAssertRecorder;}();";
     for (var i = 1; i <= num; i+=1) {
         decl += rec(i);
     }
@@ -274,7 +274,7 @@ describe('location information', function () {
 
 
 describe('lineSeparator', function () {
-    var lineDetected = "var _PowerAssertRecorder1=function(){function PowerAssertRecorder(){this.captured=[];}PowerAssertRecorder.prototype._capt=function _capt(value,espath){this.captured.push({value:value,espath:espath});return value;};PowerAssertRecorder.prototype._expr=function _expr(value,source){return{powerAssertContext:{value:value,events:this.captured},source:source};};return PowerAssertRecorder;}();var _rec1=new _PowerAssertRecorder1();var falsyStr='';assert.ok(_rec1._expr(_rec1._capt(falsyStr,'arguments/0'),{content:'assert.ok(falsyStr)',line:3}));";
+    var lineDetected = prelude(1) + "var falsyStr='';assert.ok(_rec1._expr(_rec1._capt(falsyStr,'arguments/0'),{content:'assert.ok(falsyStr)',line:3}));";
      function lineSeparatorTest (name, lineSeparatorInCode, options, expected) {
         it(name, function () {
             var sourceLines = [
@@ -336,7 +336,7 @@ describe('incoming SourceMap support', function () {
 
             var espoweredCode = escodegen.generate(espoweredAST, {format: {compact: true}});
 
-            var expectedOutput = "var _PowerAssertRecorder1=function(){function PowerAssertRecorder(){this.captured=[];}PowerAssertRecorder.prototype._capt=function _capt(value,espath){this.captured.push({value:value,espath:espath});return value;};PowerAssertRecorder.prototype._expr=function _expr(value,source){return{powerAssertContext:{value:value,events:this.captured},source:source};};return PowerAssertRecorder;}();var _rec1=new _PowerAssertRecorder1();var _rec2=new _PowerAssertRecorder1();var str='foo';var anotherStr='bar';assert.equal(_rec1._expr(_rec1._capt(str,'arguments/0'),{content:'assert.equal(str, anotherStr)',filepath:'" + opts.expectedPath + "',line:4}),_rec2._expr(_rec2._capt(anotherStr,'arguments/1'),{content:'assert.equal(str, anotherStr)',filepath:'" + opts.expectedPath + "',line:4}));";
+            var expectedOutput = prelude(2) + "var str='foo';var anotherStr='bar';assert.equal(_rec1._expr(_rec1._capt(str,'arguments/0'),{content:'assert.equal(str, anotherStr)',filepath:'" + opts.expectedPath + "',line:4}),_rec2._expr(_rec2._capt(anotherStr,'arguments/1'),{content:'assert.equal(str, anotherStr)',filepath:'" + opts.expectedPath + "',line:4}));";
             assert.equal(espoweredCode, expectedOutput);
         });
     }
