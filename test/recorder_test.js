@@ -66,4 +66,72 @@ describe('power-assert-recorder', function () {
         }
     });
 
+    it('cleanup captured values on end', function () {
+        var incr = (function () {
+            var cnt = 0;
+            return function () {
+                return ++cnt;
+            };
+        })();
+        var _rec = new PowerAssertRecorder();
+        var actual = [];
+        for (var i = 0; i < 3; i += 1) {
+            actual.push(_rec._expr(_rec._capt(incr(), 'arguments/0'), {
+                content: 'assert(incr())',
+                filepath: 'path/to/some_test.js',
+                line: 1
+            }));
+        }
+        assert.deepEqual(actual, [
+            {
+                powerAssertContext: {
+                    events: [
+                        {
+                            espath: "arguments/0",
+                            value: 1
+                        }
+                    ],
+                    value: 1
+                },
+                source: {
+                    content: "assert(incr())",
+                    filepath: "path/to/some_test.js",
+                    line: 1
+                }
+            },
+            {
+                powerAssertContext: {
+                    events: [
+                        {
+                            espath: "arguments/0",
+                            value: 2
+                        }
+                    ],
+                    value: 2
+                },
+                source: {
+                    content: "assert(incr())",
+                    filepath: "path/to/some_test.js",
+                    line: 1
+                }
+            },
+            {
+                powerAssertContext: {
+                    events: [
+                        {
+                            espath: "arguments/0",
+                            value: 3
+                        }
+                    ],
+                    value: 3
+                },
+                source: {
+                    content: "assert(incr())",
+                    filepath: "path/to/some_test.js",
+                    line: 1
+                }
+            }
+        ]);
+    });
+
 });
