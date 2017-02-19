@@ -1,3 +1,11 @@
+### [2.0.3](https://github.com/power-assert-js/espower/releases/tag/v2.0.3) (2017-02-19)
+
+
+#### Bug Fixes
+
+* [Store scopes in a stack to push/pop them in a consistent way](https://github.com/power-assert-js/espower/pull/36)
+
+
 ### [2.0.2](https://github.com/power-assert-js/espower/releases/tag/v2.0.2) (2017-01-12)
 
 
