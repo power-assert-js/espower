@@ -83,4 +83,5 @@ describe('fixtures', function () {
     testTransform('SpreadElement');
     testTransform('YieldExpression');
     testTransform('AwaitExpression');
+    testTransform('ClassScope');
 });
