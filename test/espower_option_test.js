@@ -35,6 +35,12 @@ describe('espower.defaultOptions()', function () {
     it('destructive: undefined', function () {
         assert.equal(this.options.destructive, undefined);
     });
+    it('ecmaVersion: 2016', function () {
+        assert.equal(this.options.ecmaVersion, 2016);
+    });
+    it('sourceType: "module"', function () {
+        assert.equal(this.options.sourceType, 'module');
+    });
     it('patterns: Array', function () {
         assert.deepEqual(this.options.patterns, [
             'assert(value, [message])',
