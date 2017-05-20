@@ -1,3 +1,11 @@
+## [2.1.0](https://github.com/power-assert-js/espower/releases/tag/v2.1.0) (2017-05-21)
+
+
+#### Features
+
+* [Add `ecmaVersion` and `sourceType` to options to support ES Modules syntax](https://github.com/power-assert-js/espower/pull/37)
+
+
 ### [2.0.3](https://github.com/power-assert-js/espower/releases/tag/v2.0.3) (2017-02-19)
 
 
