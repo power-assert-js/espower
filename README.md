@@ -161,6 +161,8 @@ Returns default options object for `espower` function. In other words, returns
 
 ```javascript
 {
+    ecmaVersion: 2016,
+    sourceType: 'module',
     patterns: [
         'assert(value, [message])',
         'assert.ok(value, [message])',
