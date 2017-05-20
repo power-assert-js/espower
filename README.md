@@ -101,6 +101,24 @@ If callee name (for example, `assert.equal`) matches exactly and number of argum
 Detection is done by [escallmatch](https://github.com/twada/escallmatch). Any arguments enclosed in bracket (for example, `[message]`) means optional parameters. Without bracket means mandatory parameters.
 
 
+#### options.ecmaVersion
+
+| type     | default value |
+|:---------|:--------------|
+| `number` | `2016`        |
+
+The ECMAScript version to parse and analyze. Must be either 3, 5, 6 (2015), 2016, or 2017.
+
+
+#### options.sourceType
+
+| type     | default value |
+|:---------|:--------------|
+| `string` | `'module'`    |
+
+The source type of the code. Must be either `"script"` or `"module"`.
+
+ 
 #### (optional) options.path
 
 | type     | default value |
@@ -143,6 +161,8 @@ Returns default options object for `espower` function. In other words, returns
 
 ```javascript
 {
+    ecmaVersion: 2016,
+    sourceType: 'module',
     patterns: [
         'assert(value, [message])',
         'assert.ok(value, [message])',
