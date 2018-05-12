@@ -1,10 +1,10 @@
 language: node_js
 sudo: false
 node_js:
-  - "4"
-  - "6"
-  - "7"
-  - "8"
+  - "6" # to be removed on "April 2019"
+  - "8" # to be removed on "December 2019"
+  - "9" # to be removed on "June 2018"
+  - "10" # to be removed on "April 2021"
 before_install:
   - "npm install -g coveralls"
 script:
