@@ -19,7 +19,7 @@ function testWithParser (fixtureName, parse, manipulate) {
         var actualFilepath = path.resolve(__dirname, 'fixtures', fixtureName, 'actual.js');
 
         var jsAST = parse(fixtureFilepath);
-        var espoweredAST = manipulate(jsAST, {ecmaVersion: 2017, path: 'path/to/some_test.js'});
+        var espoweredAST = manipulate(jsAST, {ecmaVersion: 2018, path: 'path/to/some_test.js'});
         var output = escodegen.generate(espoweredAST);
 
         var actual = output + '\n';
@@ -33,7 +33,7 @@ function testWithParser (fixtureName, parse, manipulate) {
 
 function testTransform (fixtureName, extraOptions) {
     function by_acorn (filepath) {
-        var parserOptions = {ecmaVersion: 2017, locations: true, plugins: {asyncawait: true}};
+        var parserOptions = {ecmaVersion: 2018, locations: true, plugins: {asyncawait: true}};
         return acorn.parse(fs.readFileSync(filepath, 'utf8'), parserOptions);
     }
     function by_esprima (filepath) {

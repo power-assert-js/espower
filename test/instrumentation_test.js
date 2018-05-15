@@ -31,11 +31,11 @@ describe('instrumentation spec', function () {
 
     function inst (jsCode, expected) {
         describe('with loc, range', function () {
-            var options = {ecmaVersion: 7, locations: true, ranges: true, plugins: {asyncawait: true}};
+            var options = {ecmaVersion: 2018, locations: true, ranges: true, plugins: {asyncawait: true}};
             testWithParserOptions(jsCode, expected, options);
         });
         describe('with loc', function () {
-            var options = {ecmaVersion: 7, locations: true, plugins: {asyncawait: true}};
+            var options = {ecmaVersion: 2018, locations: true, plugins: {asyncawait: true}};
             testWithParserOptions(jsCode, expected, options);
         });
     }

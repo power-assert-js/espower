@@ -105,9 +105,9 @@ Detection is done by [escallmatch](https://github.com/twada/escallmatch). Any ar
 
 | type     | default value |
 |:---------|:--------------|
-| `number` | `2016`        |
+| `number` | `2018`        |
 
-The ECMAScript version to parse and analyze. Must be either 3, 5, 6 (2015), 2016, or 2017.
+The ECMAScript version to parse and analyze. Must be either 3, 5, 6 (2015), 2016, 2017, or 2018.
 
 
 #### options.sourceType
