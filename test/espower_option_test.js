@@ -7,6 +7,7 @@ var escodegen = require('escodegen');
 var estraverse = require('estraverse');
 var sourceMap = require('source-map');
 var assert = require('assert');
+var join = require('path').join;
 
 var EspowerError = espower.EspowerError;
 
@@ -365,21 +366,21 @@ describe('incoming SourceMap support', function () {
         filepath: 'test/original_test.js',
         sourceMapRoot: '/path/to/base',
         espowerSourceRoot: null,
-        expectedPath: 'test/original_test.js'
+        expectedPath: join('test', 'original_test.js').replace(/\\/g, '\\\\')
     });
 
     incomingSourceMapTest('when options.sourceRoot is given and sourceMap.sourceRoot is not given', {
         filepath: '/path/to/project/test/original_test.js',
         sourceMapRoot: null,
         espowerSourceRoot: '/path/to/project/',
-        expectedPath: 'test/original_test.js'
+        expectedPath: join('test', 'original_test.js').replace(/\\/g, '\\\\')
     });
 
     incomingSourceMapTest('when both options.sourceRoot and sourceMap.sourceRoot are given, options.sourceRoot has precedence over sourceMap.sourceRoot', {
         filepath: 'project/test/original_test.js',
         sourceMapRoot: '/path/to',
         espowerSourceRoot: '/path/to/project/',
-        expectedPath: 'test/original_test.js'
+        expectedPath: join('test', 'original_test.js').replace(/\\/g, '\\\\')
     });
 
     incomingSourceMapTest('when path in sourceMap is already relative, just use it even if sourceRoot exists', {
@@ -407,7 +408,7 @@ describe('incoming SourceMap support', function () {
         filepath: 'test/original_test.js',
         sourceMapRoot: 'http://example.com/www/js/',
         espowerSourceRoot: null,
-        expectedPath: 'test/original_test.js'
+        expectedPath: join('test', 'original_test.js').replace(/\\/g, '\\\\')
     });
 
     incomingSourceMapTest('when filepath is absolute and sourceMap.sourceRoot is locating source files on a server, then fallback on basename', {
@@ -421,7 +422,7 @@ describe('incoming SourceMap support', function () {
         filepath: 'test/original_test.js',
         sourceMapRoot: 'http://example.com/www/js/',
         espowerSourceRoot: '/path/to/project/',
-        expectedPath: 'test/original_test.js'
+        expectedPath: join('test', 'original_test.js').replace(/\\/g, '\\\\')
     });
 
     incomingSourceMapTest('when filepath is absolute and sourceMap.sourceRoot is locating source files on a server, and options.sourceRoot is given, then fallback on basename', {
@@ -451,13 +452,13 @@ describe('sourceRoot option', function () {
     sourceRootTest('when sourceRoot ends with slash', {
         incomingFilepath: '/path/to/project/test/some_test.js',
         espowerSourceRoot: '/path/to/project/',
-        filepathInGeneratedCode: 'test/some_test.js'
+        filepathInGeneratedCode: join('test', 'some_test.js').replace(/\\/g, '\\\\')
     });
 
     sourceRootTest('when sourceRoot does not end with slash', {
         incomingFilepath: '/path/to/project/test/some_test.js',
         espowerSourceRoot: '/path/to/project',
-        filepathInGeneratedCode: 'test/some_test.js'
+        filepathInGeneratedCode: join('test', 'some_test.js').replace(/\\/g, '\\\\')
     });
 
     sourceRootTest('when path is already relative, just use it even if sourceRoot exists', {
