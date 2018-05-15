@@ -1,3 +1,9 @@
+### [2.1.1](https://github.com/power-assert-js/espower/releases/tag/v2.1.1) (2018-05-15)
+
+
+* Update default `ecmaVersion` to 2018 ([f315b49](https://github.com/power-assert-js/espower/commit/f315b49399200051f9ec47ad0c8877c2ff112463))
+
+
 ## [2.1.0](https://github.com/power-assert-js/espower/releases/tag/v2.1.0) (2017-05-21)
 
 
