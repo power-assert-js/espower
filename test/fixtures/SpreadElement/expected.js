@@ -47,3 +47,8 @@ assert(_rec3._expr(_rec3._capt(f(_rec3._capt(head, 'arguments/0/arguments/0'), .
     filepath: 'path/to/some_test.js',
     line: 7
 }));
+assert(...iter());
+assert(...[
+    foo,
+    bar
+]);
