@@ -78,6 +78,7 @@
     "test": "npm run lint && gulp test",
     "unit": "gulp unit",
     "watch": "gulp watch",
-    "coveralls": "gulp coverage && cat ./coverage.lcov | coveralls"
+    "test:cov": "mocha --require ./coverage/blanket --reporter mocha-lcov-reporter > ./coverage.lcov",
+    "coveralls": "npm run test:cov && cat ./coverage.lcov | coveralls"
   }
 }
