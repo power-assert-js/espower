@@ -75,7 +75,7 @@
   "scripts": {
     "preversion": "npm test",
     "clean": "rimraf ./coverage.lcov",
-    "lint": "gulp lint",
+    "lint": "jshint index.js lib",
     "gen": "node gen.js",
     "test": "npm run lint && npm run gen &&  npm run test:unit",
     "test:unit": "mocha --reporter dot",
