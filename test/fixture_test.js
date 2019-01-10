@@ -9,7 +9,6 @@ var estraverse = require('estraverse');
 var assert = require('assert');
 var fs = require('fs');
 var path = require('path');
-var extend = require('xtend');
 
 
 function testWithParser (fixtureName, parse, manipulate) {
