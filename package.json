@@ -30,11 +30,11 @@
   "devDependencies": {
     "acorn": "^5.0.0",
     "acorn-es7-plugin": "^1.0.14",
-    "blanket": "1.1.9",
     "esprima": "^4.0.0",
     "jshint": "^2.9.2",
     "mocha": "^5.0.0",
     "mocha-lcov-reporter": "^1.2.0",
+    "nyc": "^13.1.0",
     "rimraf": "^2.6.3"
   },
   "directories": {
@@ -67,12 +67,12 @@
   },
   "scripts": {
     "preversion": "npm test",
-    "clean": "rimraf ./coverage.lcov",
+    "clean": "rimraf ./coverage",
     "lint": "jshint index.js lib",
     "gen": "node gen.js",
-    "test": "npm run lint && npm run gen &&  npm run test:unit",
+    "test": "npm run lint && npm run gen && npm run test:unit",
     "test:unit": "mocha --reporter dot",
-    "test:cov": "mocha --require ./coverage/blanket --reporter mocha-lcov-reporter > ./coverage.lcov",
-    "coveralls": "npm run test:cov && cat ./coverage.lcov | coveralls"
+    "test:cov": "nyc --reporter=lcovonly npm run test:unit",
+    "coveralls": "npm run test:cov && cat ./coverage/lcov.info | coveralls"
   }
 }

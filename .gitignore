@@ -1,7 +1,7 @@
 /.idea
 /node_modules
 /npm-debug.log
-/coverage.lcov
-/coverage.html
+/coverage
+/.nyc_output
 /expr.js
 /test/fixtures/*/actual*.js
