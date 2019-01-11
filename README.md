@@ -7,7 +7,6 @@ espower
 [![Coverage Status][coverage-image]][coverage-url]
 [![Code Climate][codeclimate-image]][codeclimate-url]
 [![License][license-image]][license-url]
-[![Built with Gulp][gulp-image]][gulp-url]
 
 
 Power Assert feature instrumentor based on the [ECMAScript AST](https://github.com/estree/estree).
@@ -310,6 +309,3 @@ Licensed under the [MIT](https://github.com/power-assert-js/espower/blob/master/
 
 [coverage-url]: https://coveralls.io/r/power-assert-js/espower?branch=master
 [coverage-image]: https://coveralls.io/repos/power-assert-js/espower/badge.svg?branch=master
-
-[gulp-url]: http://gulpjs.com/
-[gulp-image]: https://img.shields.io/badge/built_with-gulp-brightgreen.svg
