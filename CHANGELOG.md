@@ -1,3 +1,21 @@
+### [2.1.2](https://github.com/power-assert-js/espower/releases/tag/v2.1.2) (2019-01-11)
+
+
+#### Bug Fixes
+
+  * [Skip modifying argument if SpreadElement appears immediately beneath assert](https://github.com/power-assert-js/espower/pull/42)
+
+
+#### Refactor
+
+  * [remove xtend](https://github.com/power-assert-js/espower/pull/40) (by [jimmywarting](https://github.com/jimmywarting))
+
+
+#### Chore
+
+  * [Replace gulp with npm scripts](https://github.com/power-assert-js/espower/pull/41)
+
+
 ### [2.1.1](https://github.com/power-assert-js/espower/releases/tag/v2.1.1) (2018-05-15)
 
 
