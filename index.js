@@ -18,9 +18,9 @@ const Instrumentor = require('./lib/instrumentor');
  * @param {object} ast ECMAScript AST to be instrumented (directly modified)
  * @param {object} options Instrumentation options.
  * @returns {object} instrumented AST
- * @throws {EspowerError} if `ast` is already instrumented
- * @throws {EspowerError} if `ast` does not contain location information
- * @throws {EspowerError} if `options` is not valid
+ * @throws {Error} if `ast` is already instrumented
+ * @throws {Error} if `ast` does not contain location information
+ * @throws {Error} if `options` is not valid
  */
 const espower = (ast, options) => {
   const instrumentor = new Instrumentor(Object.assign(defaultOptions(), options));
@@ -33,9 +33,9 @@ const espower = (ast, options) => {
  * @param {object} ast ECMAScript AST to be instrumented (directly modified)
  * @param {object} options Instrumentation options.
  * @returns {object} visitor object for estraverse
- * @throws {EspowerError} if `ast` is already instrumented
- * @throws {EspowerError} if `ast` does not contain location information
- * @throws {EspowerError} if `options` is not valid
+ * @throws {Error} if `ast` is already instrumented
+ * @throws {Error} if `ast` does not contain location information
+ * @throws {Error} if `options` is not valid
  */
 const createVisitor = (ast, options) => {
   const instrumentor = new Instrumentor(Object.assign(defaultOptions(), options));
@@ -44,5 +44,4 @@ const createVisitor = (ast, options) => {
 
 espower.createVisitor = createVisitor;
 espower.defaultOptions = defaultOptions;
-espower.EspowerError = require('./lib/espower-error');
 module.exports = espower;

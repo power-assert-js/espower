@@ -9,8 +9,6 @@ var sourceMap = require('source-map');
 var assert = require('assert');
 var join = require('path').join;
 
-var EspowerError = espower.EspowerError;
-
 function instrument (jsCode, options) {
     var jsAST = acorn.parse(jsCode, {ecmaVersion: 7, locations: true, plugins: {asyncawait: true}});
     var espoweredAST = espower(jsAST, options);
@@ -111,7 +109,7 @@ describe('instrumentation tests for options', function () {
             var tree = acorn.parse('assert(falsyStr);', {ecmaVersion: 6, locations: true, ranges: true});
             assert.throws(function () {
                 espower(tree, {destructive: false});
-            }, EspowerError);
+            }, Error);
         });
         destructiveOptionTest('destructive: true', {destructive: true}, function (assert, before, tree, after) {
             assert.notDeepEqual(tree, before);
@@ -180,9 +178,8 @@ describe('option prerequisites', function () {
                 assert.ok(false, 'Error should be thrown');
             } catch (e) {
                 assert.equal(e.message, expected);
-                assert.equal(e.name, 'EspowerError');
+                assert.equal(e.name, 'Error');
                 assert(e instanceof Error);
-                assert(e instanceof EspowerError);
                 assert(e.stack);
             }
         });
@@ -204,9 +201,8 @@ describe('AST prerequisites. Error should be thrown if location is missing.', fu
             espower(this.tree);
             assert.ok(false, 'Error should be thrown');
         } catch (e) {
-            assert.equal(e.name, 'EspowerError');
+            assert.equal(e.name, 'Error');
             assert(e instanceof Error);
-            assert(e instanceof EspowerError);
             assert.equal(e.message, '[espower] ECMAScript AST should contain location information.');
             assert(e.stack);
         }
@@ -216,9 +212,8 @@ describe('AST prerequisites. Error should be thrown if location is missing.', fu
             espower(this.tree, {path: '/path/to/baz_test.js'});
             assert.ok(false, 'Error should be thrown');
         } catch (e) {
-            assert.equal(e.name, 'EspowerError');
+            assert.equal(e.name, 'Error');
             assert(e instanceof Error);
-            assert(e instanceof EspowerError);
             assert.equal(e.message, '[espower] ECMAScript AST should contain location information. path: /path/to/baz_test.js');
             assert(e.stack);
         }
@@ -235,9 +230,8 @@ describe('AST prerequisites. Error should be thrown if AST is already instrument
             espower(ast, {path: '/path/to/baz_test.js'});
             assert.ok(false, 'Error should be thrown');
         } catch (e) {
-            assert.equal(e.name, 'EspowerError');
+            assert.equal(e.name, 'Error');
             assert(e instanceof Error);
-            assert(e instanceof EspowerError);
             assert.equal(e.message, '[espower] Attempted to transform AST twice. path: /path/to/baz_test.js');
             assert(e.stack);
         }
@@ -255,9 +249,8 @@ describe('AST prerequisites. Error should be thrown if AST is already instrument
             });
             assert.ok(false, 'Error should be thrown');
         } catch (e) {
-            assert.equal(e.name, 'EspowerError');
+            assert.equal(e.name, 'Error');
             assert(e instanceof Error);
-            assert(e instanceof EspowerError);
             assert.equal(e.message, '[espower] Attempted to transform AST twice. path: /path/to/foo_test.js');
             assert(e.stack);
         }
