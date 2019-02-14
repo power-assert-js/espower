@@ -23,8 +23,8 @@ const Instrumentor = require('./lib/instrumentor');
  * @throws {EspowerError} if `options` is not valid
  */
 const espower = (ast, options) => {
-    const instrumentor = new Instrumentor(Object.assign(defaultOptions(), options));
-    return instrumentor.instrument(ast);
+  const instrumentor = new Instrumentor(Object.assign(defaultOptions(), options));
+  return instrumentor.instrument(ast);
 };
 
 /**
@@ -38,8 +38,8 @@ const espower = (ast, options) => {
  * @throws {EspowerError} if `options` is not valid
  */
 const createVisitor = (ast, options) => {
-    const instrumentor = new Instrumentor(Object.assign(defaultOptions(), options));
-    return instrumentor.createVisitor(ast);
+  const instrumentor = new Instrumentor(Object.assign(defaultOptions(), options));
+  return instrumentor.createVisitor(ast);
 };
 
 espower.createVisitor = createVisitor;
