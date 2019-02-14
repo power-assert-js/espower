@@ -3,9 +3,9 @@ espower
 
 [![Build Status][travis-image]][travis-url]
 [![NPM package][npm-image]][npm-url]
-[![Dependency Status][depstat-image]][depstat-url]
 [![Coverage Status][coverage-image]][coverage-url]
 [![Code Climate][codeclimate-image]][codeclimate-url]
+[![Code Style][style-image]][style-url]
 [![License][license-image]][license-url]
 
 
@@ -31,7 +31,7 @@ See [CHANGELOG](https://github.com/power-assert-js/espower/blob/master/CHANGELOG
 API
 ---------------------------------------
 
-### var modifiedAst = espower(ast, [options])
+### const modifiedAst = espower(ast, [options])
 
 | return type |
 |:------------|
@@ -46,7 +46,7 @@ API
 * `options` argument is not valid
 
 
-### var visitor = espower.createVisitor(ast, [options])
+### const visitor = espower.createVisitor(ast, [options])
 
 | return type |
 |:------------|
@@ -154,7 +154,7 @@ A raw (either as a string which can be JSON.parse'd, or an object) [SourceMap](h
 VisitorKeys for AST traversal. See [estraverse.VisitorKeys](https://github.com/estools/estraverse/blob/4.0.0/estraverse.js#L217-L288) and [babel.types.VISITOR_KEYS](https://github.com/babel/babel/blob/v5.1.13/src/babel/types/visitor-keys.json).
 
 
-### var options = espower.defaultOptions();
+### const options = espower.defaultOptions();
 
 Returns default options object for `espower` function. In other words, returns
 
@@ -184,9 +184,9 @@ EXAMPLE
 For given test file `example_test.js` below,
 
 ```javascript
-var assert = require('power-assert');
-var truthy = 'true';
-var falsy = 'false';
+const assert = require('power-assert');
+const truthy = 'true';
+const falsy = 'false';
 assert(falsy);
 assert.equal(truthy, falsy);
 ```
@@ -194,15 +194,15 @@ assert.equal(truthy, falsy);
 Apply `espower` then generate modified code to console,
 
 ```javascript
-var espower = require('espower');
-var esprima = require('esprima');
-var escodegen = require('escodegen');
-var fs = require('fs');
-var path = require('path');
+const espower = require('espower');
+const esprima = require('esprima');
+const escodegen = require('escodegen');
+const fs = require('fs');
+const { join } = require('path');
 
-var filepath = path.join(__dirname, 'example_test.js');
-var jsAst = esprima.parse(fs.readFileSync(filepath), {tolerant: true, loc: true, tokens: true});
-var modifiedAst = espower(jsAst, {path: filepath, sourceRoot: __dirname});
+const filepath = join(__dirname, 'example_test.js');
+const jsAst = esprima.parse(fs.readFileSync(filepath), {tolerant: true, loc: true, tokens: true});
+const modifiedAst = espower(jsAst, {path: filepath, sourceRoot: __dirname});
 
 console.log(escodegen.generate(modifiedAst));
 ```
@@ -237,9 +237,9 @@ var _PowerAssertRecorder1 = function () {
 var _rec1 = new _PowerAssertRecorder1();
 var _rec2 = new _PowerAssertRecorder1();
 var _rec3 = new _PowerAssertRecorder1();
-var assert = require('power-assert');
-var truthy = 'true';
-var falsy = 'false';
+const assert = require('power-assert');
+const truthy = 'true';
+const falsy = 'false';
 assert(_rec1._expr(_rec1._capt(falsy, 'arguments/0'), {
     content: 'assert(falsy)',
     filepath: 'example_test.js',
@@ -298,9 +298,6 @@ Licensed under the [MIT](https://github.com/power-assert-js/espower/blob/master/
 [travis-url]: https://travis-ci.org/power-assert-js/espower
 [travis-image]: https://secure.travis-ci.org/power-assert-js/espower.svg?branch=master
 
-[depstat-url]: https://gemnasium.com/power-assert-js/espower
-[depstat-image]: https://gemnasium.com/power-assert-js/espower.svg
-
 [license-url]: https://github.com/power-assert-js/espower/blob/master/MIT-LICENSE.txt
 [license-image]: https://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat
 
@@ -309,3 +306,6 @@ Licensed under the [MIT](https://github.com/power-assert-js/espower/blob/master/
 
 [coverage-url]: https://coveralls.io/r/power-assert-js/espower?branch=master
 [coverage-image]: https://coveralls.io/repos/power-assert-js/espower/badge.svg?branch=master
+
+[style-url]: https://github.com/Flet/semistandard
+[style-image]: https://img.shields.io/badge/code%20style-semistandard-brightgreen.svg

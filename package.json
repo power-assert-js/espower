@@ -17,24 +17,23 @@
     }
   ],
   "dependencies": {
-    "array-find": "^1.0.0",
     "escallmatch": "^1.5.0",
     "escodegen": "^1.7.0",
     "escope": "^3.3.0",
     "espower-location-detector": "^1.0.0",
     "espurify": "^1.3.0",
     "estraverse": "^4.1.0",
-    "source-map": "^0.5.0",
-    "type-name": "^2.0.0"
+    "source-map": "^0.5.0"
   },
   "devDependencies": {
     "acorn": "^5.0.0",
     "acorn-es7-plugin": "^1.0.14",
     "esprima": "^4.0.0",
-    "jshint": "^2.9.2",
     "mocha": "^5.0.0",
     "nyc": "^13.1.0",
-    "rimraf": "^2.6.3"
+    "rimraf": "^2.6.3",
+    "semistandard": "^13.0.1",
+    "snazzy": "^8.0.0"
   },
   "directories": {
     "lib": "./lib"
@@ -67,7 +66,8 @@
   "scripts": {
     "preversion": "npm test",
     "clean": "rimraf ./coverage",
-    "lint": "jshint index.js lib",
+    "lint": "semistandard --verbose index.js lib/*.js | snazzy",
+    "fmt": "semistandard --fix index.js lib/*.js",
     "gen": "node gen.js",
     "test": "npm run lint && npm run gen && npm run test:unit",
     "test:unit": "mocha --reporter dot",
