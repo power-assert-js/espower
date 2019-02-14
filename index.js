@@ -9,8 +9,8 @@
  */
 'use strict';
 
-var defaultOptions = require('./lib/default-options');
-var Instrumentor = require('./lib/instrumentor');
+const defaultOptions = require('./lib/default-options');
+const Instrumentor = require('./lib/instrumentor');
 
 /**
  * Instrument power assert feature into code. ECMAScript AST in, ECMAScript AST out.
@@ -22,10 +22,10 @@ var Instrumentor = require('./lib/instrumentor');
  * @throws {EspowerError} if `ast` does not contain location information
  * @throws {EspowerError} if `options` is not valid
  */
-function espower (ast, options) {
-    var instrumentor = new Instrumentor(Object.assign(defaultOptions(), options));
+const espower = (ast, options) => {
+    const instrumentor = new Instrumentor(Object.assign(defaultOptions(), options));
     return instrumentor.instrument(ast);
-}
+};
 
 /**
  * Generate visitor object to be used with `estraverse.replace`
@@ -37,11 +37,12 @@ function espower (ast, options) {
  * @throws {EspowerError} if `ast` does not contain location information
  * @throws {EspowerError} if `options` is not valid
  */
-espower.createVisitor = function createVisitor (ast, options) {
-    var instrumentor = new Instrumentor(Object.assign(defaultOptions(), options));
+const createVisitor = (ast, options) => {
+    const instrumentor = new Instrumentor(Object.assign(defaultOptions(), options));
     return instrumentor.createVisitor(ast);
 };
 
+espower.createVisitor = createVisitor;
 espower.defaultOptions = defaultOptions;
 espower.EspowerError = require('./lib/espower-error');
 module.exports = espower;
