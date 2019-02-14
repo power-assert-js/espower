@@ -39,7 +39,7 @@ API
 
 `espower` function manipulates `ast` then returns `modifiedAst` that is also an AST node object defined in [The ESTree Spec](https://github.com/estree/estree). `ast` will be manipulated directly and returned `modifiedAst` will be the same instance of `ast`.
 
-`espower` function throws `EspowerError` when
+`espower` function throws `Error` when
 
 * `ast` is already instrumented
 * `ast` does not contain location information
