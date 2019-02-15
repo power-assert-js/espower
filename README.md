@@ -154,6 +154,15 @@ A raw (either as a string which can be JSON.parse'd, or an object) [SourceMap](h
 VisitorKeys for AST traversal. See [estraverse.VisitorKeys](https://github.com/estools/estraverse/blob/4.0.0/estraverse.js#L217-L288) and [babel.types.VISITOR_KEYS](https://github.com/babel/babel/blob/v5.1.13/src/babel/types/visitor-keys.json).
 
 
+#### (optional) options.parse
+
+| type                | default value |
+|:--------------------|:--------------|
+| `function`          | N/A           |
+
+A function to parse pattern string specified by `options.patterns`. This property is optional.
+
+
 ### const options = espower.defaultOptions();
 
 Returns default options object for `espower` function. In other words, returns

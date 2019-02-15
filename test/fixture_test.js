@@ -17,8 +17,8 @@ function testWithParser (fixtureName, parse, manipulate) {
         var expectedFilepath = path.resolve(__dirname, 'fixtures', fixtureName, 'expected.js');
         var actualFilepath = path.resolve(__dirname, 'fixtures', fixtureName, 'actual.js');
 
-        var jsAST = parse(fixtureFilepath);
-        var espoweredAST = manipulate(jsAST, {ecmaVersion: 2018, path: 'path/to/some_test.js'});
+        var jsAST = parse(fs.readFileSync(fixtureFilepath, 'utf8'));
+        var espoweredAST = manipulate(jsAST, {ecmaVersion: 2018, path: 'path/to/some_test.js', parse: parse});
         var output = escodegen.generate(espoweredAST);
 
         var actual = output + '\n';
@@ -31,13 +31,13 @@ function testWithParser (fixtureName, parse, manipulate) {
 }
 
 function testTransform (fixtureName, extraOptions) {
-    function by_acorn (filepath) {
+    function by_acorn (code) {
         var parserOptions = {ecmaVersion: 2018, locations: true, plugins: {asyncawait: true}};
-        return acorn.parse(fs.readFileSync(filepath, 'utf8'), parserOptions);
+        return acorn.parse(code, parserOptions);
     }
-    function by_esprima (filepath) {
+    function by_esprima (code) {
         var parserOptions = {tolerant: true, loc: true};
-        return esprima.parse(fs.readFileSync(filepath, 'utf8'), parserOptions);
+        return esprima.parse(code, parserOptions);
     }
     function by_espower (ast, options) {
         return espower(ast, options);
