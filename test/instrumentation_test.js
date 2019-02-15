@@ -22,7 +22,7 @@ describe('instrumentation spec', function () {
     function testWithParserOptions (jsCode, expected, options) {
         it(jsCode, function () {
             var jsAST = acorn.parse(jsCode, options);
-            var espoweredAST = espower(jsAST, {path: 'path/to/some_test.js'});
+            var espoweredAST = espower(jsAST, { path: 'path/to/some_test.js', parse: acorn.parse });
             var instrumentedCode = escodegen.generate(espoweredAST, {format: {compact: true}});
             assert.equal(instrumentedCode, expected);
             assert(acorn.parse(instrumentedCode, options));
