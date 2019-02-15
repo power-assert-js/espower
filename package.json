@@ -20,8 +20,8 @@
     "escallmatch": "^1.5.0",
     "escodegen": "^1.7.0",
     "escope": "^3.3.0",
-    "espower-location-detector": "^1.0.0",
-    "espurify": "^1.3.0",
+    "espower-location-detector": "^2.0.0",
+    "espurify": "^2.0.0",
     "estraverse": "^4.1.0"
   },
   "devDependencies": {
