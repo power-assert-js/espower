@@ -28,6 +28,7 @@
     "acorn": "^5.0.0",
     "acorn-es7-plugin": "^1.0.14",
     "esprima": "^4.0.0",
+    "esutils": "^2.0.0",
     "mocha": "^5.0.0",
     "nyc": "^13.1.0",
     "rimraf": "^2.6.3",
