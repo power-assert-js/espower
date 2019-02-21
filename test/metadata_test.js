@@ -38,6 +38,8 @@ assert(falsy);
   ].join('');
 
   const metadata = "var _am1=_pwmeta1(0,'assert(falsy)','path/to/some_test.js',3);";
+  const recorderLine = "var _ag1=new _ArgumentRecorder1(assert,_am1,0);";
+  const assertionLine = "const falsy=false;assert(_ag1._rec(falsy,'arguments/0'));";
 
   it ('metadata generator function', () => {
     const { lastLine } = transpile(input, { patterns: ['assert(value, [message])'] });
@@ -47,6 +49,22 @@ assert(falsy);
   it('assertion metadata', () => {
     const { lastLine } = transpile(input, { patterns: ['assert(value, [message])'] });
     const startAt = metadataGenerator.length;
-    assert.strictEqual(lastLine.substring(startAt, startAt + metadata.length), metadata);
+    const endAt = startAt + metadata.length;
+    assert.strictEqual(lastLine.substring(startAt, endAt), metadata);
   });
+
+  it('ag', () => {
+    const { lastLine } = transpile(input, { patterns: ['assert(value, [message])'] });
+    const startAt = lastLine.length - (recorderLine.length + assertionLine.length);
+    const endAt = lastLine.length - assertionLine.length;
+    assert.strictEqual(lastLine.substring(startAt, endAt), recorderLine);
+  });
+
+  it('assertion', () => {
+    const { lastLine } = transpile(input, { patterns: ['assert(value, [message])'] });
+    const startAt = lastLine.length - assertionLine.length;
+    const endAt = lastLine.length;
+    assert.strictEqual(lastLine.substring(startAt, endAt), assertionLine);
+  });
+
 });
