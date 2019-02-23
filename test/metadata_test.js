@@ -16,7 +16,7 @@ const transpile = (code, extraOptions) => {
   };
 };
 
-describe.only('simple Identifier: assert(falsy)', () => {
+describe('simple Identifier: assert(falsy)', () => {
   const input = `
 const falsy = false;
 assert(falsy);
