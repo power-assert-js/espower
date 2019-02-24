@@ -57,7 +57,7 @@ describe('espower.defaultOptions()', function () {
 });
 
 
-describe('instrumentation tests for options', function () {
+describe.skip('instrumentation tests for options', function () {
 
     /**
      * Copyright (C) 2012 Yusuke Suzuki (twitter: @Constellation) and other contributors.
@@ -274,7 +274,7 @@ describe('location information', function () {
 });
 
 
-describe('lineSeparator', function () {
+describe.skip('lineSeparator', function () {
     var lineDetected = prelude(1) + "var falsyStr='';assert.ok(_rec1._expr(_rec1._capt(falsyStr,'arguments/0'),{content:'assert.ok(falsyStr)',line:3}));";
      function lineSeparatorTest (name, lineSeparatorInCode, options, expected) {
         it(name, function () {
@@ -307,7 +307,7 @@ describe('lineSeparator', function () {
 });
 
 
-describe('incoming SourceMap support', function () {
+describe.skip('incoming SourceMap support', function () {
 
     function incomingSourceMapTest (testName, opts) {
         it(testName, function () {
@@ -429,7 +429,7 @@ describe('incoming SourceMap support', function () {
 });
 
 
-describe('sourceRoot option', function () {
+describe.skip('sourceRoot option', function () {
     function sourceRootTest (testName, config) {
         it(testName, function () {
             var jsCode = 'assert(falsyStr);';
