@@ -296,7 +296,7 @@ var _ArgumentRecorder1 = function () {
     return ArgumentRecorder;
 }();
 async function myAsync(a) {
-    var _am1 = _pwmeta1(0, 'assert((await a) === 3)', 'path/to/some_test.js', 4, { async: true });
+    var _am1 = _pwmeta1(0, 'assert(await a === 3)', 'path/to/some_test.js', 4, { async: true });
     var _ag1 = new _ArgumentRecorder1(assert, _am1, 0);
     assert(_ag1._rec(_ag1._tap(await a, 'arguments/0/left') === 3, 'arguments/0'));
 }

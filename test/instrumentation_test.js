@@ -53,19 +53,19 @@ describe('instrumentation spec', function () {
              "function baz(){var _am1=_pwmeta1(0,'assert(await(foo) === bar)','path/to/some_test.js',1);var _ag1=new _ArgumentRecorder1(assert,_am1,0);assert(_ag1._rec(_ag1._tap(await(_ag1._tap(foo,'arguments/0/left/arguments/0')),'arguments/0/left')===_ag1._tap(bar,'arguments/0/right'),'arguments/0'));}");
 
         inst("async function baz() {assert((await (foo)) === bar)}",
-             "async function baz(){var _am1=_pwmeta1(0,'assert((await foo) === bar)','path/to/some_test.js',1,{async:true});var _ag1=new _ArgumentRecorder1(assert,_am1,0);assert(_ag1._rec(_ag1._tap(await foo,'arguments/0/left')===_ag1._tap(bar,'arguments/0/right'),'arguments/0'));}");
+             "async function baz(){var _am1=_pwmeta1(0,'assert(await foo === bar)','path/to/some_test.js',1,{async:true});var _ag1=new _ArgumentRecorder1(assert,_am1,0);assert(_ag1._rec(_ag1._tap(await foo,'arguments/0/left')===_ag1._tap(bar,'arguments/0/right'),'arguments/0'));}");
 
         inst("var baz = function () {assert((await (foo)) === bar)}",
              "var baz=function(){var _am1=_pwmeta1(0,'assert(await(foo) === bar)','path/to/some_test.js',1);var _ag1=new _ArgumentRecorder1(assert,_am1,0);assert(_ag1._rec(_ag1._tap(await(_ag1._tap(foo,'arguments/0/left/arguments/0')),'arguments/0/left')===_ag1._tap(bar,'arguments/0/right'),'arguments/0'));};");
 
         inst("var baz = async function () {assert((await (foo)) === bar)}",
-             "var baz=async function(){var _am1=_pwmeta1(0,'assert((await foo) === bar)','path/to/some_test.js',1,{async:true});var _ag1=new _ArgumentRecorder1(assert,_am1,0);assert(_ag1._rec(_ag1._tap(await foo,'arguments/0/left')===_ag1._tap(bar,'arguments/0/right'),'arguments/0'));};");
+             "var baz=async function(){var _am1=_pwmeta1(0,'assert(await foo === bar)','path/to/some_test.js',1,{async:true});var _ag1=new _ArgumentRecorder1(assert,_am1,0);assert(_ag1._rec(_ag1._tap(await foo,'arguments/0/left')===_ag1._tap(bar,'arguments/0/right'),'arguments/0'));};");
 
         inst("var baz = () => {assert((await (foo)) === bar)};",
              "var baz=()=>{var _am1=_pwmeta1(0,'assert(await(foo) === bar)','path/to/some_test.js',1);var _ag1=new _ArgumentRecorder1(assert,_am1,0);assert(_ag1._rec(_ag1._tap(await(_ag1._tap(foo,'arguments/0/left/arguments/0')),'arguments/0/left')===_ag1._tap(bar,'arguments/0/right'),'arguments/0'));};");
 
         inst("var baz = async () => {assert((await (foo)) === bar)}",
-             "var baz=async()=>{var _am1=_pwmeta1(0,'assert((await foo) === bar)','path/to/some_test.js',1,{async:true});var _ag1=new _ArgumentRecorder1(assert,_am1,0);assert(_ag1._rec(_ag1._tap(await foo,'arguments/0/left')===_ag1._tap(bar,'arguments/0/right'),'arguments/0'));};");
+             "var baz=async()=>{var _am1=_pwmeta1(0,'assert(await foo === bar)','path/to/some_test.js',1,{async:true});var _ag1=new _ArgumentRecorder1(assert,_am1,0);assert(_ag1._rec(_ag1._tap(await foo,'arguments/0/left')===_ag1._tap(bar,'arguments/0/right'),'arguments/0'));};");
     });
 
 });
