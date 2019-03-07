@@ -16,17 +16,6 @@ function instrument (jsCode, options) {
     return instrumentedCode;
 }
 
-function rec(num) {
-    return 'var _rec' + num + '=new _PowerAssertRecorder1();';
-}
-function prelude(num) {
-    var decl = "var _PowerAssertRecorder1=function(){function PowerAssertRecorder(){this.captured=[];}PowerAssertRecorder.prototype._capt=function _capt(value,espath){this.captured.push({value:value,espath:espath});return value;};PowerAssertRecorder.prototype._expr=function _expr(value,source){var capturedValues=this.captured;this.captured=[];return{powerAssertContext:{value:value,events:capturedValues},source:source};};return PowerAssertRecorder;}();";
-    for (var i = 1; i <= num; i+=1) {
-        decl += rec(i);
-    }
-    return decl;
-}
-
 describe('espower.defaultOptions()', function () {
     beforeEach(function () {
         this.options = espower.defaultOptions();
@@ -57,7 +46,7 @@ describe('espower.defaultOptions()', function () {
 });
 
 
-describe.skip('instrumentation tests for options', function () {
+describe('instrumentation tests for options', function () {
 
     /**
      * Copyright (C) 2012 Yusuke Suzuki (twitter: @Constellation) and other contributors.
@@ -119,49 +108,128 @@ describe.skip('instrumentation tests for options', function () {
     });
 
 
-    describe('patterns option.', function () {
-        it('matches function call', function () {
-            var instrumentedCode = instrument('refute(falsyStr);', {
-                patterns: [
-                    'refute(value)'
-                ]
-            });
-            assert.equal(instrumentedCode,
-                         prelude(1) + "refute(_rec1._expr(_rec1._capt(falsyStr,'arguments/0'),{content:'refute(falsyStr)',line:1}));");
+  describe('patterns option.', function () {
+    describe('function: refute(falsyStr)', function () {
+      let result;
+      const metagen = "var _pwmeta1=(ptnidx,content,filepath,line,extra)=>{const version=2,patterns=[{pattern:'refute(value)',args:[{index:0,name:'value',kind:'mandatory'}]}];return Object.assign({version,content,filepath,line},extra,patterns[ptnidx]);};";
+      const am = "var _am1=_pwmeta1(0,'refute(falsyStr)',null,1);";
+      const ag = "var _ag1=new _ArgumentRecorder1(refute,_am1,0);";
+      const expectedAssertion = "refute(_ag1._rec(falsyStr,'arguments/0'));";
+      beforeEach(() => {
+        result = instrument('refute(falsyStr);', {
+          patterns: [
+            'refute(value)'
+          ]
         });
-
-        it('matches method call', function () {
-            var instrumentedCode = instrument('refute.equal(foo, bar);', {
-                patterns: [
-                    'refute.equal(actual, expected)'
-                ]
-            });
-            assert.equal(instrumentedCode,
-                         prelude(2) + "refute.equal(_rec1._expr(_rec1._capt(foo,'arguments/0'),{content:'refute.equal(foo, bar)',line:1}),_rec2._expr(_rec2._capt(bar,'arguments/1'),{content:'refute.equal(foo, bar)',line:1}));");
-        });
-
-        it('deep callee chain', function () {
-            var instrumentedCode = instrument('browser.assert.element(foo);', {
-                patterns: [
-                    'browser.assert.element(selection, [message])'
-                ]
-            });
-            assert.equal(instrumentedCode,
-                         prelude(1) + "browser.assert.element(_rec1._expr(_rec1._capt(foo,'arguments/0'),{content:'browser.assert.element(foo)',line:1}));");
-        });
+      });
+      it('metagen', () => {
+        const startAt = 0;
+        const endAt = metagen.length;
+        assert.strictEqual(result.substring(startAt, endAt), metagen);
+      });
+      it('am', () => {
+        const startAt = metagen.length;
+        const endAt = metagen.length + am.length;
+        assert.strictEqual(result.substring(startAt, endAt), am);
+      });
+      it('ag', () => {
+        const startAt = result.length - (expectedAssertion.length + ag.length);
+        const endAt = result.length - expectedAssertion.length;
+        assert.strictEqual(result.substring(startAt, endAt), ag);
+      });
+      it('assertion', () => {
+        const startAt = result.length - expectedAssertion.length;
+        const endAt = result.length;
+        assert.strictEqual(result.substring(startAt, endAt), expectedAssertion);
+      });
     });
 
+    describe('method: refute.equal(actual, expected)', () => {
+      let result;
+      const metagen = "var _pwmeta1=(ptnidx,content,filepath,line,extra)=>{const version=2,patterns=[{pattern:'refute.equal(actual, expected)',args:[{index:0,name:'actual',kind:'mandatory'},{index:1,name:'expected',kind:'mandatory'}]}];return Object.assign({version,content,filepath,line},extra,patterns[ptnidx]);};";
+      const am = "var _am1=_pwmeta1(0,'refute.equal(foo, bar)',null,1);";
+      const ag1 = "var _ag1=new _ArgumentRecorder1(refute.equal,_am1,0);";
+      const ag2 = "var _ag2=new _ArgumentRecorder1(refute.equal,_am1,1);";
+      const expectedAssertion = "refute.equal(_ag1._rec(foo,'arguments/0'),_ag2._rec(bar,'arguments/1'));";
+      beforeEach(() => {
+        result = instrument('refute.equal(foo, bar);', {
+          patterns: [
+            'refute.equal(actual, expected)'
+          ]
+        });
+      });
+      it('metagen', () => {
+        const startAt = 0;
+        const endAt = metagen.length;
+        assert.strictEqual(result.substring(startAt, endAt), metagen);
+      });
+      it('am', () => {
+        const startAt = metagen.length;
+        const endAt = metagen.length + am.length;
+        assert.strictEqual(result.substring(startAt, endAt), am);
+      });
+      it('ag1', () => {
+        const startAt = result.length - (expectedAssertion.length + ag1.length + ag2.length);
+        const endAt = result.length - (expectedAssertion.length + ag2.length);
+        assert.strictEqual(result.substring(startAt, endAt), ag1);
+      });
+      it('ag2', () => {
+        const startAt = result.length - (expectedAssertion.length + ag2.length);
+        const endAt = result.length - expectedAssertion.length;
+        assert.strictEqual(result.substring(startAt, endAt), ag2);
+      });
+      it('assertion', () => {
+        const startAt = result.length - expectedAssertion.length;
+        const endAt = result.length;
+        assert.strictEqual(result.substring(startAt, endAt), expectedAssertion);
+      });
+    });
+
+    describe('deep callee chain: browser.assert.element(selection, [message])', () => {
+      let result;
+      const metagen = "var _pwmeta1=(ptnidx,content,filepath,line,extra)=>{const version=2,patterns=[{pattern:'browser.assert.element(selection, [message])',args:[{index:0,name:'selection',kind:'mandatory'},{index:1,name:'message',kind:'optional',message:true}]}];return Object.assign({version,content,filepath,line},extra,patterns[ptnidx]);};";
+      const am = "var _am1=_pwmeta1(0,'browser.assert.element(foo)',null,1);";
+      const ag1 = "var _ag1=new _ArgumentRecorder1(browser.assert.element,_am1,0);";
+      const expectedAssertion = "browser.assert.element(_ag1._rec(foo,'arguments/0'));";
+      beforeEach(() => {
+        result = instrument('browser.assert.element(foo);', {
+          patterns: [
+            'browser.assert.element(selection, [message])'
+          ]
+        });
+      });
+      it('metagen', () => {
+        const startAt = 0;
+        const endAt = metagen.length;
+        assert.strictEqual(result.substring(startAt, endAt), metagen);
+      });
+      it('am', () => {
+        const startAt = metagen.length;
+        const endAt = metagen.length + am.length;
+        assert.strictEqual(result.substring(startAt, endAt), am);
+      });
+      it('ag1', () => {
+        const startAt = result.length - (expectedAssertion.length + ag1.length);
+        const endAt = result.length - expectedAssertion.length;
+        assert.strictEqual(result.substring(startAt, endAt), ag1);
+      });
+      it('assertion', () => {
+        const startAt = result.length - expectedAssertion.length;
+        const endAt = result.length;
+        assert.strictEqual(result.substring(startAt, endAt), expectedAssertion);
+      });
+    });
+  });
+      
 
     describe('path option.', function () {
         it('path: null', function () {
             var instrumentedCode = instrument('assert(falsyStr);', {});
-            assert.equal(instrumentedCode,
-                         prelude(1) + "assert(_rec1._expr(_rec1._capt(falsyStr,'arguments/0'),{content:'assert(falsyStr)',line:1}));");
+            assert(instrumentedCode.includes("var _am1=_pwmeta1(0,'assert(falsyStr)',null,1);"));
         });
         it('with path', function () {
             var instrumentedCode = instrument('assert(falsyStr);', {path: 'path/to/baz_test.js'});
-            assert.equal(instrumentedCode,
-                         prelude(1) + "assert(_rec1._expr(_rec1._capt(falsyStr,'arguments/0'),{content:'assert(falsyStr)',filepath:'path/to/baz_test.js',line:1}));");
+            assert(instrumentedCode.includes("var _am1=_pwmeta1(0,'assert(falsyStr)','path/to/baz_test.js',1);"));
         });
     });
 });
@@ -274,8 +342,8 @@ describe('location information', function () {
 });
 
 
-describe.skip('lineSeparator', function () {
-    var lineDetected = prelude(1) + "var falsyStr='';assert.ok(_rec1._expr(_rec1._capt(falsyStr,'arguments/0'),{content:'assert.ok(falsyStr)',line:3}));";
+describe('lineSeparator', function () {
+    var lineDetected = "var _ag1=new _ArgumentRecorder1(assert.ok,_am1,0);var falsyStr='';assert.ok(_ag1._rec(falsyStr,'arguments/0'));";
      function lineSeparatorTest (name, lineSeparatorInCode, options, expected) {
         it(name, function () {
             var sourceLines = [
@@ -283,7 +351,10 @@ describe.skip('lineSeparator', function () {
                 '// comment line',
                 'assert.ok(falsyStr);'
             ].join(lineSeparatorInCode);
-            assert.equal(instrument(sourceLines, options), expected);
+            const result = instrument(sourceLines, options);
+            const startAt = result.length - lineDetected.length;
+            const endAt = result.length;
+            assert.strictEqual(result.substring(startAt, endAt), lineDetected);
         });
     }
     context('code: LF', function () {
@@ -307,7 +378,8 @@ describe.skip('lineSeparator', function () {
 });
 
 
-describe.skip('incoming SourceMap support', function () {
+describe('incoming SourceMap support', function () {
+    const metagen = "var _pwmeta1=(ptnidx,content,filepath,line,extra)=>{const version=2,patterns=[{pattern:'assert.equal(actual, expected, [message])',args:[{index:0,name:'actual',kind:'mandatory'},{index:1,name:'expected',kind:'mandatory'},{index:2,name:'message',kind:'optional',message:true}]}];return Object.assign({version,content,filepath,line},extra,patterns[ptnidx]);};";
 
     function incomingSourceMapTest (testName, opts) {
         it(testName, function () {
@@ -338,8 +410,10 @@ describe.skip('incoming SourceMap support', function () {
 
             var espoweredCode = escodegen.generate(espoweredAST, {format: {compact: true}});
 
-            var expectedOutput = prelude(2) + "var str='foo';var anotherStr='bar';assert.equal(_rec1._expr(_rec1._capt(str,'arguments/0'),{content:'assert.equal(str, anotherStr)',filepath:'" + opts.expectedPath + "',line:4}),_rec2._expr(_rec2._capt(anotherStr,'arguments/1'),{content:'assert.equal(str, anotherStr)',filepath:'" + opts.expectedPath + "',line:4}));";
-            assert.equal(espoweredCode, expectedOutput);
+            const am = `var _am1=_pwmeta1(0,'assert.equal(str, anotherStr)','${opts.expectedPath}',4);`;
+            const startAt = metagen.length;
+            const endAt = metagen.length + am.length;
+            assert.strictEqual(espoweredCode.substring(startAt, endAt), am);
         });
     }
 
@@ -429,19 +503,26 @@ describe.skip('incoming SourceMap support', function () {
 });
 
 
-describe.skip('sourceRoot option', function () {
+describe('sourceRoot option', function () {
+    const metagen = "var _pwmeta1=(ptnidx,content,filepath,line,extra)=>{const version=2,patterns=[{pattern:'assert(value)',args:[{index:0,name:'value',kind:'mandatory'}]}];return Object.assign({version,content,filepath,line},extra,patterns[ptnidx]);};";
+
     function sourceRootTest (testName, config) {
         it(testName, function () {
             var jsCode = 'assert(falsyStr);';
             var jsAST = acorn.parse(jsCode, {ecmaVersion: 6, locations: true, sourceFile: config.incomingFilepath});
             var espoweredAST = espower(jsAST, {
+                patterns: [
+                    'assert(value)'
+                ],
                 parse: acorn.parse,
                 path: config.incomingFilepath,
                 sourceRoot: config.espowerSourceRoot
             });
             var instrumentedCode = escodegen.generate(espoweredAST, {format: {compact: true}});
-            assert.equal(instrumentedCode,
-                         prelude(1) + "assert(_rec1._expr(_rec1._capt(falsyStr,'arguments/0'),{content:'assert(falsyStr)',filepath:'" + config.filepathInGeneratedCode + "',line:1}));");
+            const am = `var _am1=_pwmeta1(0,'assert(falsyStr)','${config.filepathInGeneratedCode}',1);`;
+            const startAt = metagen.length;
+            const endAt = metagen.length + am.length;
+            assert.strictEqual(instrumentedCode.substring(startAt, endAt), am);
         });
     }
 
