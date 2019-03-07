@@ -300,8 +300,8 @@ var _ag1 = new _ArgumentRecorder1(assert, _am1, 0);
 var _am2 = _pwmeta1(0, 'assert(typeof [[foo.bar,baz(moo)],+fourStr] === \'number\')', 'path/to/some_test.js', 5);
 var _ag2 = new _ArgumentRecorder1(assert, _am2, 0);
 var _am3 = _pwmeta1(7, 'assert.notDeepEqual([foo,bar], [hoge,fuga,piyo])', 'path/to/some_test.js', 7);
-var _ag3 = new _ArgumentRecorder1(assert.notDeepEqual, _am3, 7);
-var _ag4 = new _ArgumentRecorder1(assert.notDeepEqual, _am3, 7);
+var _ag3 = new _ArgumentRecorder1(assert.notDeepEqual, _am3, 0);
+var _ag4 = new _ArgumentRecorder1(assert.notDeepEqual, _am3, 1);
 assert(_ag1._rec([
     _ag1._tap(foo, 'arguments/0/elements/0'),
     _ag1._tap(bar, 'arguments/0/elements/1')

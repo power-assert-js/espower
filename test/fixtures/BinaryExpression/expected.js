@@ -308,7 +308,7 @@ var _ag5 = new _ArgumentRecorder1(assert, _am5, 0);
 var _am6 = _pwmeta1(0, 'assert(fuga !== piyo)', 'path/to/some_test.js', 15);
 var _ag6 = new _ArgumentRecorder1(assert, _am6, 0);
 var _am7 = _pwmeta1(1, 'assert.ok(hoge === fuga, \'comment\')', 'path/to/some_test.js', 17);
-var _ag7 = new _ArgumentRecorder1(assert.ok, _am7, 1);
+var _ag7 = new _ArgumentRecorder1(assert.ok, _am7, 0);
 var _am8 = _pwmeta1(0, 'assert(ary1.length === ary2.length)', 'path/to/some_test.js', 19);
 var _ag8 = new _ArgumentRecorder1(assert, _am8, 0);
 var _am9 = _pwmeta1(0, 'assert(foo instanceof Foo)', 'path/to/some_test.js', 21);

@@ -298,14 +298,14 @@ var _ArgumentRecorder1 = function () {
 }();
 var _ag1 = new _ArgumentRecorder1(assert, _am1, 0);
 var _am2 = _pwmeta1(1, 'assert.ok(actual < 5 || 13 < actual)', 'path/to/some_test.js', 5);
-var _ag2 = new _ArgumentRecorder1(assert.ok, _am2, 1);
+var _ag2 = new _ArgumentRecorder1(assert.ok, _am2, 0);
 var _am3 = _pwmeta1(0, 'assert(2 > actual && actual < 13)', 'path/to/some_test.js', 7);
 var _ag3 = new _ArgumentRecorder1(assert, _am3, 0);
 var _am4 = _pwmeta1(0, 'assert(2 > actual && actual < 13)', 'path/to/some_test.js', 9);
 var _ag4 = new _ArgumentRecorder1(assert, _am4, 0);
 var _am5 = _pwmeta1(2, 'assert.equal(5 < actual && actual < 13, falsy)', 'path/to/some_test.js', 11);
-var _ag5 = new _ArgumentRecorder1(assert.equal, _am5, 2);
-var _ag6 = new _ArgumentRecorder1(assert.equal, _am5, 2);
+var _ag5 = new _ArgumentRecorder1(assert.equal, _am5, 0);
+var _ag6 = new _ArgumentRecorder1(assert.equal, _am5, 1);
 assert(_ag1._rec(_ag1._tap(5 < _ag1._tap(actual, 'arguments/0/left/right'), 'arguments/0/left') && _ag1._tap(_ag1._tap(actual, 'arguments/0/right/left') < 13, 'arguments/0/right'), 'arguments/0'));
 assert.ok(_ag2._rec(_ag2._tap(_ag2._tap(actual, 'arguments/0/left/left') < 5, 'arguments/0/left') || _ag2._tap(13 < _ag2._tap(actual, 'arguments/0/right/right'), 'arguments/0/right'), 'arguments/0'));
 assert(_ag3._rec(_ag3._tap(2 > _ag3._tap(actual, 'arguments/0/left/right'), 'arguments/0/left') && _ag3._tap(_ag3._tap(actual, 'arguments/0/right/left') < 13, 'arguments/0/right'), 'arguments/0'));

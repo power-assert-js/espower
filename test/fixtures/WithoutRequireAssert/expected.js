@@ -311,7 +311,7 @@ describe('Array#indexOf()', function () {
     });
     it('should return -1 when the value is not present', function () {
         var _am2 = _pwmeta1(1, 'assert.ok(this.ary.indexOf(two) === minusOne, \'THIS IS AN ASSERTION MESSAGE\')', 'path/to/some_test.js', 13);
-        var _ag2 = new _ArgumentRecorder1(assert.ok, _am2, 1);
+        var _ag2 = new _ArgumentRecorder1(assert.ok, _am2, 0);
         var minusOne = -1, two = 2;
         assert.ok(_ag2._rec(_ag2._tap(_ag2._tap(this.ary, 'arguments/0/left/callee/object').indexOf(_ag2._tap(two, 'arguments/0/left/arguments/0')), 'arguments/0/left') === _ag2._tap(minusOne, 'arguments/0/right'), 'arguments/0'), 'THIS IS AN ASSERTION MESSAGE');
     });

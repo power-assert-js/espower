@@ -301,7 +301,7 @@ var _ArgumentRecorder1 = function () {
     }
     return ArgumentRecorder;
 }();
-var _ag1 = new _ArgumentRecorder1(assert.equal, _am6, 2);
+var _ag1 = new _ArgumentRecorder1(assert.equal, _am6, 0);
 var _am7 = _pwmeta1(0, 'assert(/^not/.exec(str))', 'path/to/some_test.js', 16);
 var _ag2 = new _ArgumentRecorder1(assert, _am7, 0);
 var _am8 = _pwmeta1(0, 'assert(fuga !== \'ふが\')', 'path/to/some_test.js', 19);

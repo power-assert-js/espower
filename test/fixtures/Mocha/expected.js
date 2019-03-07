@@ -313,22 +313,22 @@ describe('Array', function () {
         });
         it('should return -1 when the value is not present', function () {
             var _am2 = _pwmeta1(1, 'assert.ok(this.ary.indexOf(two) === minusOne, \'THIS IS AN ASSERTION MESSAGE\')', 'path/to/some_test.js', 16);
-            var _ag2 = new _ArgumentRecorder1(assert.ok, _am2, 1);
+            var _ag2 = new _ArgumentRecorder1(assert.ok, _am2, 0);
             var minusOne = -1, two = 2;
             assert.ok(_ag2._rec(_ag2._tap(_ag2._tap(this.ary, 'arguments/0/left/callee/object').indexOf(_ag2._tap(two, 'arguments/0/left/arguments/0')), 'arguments/0/left') === _ag2._tap(minusOne, 'arguments/0/right'), 'arguments/0'), 'THIS IS AN ASSERTION MESSAGE');
         });
     });
     it('#length', function () {
         var _am3 = _pwmeta1(2, 'assert.equal(this.ary.length, four)', 'path/to/some_test.js', 21);
-        var _ag3 = new _ArgumentRecorder1(assert.equal, _am3, 2);
-        var _ag4 = new _ArgumentRecorder1(assert.equal, _am3, 2);
+        var _ag3 = new _ArgumentRecorder1(assert.equal, _am3, 0);
+        var _ag4 = new _ArgumentRecorder1(assert.equal, _am3, 1);
         var four = 4;
         assert.equal(_ag3._rec(_ag3._tap(this.ary, 'arguments/0/object').length, 'arguments/0'), _ag4._rec(four, 'arguments/1'));
     });
     it('#length assertion with message', function () {
         var _am4 = _pwmeta1(2, 'assert.equal(this.ary.length, four, \'THIS IS AN ASSERTION MESSAGE\')', 'path/to/some_test.js', 25);
-        var _ag5 = new _ArgumentRecorder1(assert.equal, _am4, 2);
-        var _ag6 = new _ArgumentRecorder1(assert.equal, _am4, 2);
+        var _ag5 = new _ArgumentRecorder1(assert.equal, _am4, 0);
+        var _ag6 = new _ArgumentRecorder1(assert.equal, _am4, 1);
         var four = 4;
         assert.equal(_ag5._rec(_ag5._tap(this.ary, 'arguments/0/object').length, 'arguments/0'), _ag6._rec(four, 'arguments/1'), 'THIS IS AN ASSERTION MESSAGE');
     });

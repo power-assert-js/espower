@@ -300,8 +300,8 @@ var _ag1 = new _ArgumentRecorder1(assert, _am1, 0);
 var _am2 = _pwmeta1(0, 'assert(!{foo: bar.baz,name: nameOf({firstName: first,lastName: last})})', 'path/to/some_test.js', 5);
 var _ag2 = new _ArgumentRecorder1(assert, _am2, 0);
 var _am3 = _pwmeta1(6, 'assert.deepEqual({foo: bar,hoge: fuga}, {hoge: fuga,foo: bar})', 'path/to/some_test.js', 7);
-var _ag3 = new _ArgumentRecorder1(assert.deepEqual, _am3, 6);
-var _ag4 = new _ArgumentRecorder1(assert.deepEqual, _am3, 6);
+var _ag3 = new _ArgumentRecorder1(assert.deepEqual, _am3, 0);
+var _ag4 = new _ArgumentRecorder1(assert.deepEqual, _am3, 1);
 assert(_ag1._rec({
     foo: _ag1._tap(bar, 'arguments/0/properties/0/value'),
     hoge: _ag1._tap(fuga, 'arguments/0/properties/1/value')
