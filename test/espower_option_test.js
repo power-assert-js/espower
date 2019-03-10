@@ -1,5 +1,7 @@
 'use strict';
 
+const { testGeneratedCode } = require('./helper');
+
 var espower = require('..');
 var acorn = require('acorn');
 require('acorn-es7-plugin')(acorn);
@@ -8,13 +10,6 @@ var estraverse = require('estraverse');
 var sourceMap = require('source-map');
 var assert = require('assert');
 var join = require('path').join;
-
-function instrument (jsCode, options) {
-    var jsAST = acorn.parse(jsCode, {ecmaVersion: 7, locations: true, plugins: {asyncawait: true}});
-    var espoweredAST = espower(jsAST, Object.assign({parse: acorn.parse}, options));
-    var instrumentedCode = escodegen.generate(espoweredAST, {format: {compact: true}});
-    return instrumentedCode;
-}
 
 describe('espower.defaultOptions()', function () {
     beforeEach(function () {
@@ -109,122 +104,78 @@ describe('instrumentation tests for options', function () {
 
 
   describe('patterns option.', function () {
-    describe('function: refute(falsyStr)', function () {
-      let result;
-      const metagen = "var _pwmeta1=(ptnidx,content,filepath,line,extra)=>{const version=2,patterns=[{pattern:'refute(value)',args:[{index:0,name:'value',kind:'mandatory'}]}];return Object.assign({version,content,filepath,line},extra,patterns[ptnidx]);};";
-      const am = "var _am1=_pwmeta1(0,'refute(falsyStr)',null,1);";
-      const ag = "var _ag1=new _ArgumentRecorder1(refute,_am1,0);";
-      const expectedAssertion = "refute(_ag1._rec(falsyStr,'arguments/0'));";
-      beforeEach(() => {
-        result = instrument('refute(falsyStr);', {
-          patterns: [
-            'refute(value)'
-          ]
-        });
-      });
-      it('metagen', () => {
-        const startAt = 0;
-        const endAt = metagen.length;
-        assert.strictEqual(result.substring(startAt, endAt), metagen);
-      });
-      it('am', () => {
-        const startAt = metagen.length;
-        const endAt = metagen.length + am.length;
-        assert.strictEqual(result.substring(startAt, endAt), am);
-      });
-      it('ag', () => {
-        const startAt = result.length - (expectedAssertion.length + ag.length);
-        const endAt = result.length - expectedAssertion.length;
-        assert.strictEqual(result.substring(startAt, endAt), ag);
-      });
-      it('assertion', () => {
-        const startAt = result.length - expectedAssertion.length;
-        const endAt = result.length;
-        assert.strictEqual(result.substring(startAt, endAt), expectedAssertion);
-      });
+
+    testGeneratedCode({
+      suite: 'function: refute(falsyStr)',
+      input: 'refute(falsyStr);',
+      espowerOptions: {
+        patterns: [
+          'refute(value)'
+        ]
+      },
+      prelude: [
+        "var _pwmeta1=(ptnidx,content,filepath,line,extra)=>{const version=2,patterns=[{pattern:'refute(value)',args:[{index:0,name:'value',kind:'mandatory'}]}];return Object.assign({version,content,filepath,line},extra,patterns[ptnidx]);};",
+        "var _am1=_pwmeta1(0,'refute(falsyStr)','path/to/some_test.js',1);"
+      ],
+      postlude: [
+        "var _ag1=new _ArgumentRecorder1(refute,_am1,0);",
+        "refute(_ag1._rec(falsyStr,'arguments/0'));"
+      ]
     });
 
-    describe('method: refute.equal(actual, expected)', () => {
-      let result;
-      const metagen = "var _pwmeta1=(ptnidx,content,filepath,line,extra)=>{const version=2,patterns=[{pattern:'refute.equal(actual, expected)',args:[{index:0,name:'actual',kind:'mandatory'},{index:1,name:'expected',kind:'mandatory'}]}];return Object.assign({version,content,filepath,line},extra,patterns[ptnidx]);};";
-      const am = "var _am1=_pwmeta1(0,'refute.equal(foo, bar)',null,1);";
-      const ag1 = "var _ag1=new _ArgumentRecorder1(refute.equal,_am1,0);";
-      const ag2 = "var _ag2=new _ArgumentRecorder1(refute.equal,_am1,1);";
-      const expectedAssertion = "refute.equal(_ag1._rec(foo,'arguments/0'),_ag2._rec(bar,'arguments/1'));";
-      beforeEach(() => {
-        result = instrument('refute.equal(foo, bar);', {
-          patterns: [
-            'refute.equal(actual, expected)'
-          ]
-        });
-      });
-      it('metagen', () => {
-        const startAt = 0;
-        const endAt = metagen.length;
-        assert.strictEqual(result.substring(startAt, endAt), metagen);
-      });
-      it('am', () => {
-        const startAt = metagen.length;
-        const endAt = metagen.length + am.length;
-        assert.strictEqual(result.substring(startAt, endAt), am);
-      });
-      it('ag1', () => {
-        const startAt = result.length - (expectedAssertion.length + ag1.length + ag2.length);
-        const endAt = result.length - (expectedAssertion.length + ag2.length);
-        assert.strictEqual(result.substring(startAt, endAt), ag1);
-      });
-      it('ag2', () => {
-        const startAt = result.length - (expectedAssertion.length + ag2.length);
-        const endAt = result.length - expectedAssertion.length;
-        assert.strictEqual(result.substring(startAt, endAt), ag2);
-      });
-      it('assertion', () => {
-        const startAt = result.length - expectedAssertion.length;
-        const endAt = result.length;
-        assert.strictEqual(result.substring(startAt, endAt), expectedAssertion);
-      });
+    testGeneratedCode({
+      suite: 'method: refute.equal(actual, expected)',
+      input: 'refute.equal(foo, bar);',
+      espowerOptions: {
+        patterns: [
+          'refute.equal(actual, expected)'
+        ]
+      },
+      prelude: [
+        "var _pwmeta1=(ptnidx,content,filepath,line,extra)=>{const version=2,patterns=[{pattern:'refute.equal(actual, expected)',args:[{index:0,name:'actual',kind:'mandatory'},{index:1,name:'expected',kind:'mandatory'}]}];return Object.assign({version,content,filepath,line},extra,patterns[ptnidx]);};",
+        "var _am1=_pwmeta1(0,'refute.equal(foo, bar)','path/to/some_test.js',1);"
+      ],
+      postlude: [
+        "var _ag1=new _ArgumentRecorder1(refute.equal,_am1,0);",
+        "var _ag2=new _ArgumentRecorder1(refute.equal,_am1,1);",
+        "refute.equal(_ag1._rec(foo,'arguments/0'),_ag2._rec(bar,'arguments/1'));"
+      ]
     });
 
-    describe('deep callee chain: browser.assert.element(selection, [message])', () => {
-      let result;
-      const metagen = "var _pwmeta1=(ptnidx,content,filepath,line,extra)=>{const version=2,patterns=[{pattern:'browser.assert.element(selection, [message])',args:[{index:0,name:'selection',kind:'mandatory'},{index:1,name:'message',kind:'optional',message:true}]}];return Object.assign({version,content,filepath,line},extra,patterns[ptnidx]);};";
-      const am = "var _am1=_pwmeta1(0,'browser.assert.element(foo)',null,1);";
-      const ag1 = "var _ag1=new _ArgumentRecorder1(browser.assert.element,_am1,0);";
-      const expectedAssertion = "browser.assert.element(_ag1._rec(foo,'arguments/0'));";
-      beforeEach(() => {
-        result = instrument('browser.assert.element(foo);', {
-          patterns: [
-            'browser.assert.element(selection, [message])'
-          ]
-        });
-      });
-      it('metagen', () => {
-        const startAt = 0;
-        const endAt = metagen.length;
-        assert.strictEqual(result.substring(startAt, endAt), metagen);
-      });
-      it('am', () => {
-        const startAt = metagen.length;
-        const endAt = metagen.length + am.length;
-        assert.strictEqual(result.substring(startAt, endAt), am);
-      });
-      it('ag1', () => {
-        const startAt = result.length - (expectedAssertion.length + ag1.length);
-        const endAt = result.length - expectedAssertion.length;
-        assert.strictEqual(result.substring(startAt, endAt), ag1);
-      });
-      it('assertion', () => {
-        const startAt = result.length - expectedAssertion.length;
-        const endAt = result.length;
-        assert.strictEqual(result.substring(startAt, endAt), expectedAssertion);
-      });
+    testGeneratedCode({
+      suite: 'deep callee chain: browser.assert.element(selection, [message])',
+      input: 'browser.assert.element(foo);',
+      espowerOptions: {
+        patterns: [
+          'browser.assert.element(selection, [message])'
+        ]
+      },
+      prelude: [
+        "var _pwmeta1=(ptnidx,content,filepath,line,extra)=>{const version=2,patterns=[{pattern:'browser.assert.element(selection, [message])',args:[{index:0,name:'selection',kind:'mandatory'},{index:1,name:'message',kind:'optional',message:true}]}];return Object.assign({version,content,filepath,line},extra,patterns[ptnidx]);};",
+        "var _am1=_pwmeta1(0,'browser.assert.element(foo)','path/to/some_test.js',1);"
+      ],
+      postlude: [
+        "var _ag1=new _ArgumentRecorder1(browser.assert.element,_am1,0);",
+        "browser.assert.element(_ag1._rec(foo,'arguments/0'));"
+      ]
     });
+
   });
       
 
     describe('path option.', function () {
-        it('path: null', function () {
+        function instrument (jsCode, options) {
+            var jsAST = acorn.parse(jsCode, {ecmaVersion: 7, locations: true, plugins: {asyncawait: true}});
+            var espoweredAST = espower(jsAST, Object.assign({parse: acorn.parse}, options));
+            var instrumentedCode = escodegen.generate(espoweredAST, {format: {compact: true}});
+            return instrumentedCode;
+        }
+        it('path: undefined', function () {
             var instrumentedCode = instrument('assert(falsyStr);', {});
+            assert(instrumentedCode.includes("var _am1=_pwmeta1(0,'assert(falsyStr)',null,1);"));
+        });
+        it('path: null', function () {
+            var instrumentedCode = instrument('assert(falsyStr);', {path: null});
             assert(instrumentedCode.includes("var _am1=_pwmeta1(0,'assert(falsyStr)',null,1);"));
         });
         it('with path', function () {
@@ -343,38 +294,38 @@ describe('location information', function () {
 
 
 describe('lineSeparator', function () {
-    var lineDetected = "var _ag1=new _ArgumentRecorder1(assert.ok,_am1,0);var falsyStr='';assert.ok(_ag1._rec(falsyStr,'arguments/0'));";
-     function lineSeparatorTest (name, lineSeparatorInCode, options, expected) {
-        it(name, function () {
-            var sourceLines = [
-                'var falsyStr = "";',
-                '// comment line',
-                'assert.ok(falsyStr);'
-            ].join(lineSeparatorInCode);
-            const result = instrument(sourceLines, options);
-            const startAt = result.length - lineDetected.length;
-            const endAt = result.length;
-            assert.strictEqual(result.substring(startAt, endAt), lineDetected);
-        });
-    }
-    context('code: LF', function () {
-        function when (name, opt, expected) {
-            lineSeparatorTest(name, '\n', opt, expected);
-        }
-        when('option: default', {}, lineDetected);
+  function lineSeparatorTest (name, lineSeparatorInCode) {
+    const input = [
+      'var falsyStr = "";',
+      '// comment line',
+      'assert.ok(falsyStr);'
+    ].join(lineSeparatorInCode);
+    testGeneratedCode({
+      suite: name,
+      input,
+      espowerOptions: {
+        patterns: [
+          'assert.ok(falsyStr)'
+        ]
+      },
+      prelude: [
+      ],
+      postlude: [
+        "var _ag1=new _ArgumentRecorder1(assert.ok,_am1,0);",
+        "var falsyStr='';",
+        "assert.ok(_ag1._rec(falsyStr,'arguments/0'));"
+      ]
     });
-    context('code: CR', function () {
-        function when (name, opt, expected) {
-            lineSeparatorTest(name, '\r', opt, expected);
-        }
-        when('option: default', {}, lineDetected);
-    });
-    context('code: CRLF', function () {
-        function when (name, opt, expected) {
-            lineSeparatorTest(name, '\r\n', opt, expected);
-        }
-        when('option: default', {}, lineDetected);
-    });
+  }
+  context('code: LF', function () {
+    lineSeparatorTest('option: default', '\n');
+  });
+  context('code: CR', function () {
+    lineSeparatorTest('option: default', '\r');
+  });
+  context('code: CRLF', function () {
+    lineSeparatorTest('option: default', '\r\n');
+  });
 });
 
 
@@ -504,26 +455,25 @@ describe('incoming SourceMap support', function () {
 
 
 describe('sourceRoot option', function () {
-    const metagen = "var _pwmeta1=(ptnidx,content,filepath,line,extra)=>{const version=2,patterns=[{pattern:'assert(value)',args:[{index:0,name:'value',kind:'mandatory'}]}];return Object.assign({version,content,filepath,line},extra,patterns[ptnidx]);};";
-
     function sourceRootTest (testName, config) {
-        it(testName, function () {
-            var jsCode = 'assert(falsyStr);';
-            var jsAST = acorn.parse(jsCode, {ecmaVersion: 6, locations: true, sourceFile: config.incomingFilepath});
-            var espoweredAST = espower(jsAST, {
-                patterns: [
-                    'assert(value)'
-                ],
-                parse: acorn.parse,
-                path: config.incomingFilepath,
-                sourceRoot: config.espowerSourceRoot
-            });
-            var instrumentedCode = escodegen.generate(espoweredAST, {format: {compact: true}});
-            const am = `var _am1=_pwmeta1(0,'assert(falsyStr)','${config.filepathInGeneratedCode}',1);`;
-            const startAt = metagen.length;
-            const endAt = metagen.length + am.length;
-            assert.strictEqual(instrumentedCode.substring(startAt, endAt), am);
-        });
+      testGeneratedCode({
+        suite: testName,
+        input: 'assert(falsyStr);',
+        espowerOptions: {
+          patterns: [
+            'assert(value)'
+          ],
+          path: config.incomingFilepath,
+          sourceRoot: config.espowerSourceRoot
+        },
+        parserOptions: {
+          sourceFile: config.incomingFilepath
+        },
+        prelude: [
+          "var _pwmeta1=(ptnidx,content,filepath,line,extra)=>{const version=2,patterns=[{pattern:'assert(value)',args:[{index:0,name:'value',kind:'mandatory'}]}];return Object.assign({version,content,filepath,line},extra,patterns[ptnidx]);};",
+          `var _am1=_pwmeta1(0,'assert(falsyStr)','${config.filepathInGeneratedCode}',1);`
+        ]
+      });
     }
 
     sourceRootTest('when sourceRoot ends with slash', {

@@ -1,36 +1,17 @@
 'use strict';
 
 const assert = require('assert');
-const acorn = require('acorn');
-require('acorn-es7-plugin')(acorn);
-const escodegen = require('escodegen');
-const espower = require('..');
-const transpile = (code, extraOptions) => {
-  const options = {ecmaVersion: 2018, locations: true, ranges: true, plugins: {asyncawait: true}};
-  const ast = acorn.parse(code, options);
-  const espoweredAST = espower(ast, Object.assign({ path: 'path/to/some_test.js', parse: acorn.parse }, extraOptions));
-  const result = escodegen.generate(espoweredAST, {format: {compact: true}});
-  const lines = result.split('\n');
-  const lastLine = lines[lines.length - 1];
-  return {
-    result,
-    lastLine
-  };
-};
+const { transpile } = require('./helper');
 
 describe('instrumentation spec', function () {
 
-    function testWithParserOptions (jsCode, expected, options) {
-        it(jsCode, function () {
-            const { lastLine } = transpile(jsCode, { patterns: ['assert(value, [message])'] });
+    function inst (input, expected) {
+        it(input, function () {
+            const { lastLine } = transpile({input, espowerOptions: { patterns: ['assert(value, [message])'] }});
             const startAt = lastLine.length - expected.length;
             const endAt = lastLine.length;
             assert.strictEqual(lastLine.substring(startAt, endAt), expected);
         });
-    }
-
-    function inst (jsCode, expected) {
-      testWithParserOptions(jsCode, expected);
     }
 
     describe('spike disambiguation: YieldExpression vs FunctionCall', function () {
