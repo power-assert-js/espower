@@ -4,7 +4,7 @@ var espower = require('..');
 var acorn = require('acorn');
 var assert = require('assert');
 
-//// original code of jsx_test.json:
+/// / original code of jsx_test.json:
 // var React = require('react/addons');
 // var TestUtils = React.addons.TestUtils;
 // var assert = require('power-assert');
@@ -26,8 +26,8 @@ var assert = require('assert');
 var ast = require('./jsx_test.json');
 
 it('custom visitorKeys', function () {
-    var visitorKeys = require('./visitor-keys.json');
-    assert.doesNotThrow(function () {
-        espower(ast, { visitorKeys: visitorKeys, parse: acorn.parse });
-    });
+  var visitorKeys = require('./visitor-keys.json');
+  assert.doesNotThrow(function () {
+    espower(ast, { visitorKeys: visitorKeys, parse: acorn.parse });
+  });
 });

@@ -67,12 +67,23 @@
   "scripts": {
     "preversion": "npm test",
     "clean": "rimraf ./coverage",
-    "lint": "semistandard --verbose index.js lib/*.js | snazzy",
-    "fmt": "semistandard --fix index.js lib/*.js",
+    "lint": "semistandard --verbose index.js 'lib/**/*.js' 'templates/*.js' 'test/*.js' | snazzy",
+    "fmt": "semistandard --fix index.js 'lib/**/*.js' 'templates/*.js' 'test/*.js'",
     "gen": "node gen.js",
     "test": "npm run lint && npm run gen && npm run test:unit",
     "test:unit": "mocha --reporter dot",
     "test:cov": "nyc --reporter=lcovonly npm run test:unit",
     "coveralls": "npm run test:cov && cat ./coverage/lcov.info | coveralls"
+  },
+  "semistandard": {
+    "ignore": [
+      "**/*.jsx"
+    ],
+    "globals": [
+      "describe",
+      "context",
+      "beforeEach",
+      "it"
+    ]
   }
 }
