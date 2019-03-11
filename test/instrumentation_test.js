@@ -1,79 +1,52 @@
 'use strict';
 
-var espower = require('..');
-var acorn = require('acorn');
-require('acorn-es7-plugin')(acorn);
-var escodegen = require('escodegen');
-var estraverse = require('estraverse');
-var assert = require('assert');
+const assert = require('assert');
+const { transpile } = require('./helper');
 
 describe('instrumentation spec', function () {
-    function rec(num) {
-        return 'var _rec' + num + '=new _PowerAssertRecorder1();';
-    }
-    function prelude(num) {
-        var decl = "var _PowerAssertRecorder1=function(){function PowerAssertRecorder(){this.captured=[];}PowerAssertRecorder.prototype._capt=function _capt(value,espath){this.captured.push({value:value,espath:espath});return value;};PowerAssertRecorder.prototype._expr=function _expr(value,source){var capturedValues=this.captured;this.captured=[];return{powerAssertContext:{value:value,events:capturedValues},source:source};};return PowerAssertRecorder;}();";
-        for (var i = 1; i <= num; i+=1) {
-            decl += rec(i);
-        }
-        return decl;
-    }
 
-    function testWithParserOptions (jsCode, expected, options) {
-        it(jsCode, function () {
-            var jsAST = acorn.parse(jsCode, options);
-            var espoweredAST = espower(jsAST, { path: 'path/to/some_test.js', parse: acorn.parse });
-            var instrumentedCode = escodegen.generate(espoweredAST, {format: {compact: true}});
-            assert.equal(instrumentedCode, expected);
-            assert(acorn.parse(instrumentedCode, options));
+    function inst (input, expected) {
+        it(input, function () {
+            const { lastLine } = transpile({input, espowerOptions: { patterns: ['assert(value, [message])'] }});
+            const startAt = lastLine.length - expected.length;
+            const endAt = lastLine.length;
+            assert.strictEqual(lastLine.substring(startAt, endAt), expected);
         });
     }
 
-    function inst (jsCode, expected) {
-        describe('with loc, range', function () {
-            var options = {ecmaVersion: 2018, locations: true, ranges: true, plugins: {asyncawait: true}};
-            testWithParserOptions(jsCode, expected, options);
-        });
-        describe('with loc', function () {
-            var options = {ecmaVersion: 2018, locations: true, plugins: {asyncawait: true}};
-            testWithParserOptions(jsCode, expected, options);
-        });
-    }
-
-
-    describe('disambiguation: YieldExpression vs FunctionCall', function () {
+    describe('spike disambiguation: YieldExpression vs FunctionCall', function () {
         inst("function baz() {assert((yield (foo)) === bar)}",
-             prelude(0) + "function baz(){" + rec(1) + "assert(_rec1._expr(_rec1._capt(_rec1._capt(yield(_rec1._capt(foo,'arguments/0/left/arguments/0')),'arguments/0/left')===_rec1._capt(bar,'arguments/0/right'),'arguments/0'),{content:'assert(yield(foo) === bar)',filepath:'path/to/some_test.js',line:1}));}");
+             "function baz(){var _am1=_pwmeta1(0,'assert(yield(foo) === bar)','path/to/some_test.js',1);var _ag1=new _ArgumentRecorder1(assert,_am1,0);assert(_ag1._rec(_ag1._tap(yield(_ag1._tap(foo,'arguments/0/left/arguments/0')),'arguments/0/left')===_ag1._tap(bar,'arguments/0/right'),'arguments/0'));}");
 
         inst("function *baz() {assert((yield (foo)) === bar)}",
-             prelude(0) + "function*baz(){" + rec(1) + "assert(_rec1._expr(_rec1._capt(_rec1._capt(yield foo,'arguments/0/left')===_rec1._capt(bar,'arguments/0/right'),'arguments/0'),{content:'assert((yield foo) === bar)',filepath:'path/to/some_test.js',line:1,generator:true}));}");
+             "function*baz(){var _am1=_pwmeta1(0,'assert((yield foo) === bar)','path/to/some_test.js',1,{generator:true});var _ag1=new _ArgumentRecorder1(assert,_am1,0);assert(_ag1._rec(_ag1._tap(yield foo,'arguments/0/left')===_ag1._tap(bar,'arguments/0/right'),'arguments/0'));}");
 
         inst("var baz = function () {assert((yield (foo)) === bar)}",
-             prelude(0) + "var baz=function(){" + rec(1) + "assert(_rec1._expr(_rec1._capt(_rec1._capt(yield(_rec1._capt(foo,'arguments/0/left/arguments/0')),'arguments/0/left')===_rec1._capt(bar,'arguments/0/right'),'arguments/0'),{content:'assert(yield(foo) === bar)',filepath:'path/to/some_test.js',line:1}));};");
+             "var baz=function(){var _am1=_pwmeta1(0,'assert(yield(foo) === bar)','path/to/some_test.js',1);var _ag1=new _ArgumentRecorder1(assert,_am1,0);assert(_ag1._rec(_ag1._tap(yield(_ag1._tap(foo,'arguments/0/left/arguments/0')),'arguments/0/left')===_ag1._tap(bar,'arguments/0/right'),'arguments/0'));};");
 
         inst("var baz = function *() {assert((yield (foo)) === bar)}",
-             prelude(0) + "var baz=function*(){" + rec(1) + "assert(_rec1._expr(_rec1._capt(_rec1._capt(yield foo,'arguments/0/left')===_rec1._capt(bar,'arguments/0/right'),'arguments/0'),{content:'assert((yield foo) === bar)',filepath:'path/to/some_test.js',line:1,generator:true}));};");
+             "var baz=function*(){var _am1=_pwmeta1(0,'assert((yield foo) === bar)','path/to/some_test.js',1,{generator:true});var _ag1=new _ArgumentRecorder1(assert,_am1,0);assert(_ag1._rec(_ag1._tap(yield foo,'arguments/0/left')===_ag1._tap(bar,'arguments/0/right'),'arguments/0'));};");
     });
 
 
     describe('disambiguation: AwaitExpression vs FunctionCall', function () {
         inst("function baz() {assert((await (foo)) === bar)}",
-             prelude(0) + "function baz(){" + rec(1) + "assert(_rec1._expr(_rec1._capt(_rec1._capt(await(_rec1._capt(foo,'arguments/0/left/arguments/0')),'arguments/0/left')===_rec1._capt(bar,'arguments/0/right'),'arguments/0'),{content:'assert(await(foo) === bar)',filepath:'path/to/some_test.js',line:1}));}");
+             "function baz(){var _am1=_pwmeta1(0,'assert(await(foo) === bar)','path/to/some_test.js',1);var _ag1=new _ArgumentRecorder1(assert,_am1,0);assert(_ag1._rec(_ag1._tap(await(_ag1._tap(foo,'arguments/0/left/arguments/0')),'arguments/0/left')===_ag1._tap(bar,'arguments/0/right'),'arguments/0'));}");
 
         inst("async function baz() {assert((await (foo)) === bar)}",
-             prelude(0) + "async function baz(){" + rec(1) + "assert(_rec1._expr(_rec1._capt(_rec1._capt(await foo,'arguments/0/left')===_rec1._capt(bar,'arguments/0/right'),'arguments/0'),{content:'assert((await foo) === bar)',filepath:'path/to/some_test.js',line:1,async:true}));}");
+             "async function baz(){var _am1=_pwmeta1(0,'assert(await foo === bar)','path/to/some_test.js',1,{async:true});var _ag1=new _ArgumentRecorder1(assert,_am1,0);assert(_ag1._rec(_ag1._tap(await foo,'arguments/0/left')===_ag1._tap(bar,'arguments/0/right'),'arguments/0'));}");
 
         inst("var baz = function () {assert((await (foo)) === bar)}",
-             prelude(0) + "var baz=function(){" + rec(1) + "assert(_rec1._expr(_rec1._capt(_rec1._capt(await(_rec1._capt(foo,'arguments/0/left/arguments/0')),'arguments/0/left')===_rec1._capt(bar,'arguments/0/right'),'arguments/0'),{content:'assert(await(foo) === bar)',filepath:'path/to/some_test.js',line:1}));};");
+             "var baz=function(){var _am1=_pwmeta1(0,'assert(await(foo) === bar)','path/to/some_test.js',1);var _ag1=new _ArgumentRecorder1(assert,_am1,0);assert(_ag1._rec(_ag1._tap(await(_ag1._tap(foo,'arguments/0/left/arguments/0')),'arguments/0/left')===_ag1._tap(bar,'arguments/0/right'),'arguments/0'));};");
 
         inst("var baz = async function () {assert((await (foo)) === bar)}",
-             prelude(0) + "var baz=async function(){" + rec(1) + "assert(_rec1._expr(_rec1._capt(_rec1._capt(await foo,'arguments/0/left')===_rec1._capt(bar,'arguments/0/right'),'arguments/0'),{content:'assert((await foo) === bar)',filepath:'path/to/some_test.js',line:1,async:true}));};");
+             "var baz=async function(){var _am1=_pwmeta1(0,'assert(await foo === bar)','path/to/some_test.js',1,{async:true});var _ag1=new _ArgumentRecorder1(assert,_am1,0);assert(_ag1._rec(_ag1._tap(await foo,'arguments/0/left')===_ag1._tap(bar,'arguments/0/right'),'arguments/0'));};");
 
         inst("var baz = () => {assert((await (foo)) === bar)};",
-             prelude(0) + "var baz=()=>{" + rec(1) + "assert(_rec1._expr(_rec1._capt(_rec1._capt(await(_rec1._capt(foo,'arguments/0/left/arguments/0')),'arguments/0/left')===_rec1._capt(bar,'arguments/0/right'),'arguments/0'),{content:'assert(await(foo) === bar)',filepath:'path/to/some_test.js',line:1}));};");
+             "var baz=()=>{var _am1=_pwmeta1(0,'assert(await(foo) === bar)','path/to/some_test.js',1);var _ag1=new _ArgumentRecorder1(assert,_am1,0);assert(_ag1._rec(_ag1._tap(await(_ag1._tap(foo,'arguments/0/left/arguments/0')),'arguments/0/left')===_ag1._tap(bar,'arguments/0/right'),'arguments/0'));};");
 
         inst("var baz = async () => {assert((await (foo)) === bar)}",
-             prelude(0) + "var baz=async()=>{" + rec(1) + "assert(_rec1._expr(_rec1._capt(_rec1._capt(await foo,'arguments/0/left')===_rec1._capt(bar,'arguments/0/right'),'arguments/0'),{content:'assert((await foo) === bar)',filepath:'path/to/some_test.js',line:1,async:true}));};");
+             "var baz=async()=>{var _am1=_pwmeta1(0,'assert(await foo === bar)','path/to/some_test.js',1,{async:true});var _ag1=new _ArgumentRecorder1(assert,_am1,0);assert(_ag1._rec(_ag1._tap(await foo,'arguments/0/left')===_ag1._tap(bar,'arguments/0/right'),'arguments/0'));};");
     });
 
 });

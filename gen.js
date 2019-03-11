@@ -1,9 +1,16 @@
 const { join } = require('path');
-const fs = require('fs');
-const acorn = require('acorn');
+const { readFileSync, writeFileSync } = require('fs');
+const { parse } = require('acorn');
 const espurify = require('espurify');
 
-const filepath = join(__dirname, 'power-assert-recorder.js');
-const ast = acorn.parse(fs.readFileSync(filepath), { ecmaVersion: 6, locations: true });
-const callexp = espurify(ast).body[0].expression.right;
-fs.writeFileSync(join(__dirname, 'lib', 'power-assert-recorder.json'), JSON.stringify(callexp, null, 2));
+const dump = (name) => {
+  const filepath = join(__dirname, 'templates', `${name}.js`);
+  const templateLines = readFileSync(require.resolve(filepath), 'utf8').split('\n');
+  const funcBody = templateLines.slice(2, templateLines.length - 2).join('\n'); // extract template body
+  const ast = parse(`(function () { ${funcBody} })()`, { ecmaVersion: 6 });
+  const callexp = espurify(ast).body[0].expression;
+  writeFileSync(join(__dirname, 'lib', 'templates', `${name}.json`), JSON.stringify(callexp, null, 2));
+};
+
+dump('argument-recorder');
+dump('assertion-message');
