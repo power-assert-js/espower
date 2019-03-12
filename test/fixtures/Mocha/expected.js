@@ -295,6 +295,48 @@ var _ArgumentRecorder1 = function () {
     }
     return ArgumentRecorder;
 }();
+var _AssertionMessage1 = function () {
+    const _s = '\n\n      ';
+    class AssertionMessage {
+        constructor(am, matchIndex, msgOrRec) {
+            this._am = am;
+            this._idx = matchIndex;
+            this._msgOrRec = msgOrRec;
+        }
+        metadata() {
+            return this._am;
+        }
+        matchIndex() {
+            return this._idx;
+        }
+        val() {
+            if (this._msgOrRec && typeof this._msgOrRec.val === 'function') {
+                return this._msgOrRec.val();
+            } else {
+                return this._msgOrRec;
+            }
+        }
+        eject() {
+            if (this._msgOrRec && typeof this._msgOrRec.eject === 'function') {
+                return this._msgOrRec.eject();
+            } else {
+                return {
+                    value: this.val(),
+                    logs: []
+                };
+            }
+        }
+        toString() {
+            let msg = typeof this._msgOrRec === 'string' ? this._msgOrRec : '';
+            msg += `${ _s }# ${ this._am.filepath }:${ this._am.line }`;
+            msg += `${ _s }${ this._am.content }`;
+            msg += `${ _s }[WARNING] power-assert is not configured. see: https://github.com/power-assert-js/power-assert`;
+            msg += `\n`;
+            return msg;
+        }
+    }
+    return AssertionMessage;
+}();
 var assert = require('power-assert');
 describe('Array', function () {
     beforeEach(function () {
