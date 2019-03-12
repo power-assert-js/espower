@@ -209,12 +209,6 @@ var _pwmeta1 = (ptnidx, content, filepath, line, extra) => {
         line
     }, extra, patterns[ptnidx]);
 };
-var _am1 = _pwmeta1(0, 'assert(false)', 'path/to/some_test.js', 3);
-var _am2 = _pwmeta1(0, 'assert(0)', 'path/to/some_test.js', 5);
-var _am3 = _pwmeta1(2, 'assert.equal(1, 0)', 'path/to/some_test.js', 7);
-var _am4 = _pwmeta1(0, 'assert(false, \'message\')', 'path/to/some_test.js', 9);
-var _am5 = _pwmeta1(0, 'assert(false, messageStr)', 'path/to/some_test.js', 11);
-var _am6 = _pwmeta1(2, 'assert.equal(foo, \'bar\', \'msg\')', 'path/to/some_test.js', 13);
 var _ArgumentRecorder1 = function () {
     const isPromiseLike = o => o !== null && typeof o === 'object' && typeof o.then === 'function' && typeof o.catch === 'function';
     const mark = (_this, s) => {
@@ -301,6 +295,12 @@ var _ArgumentRecorder1 = function () {
     }
     return ArgumentRecorder;
 }();
+var _am1 = _pwmeta1(0, 'assert(false)', 'path/to/some_test.js', 3);
+var _am2 = _pwmeta1(0, 'assert(0)', 'path/to/some_test.js', 5);
+var _am3 = _pwmeta1(2, 'assert.equal(1, 0)', 'path/to/some_test.js', 7);
+var _am4 = _pwmeta1(0, 'assert(false, \'message\')', 'path/to/some_test.js', 9);
+var _am5 = _pwmeta1(0, 'assert(false, messageStr)', 'path/to/some_test.js', 11);
+var _am6 = _pwmeta1(2, 'assert.equal(foo, \'bar\', \'msg\')', 'path/to/some_test.js', 13);
 var _ag1 = new _ArgumentRecorder1(assert.equal, _am6, 0);
 var _am7 = _pwmeta1(0, 'assert(/^not/.exec(str))', 'path/to/some_test.js', 16);
 var _ag2 = new _ArgumentRecorder1(assert, _am7, 0);
