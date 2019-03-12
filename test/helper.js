@@ -19,25 +19,44 @@ const transpile = ({ input, espowerOptions = {}, parserOptions = {} }) => {
 
 const testGeneratedCode = ({ suite, input, prelude = [], postlude = [], espowerOptions = {}, parserOptions = {} }) => {
   describe(suite, () => {
-    const lastLine = transpile({ input, espowerOptions, parserOptions }).lastLine;
-    prelude.reduce((startAt, fragment, idx) => {
-      const endAt = startAt + fragment.length;
-      it(`prelude${idx} ${fragment}`, () => {
-        assert.strictEqual(lastLine.substring(startAt, endAt), fragment);
-      });
-      return endAt;
-    }, 0);
-    postlude.reduceRight((endAt, fragment, idx) => {
-      const startAt = endAt - fragment.length;
-      it(`postlude${idx} ${fragment}`, () => {
-        assert.strictEqual(lastLine.substring(startAt, endAt), fragment);
-      });
-      return startAt;
-    }, lastLine.length);
+    const result = transpile({ input, espowerOptions, parserOptions }).lastLine;
+    testPreludeAndPostlude({ result, prelude, postlude });
   });
 };
 
+const testPreludeAndPostlude = ({ result, prelude = [], postlude = [] }) => {
+  prelude.reduce((startAt, fragment, idx) => {
+    const endAt = startAt + fragment.length;
+    it(`prelude[${idx}] ${fragment}`, () => {
+      assert.strictEqual(result.substring(startAt, endAt), fragment);
+    });
+    return endAt;
+  }, 0);
+  postlude.reduceRight((endAt, fragment, idx) => {
+    const startAt = endAt - fragment.length;
+    it(`postlude[${idx}] ${fragment}`, () => {
+      assert.strictEqual(result.substring(startAt, endAt), fragment);
+    });
+    return startAt;
+  }, result.length);
+};
+
+const assertPreludeAndPostlude = ({ result, prelude = [], postlude = [] }) => {
+  prelude.reduce((startAt, fragment, idx) => {
+    const endAt = startAt + fragment.length;
+    assert.strictEqual(result.substring(startAt, endAt), fragment, `prelude[${idx}] ${fragment}`);
+    return endAt;
+  }, 0);
+  postlude.reduceRight((endAt, fragment, idx) => {
+    const startAt = endAt - fragment.length;
+    assert.strictEqual(result.substring(startAt, endAt), fragment, `postlude[${idx}] ${fragment}`);
+    return startAt;
+  }, result.length);
+};
+
 module.exports = {
+  assertPreludeAndPostlude,
+  testPreludeAndPostlude,
   transpile,
   testGeneratedCode
 };

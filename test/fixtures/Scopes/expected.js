@@ -208,7 +208,6 @@ var _pwmeta1 = (ptnidx, content, filepath, line, extra) => {
         line
     }, extra, patterns[ptnidx]);
 };
-var _am1 = _pwmeta1(0, 'assert(foo === \'FOO\')', 'path/to/some_test.js', 5);
 var _ArgumentRecorder1 = function () {
     const isPromiseLike = o => o !== null && typeof o === 'object' && typeof o.then === 'function' && typeof o.catch === 'function';
     const mark = (_this, s) => {
@@ -295,6 +294,7 @@ var _ArgumentRecorder1 = function () {
     }
     return ArgumentRecorder;
 }();
+var _am1 = _pwmeta1(0, 'assert(foo === \'FOO\')', 'path/to/some_test.js', 5);
 var _ag1 = new _ArgumentRecorder1(assert, _am1, 0);
 var _am2 = _pwmeta1(0, 'assert(bar)', 'path/to/some_test.js', 7);
 var _ag2 = new _ArgumentRecorder1(assert, _am2, 0);
