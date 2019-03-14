@@ -295,29 +295,72 @@ var _ArgumentRecorder1 = function () {
     }
     return ArgumentRecorder;
 }();
+var _AssertionMessage1 = function () {
+    const _s = '\n\n      ';
+    class AssertionMessage {
+        constructor(am, matchIndex, msgOrRec) {
+            this._am = am;
+            this._idx = matchIndex;
+            this._msgOrRec = msgOrRec;
+        }
+        metadata() {
+            return this._am;
+        }
+        matchIndex() {
+            return this._idx;
+        }
+        val() {
+            if (this._msgOrRec && typeof this._msgOrRec.val === 'function') {
+                return this._msgOrRec.val();
+            } else {
+                return this._msgOrRec;
+            }
+        }
+        eject() {
+            if (this._msgOrRec && typeof this._msgOrRec.eject === 'function') {
+                return this._msgOrRec.eject();
+            } else {
+                return {
+                    value: this.val(),
+                    logs: []
+                };
+            }
+        }
+        toString() {
+            let msg = typeof this._msgOrRec === 'string' ? this._msgOrRec : '';
+            msg += `${ _s }# ${ this._am.filepath }:${ this._am.line }`;
+            msg += `${ _s }${ this._am.content }`;
+            msg += `${ _s }[WARNING] power-assert is not configured. see: https://github.com/power-assert-js/power-assert`;
+            msg += `\n`;
+            return msg;
+        }
+    }
+    return AssertionMessage;
+}();
 var _am1 = _pwmeta1(0, 'assert(false)', 'path/to/some_test.js', 3);
 var _am2 = _pwmeta1(0, 'assert(0)', 'path/to/some_test.js', 5);
 var _am3 = _pwmeta1(2, 'assert.equal(1, 0)', 'path/to/some_test.js', 7);
 var _am4 = _pwmeta1(0, 'assert(false, \'message\')', 'path/to/some_test.js', 9);
 var _am5 = _pwmeta1(0, 'assert(false, messageStr)', 'path/to/some_test.js', 11);
+var _ag1 = new _ArgumentRecorder1(assert, _am5, 1);
 var _am6 = _pwmeta1(2, 'assert.equal(foo, \'bar\', \'msg\')', 'path/to/some_test.js', 13);
-var _ag1 = new _ArgumentRecorder1(assert.equal, _am6, 0);
+var _ag2 = new _ArgumentRecorder1(assert.equal, _am6, 0);
 var _am7 = _pwmeta1(0, 'assert(/^not/.exec(str))', 'path/to/some_test.js', 16);
-var _ag2 = new _ArgumentRecorder1(assert, _am7, 0);
+var _ag3 = new _ArgumentRecorder1(assert, _am7, 0);
 var _am8 = _pwmeta1(0, 'assert(fuga !== \'ふが\')', 'path/to/some_test.js', 19);
-var _ag3 = new _ArgumentRecorder1(assert, _am8, 0);
+var _ag4 = new _ArgumentRecorder1(assert, _am8, 0);
 var _am9 = _pwmeta1(0, 'assert(\'ほげ\' !== \'ふが\')', 'path/to/some_test.js', 20);
-var _ag4 = new _ArgumentRecorder1(assert, _am9, 0);
+var _ag5 = new _ArgumentRecorder1(assert, _am9, 0);
 var _am10 = _pwmeta1(0, 'assert(0b111110111)', 'path/to/some_test.js', 23);
 var _am11 = _pwmeta1(0, 'assert(0o767)', 'path/to/some_test.js', 26);
 assert(false);
 assert(0);
 assert.equal(1, 0);
 assert(false, 'message');
-assert(false, messageStr);
-assert.equal(_ag1._rec(foo, 'arguments/0'), 'bar', 'msg');
-assert(_ag2._rec(/^not/.exec(_ag2._tap(str, 'arguments/0/arguments/0')), 'arguments/0'));
-assert(_ag3._rec(_ag3._tap(fuga, 'arguments/0/left') !== 'ふが', 'arguments/0'));
-assert(_ag4._rec('ほげ' !== 'ふが', 'arguments/0'));
+assert(false, new _AssertionMessage1(_am5, 1, _ag1._rec(messageStr, 'arguments/1')));
+assert.equal(_ag2._rec(foo, 'arguments/0'), 'bar', 'msg');
+assert(_ag3._rec(/^not/.exec(_ag3._tap(str, 'arguments/0/arguments/0')), 'arguments/0'));
+assert(_ag4._rec(_ag4._tap(fuga, 'arguments/0/left') !== 'ふが', 'arguments/0'));
+assert(_ag5._rec('ほげ' !== 'ふが', 'arguments/0'));
 assert(503);
 assert(503);

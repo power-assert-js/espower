@@ -294,6 +294,48 @@ var _ArgumentRecorder1 = function () {
     }
     return ArgumentRecorder;
 }();
+var _AssertionMessage1 = function () {
+    const _s = '\n\n      ';
+    class AssertionMessage {
+        constructor(am, matchIndex, msgOrRec) {
+            this._am = am;
+            this._idx = matchIndex;
+            this._msgOrRec = msgOrRec;
+        }
+        metadata() {
+            return this._am;
+        }
+        matchIndex() {
+            return this._idx;
+        }
+        val() {
+            if (this._msgOrRec && typeof this._msgOrRec.val === 'function') {
+                return this._msgOrRec.val();
+            } else {
+                return this._msgOrRec;
+            }
+        }
+        eject() {
+            if (this._msgOrRec && typeof this._msgOrRec.eject === 'function') {
+                return this._msgOrRec.eject();
+            } else {
+                return {
+                    value: this.val(),
+                    logs: []
+                };
+            }
+        }
+        toString() {
+            let msg = typeof this._msgOrRec === 'string' ? this._msgOrRec : '';
+            msg += `${ _s }# ${ this._am.filepath }:${ this._am.line }`;
+            msg += `${ _s }${ this._am.content }`;
+            msg += `${ _s }[WARNING] power-assert is not configured. see: https://github.com/power-assert-js/power-assert`;
+            msg += `\n`;
+            return msg;
+        }
+    }
+    return AssertionMessage;
+}();
 var _am1 = _pwmeta1(0, 'assert(foo === \'FOO\')', 'path/to/some_test.js', 5);
 var _ag1 = new _ArgumentRecorder1(assert, _am1, 0);
 var _am2 = _pwmeta1(0, 'assert(bar)', 'path/to/some_test.js', 7);
