@@ -343,6 +343,6 @@ var _am2 = _pwmeta1(0, 'assert(`Hello, ${ nickname }`)', 'path/to/some_test.js',
 var _ag2 = new _ArgumentRecorder1(assert, _am2, 0);
 var _am3 = _pwmeta1(0, 'assert(`Hello, ${ user.nickname }`)', 'path/to/some_test.js', 7);
 var _ag3 = new _ArgumentRecorder1(assert, _am3, 0);
-assert(_ag1._rec(`Hello`, 'arguments/0'));
-assert(_ag2._rec(`Hello, ${ _ag2._tap(nickname, 'arguments/0/expressions/0') }`, 'arguments/0'));
-assert(_ag3._rec(`Hello, ${ _ag3._tap(_ag3._tap(user, 'arguments/0/expressions/0/object').nickname, 'arguments/0/expressions/0') }`, 'arguments/0'));
+assert(_ag1._rec(`Hello`, 'arguments/0'), new _AssertionMessage1(_am1, -1));
+assert(_ag2._rec(`Hello, ${ _ag2._tap(nickname, 'arguments/0/expressions/0') }`, 'arguments/0'), new _AssertionMessage1(_am2, -1));
+assert(_ag3._rec(`Hello, ${ _ag3._tap(_ag3._tap(user, 'arguments/0/expressions/0/object').nickname, 'arguments/0/expressions/0') }`, 'arguments/0'), new _AssertionMessage1(_am3, -1));

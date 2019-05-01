@@ -347,11 +347,11 @@ var _am4 = _pwmeta1(0, 'assert({ foo })', 'path/to/some_test.js', 11);
 var _ag4 = new _ArgumentRecorder1(assert, _am4, 0);
 var _am5 = _pwmeta1(0, 'assert({foo,bar: baz})', 'path/to/some_test.js', 13);
 var _ag5 = new _ArgumentRecorder1(assert, _am5, 0);
-assert(_ag1._rec({ [_ag1._tap(num, 'arguments/0/properties/0/key')]: _ag1._tap(foo, 'arguments/0/properties/0/value') }, 'arguments/0'));
-assert(_ag2._rec({ [_ag2._tap('prop_' + _ag2._tap((() => bar())(), 'arguments/0/properties/0/key/right'), 'arguments/0/properties/0/key')]: 42 }, 'arguments/0'));
-assert(_ag3._rec({ [_ag3._tap(`prop_${ _ag3._tap(generate(_ag3._tap(seed, 'arguments/0/properties/0/key/expressions/0/arguments/0')), 'arguments/0/properties/0/key/expressions/0') }`, 'arguments/0/properties/0/key')]: _ag3._tap(foo, 'arguments/0/properties/0/value') }, 'arguments/0'));
-assert(_ag4._rec({ foo }, 'arguments/0'));
+assert(_ag1._rec({ [_ag1._tap(num, 'arguments/0/properties/0/key')]: _ag1._tap(foo, 'arguments/0/properties/0/value') }, 'arguments/0'), new _AssertionMessage1(_am1, -1));
+assert(_ag2._rec({ [_ag2._tap('prop_' + _ag2._tap((() => bar())(), 'arguments/0/properties/0/key/right'), 'arguments/0/properties/0/key')]: 42 }, 'arguments/0'), new _AssertionMessage1(_am2, -1));
+assert(_ag3._rec({ [_ag3._tap(`prop_${ _ag3._tap(generate(_ag3._tap(seed, 'arguments/0/properties/0/key/expressions/0/arguments/0')), 'arguments/0/properties/0/key/expressions/0') }`, 'arguments/0/properties/0/key')]: _ag3._tap(foo, 'arguments/0/properties/0/value') }, 'arguments/0'), new _AssertionMessage1(_am3, -1));
+assert(_ag4._rec({ foo }, 'arguments/0'), new _AssertionMessage1(_am4, -1));
 assert(_ag5._rec({
     foo,
     bar: _ag5._tap(baz, 'arguments/0/properties/1/value')
-}, 'arguments/0'));
+}, 'arguments/0'), new _AssertionMessage1(_am5, -1));

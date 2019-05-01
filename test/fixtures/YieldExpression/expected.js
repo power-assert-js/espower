@@ -340,5 +340,5 @@ var _AssertionMessage1 = function () {
 function* gen(a) {
     var _am1 = _pwmeta1(0, 'assert((yield a) === 3)', 'path/to/some_test.js', 4, { generator: true });
     var _ag1 = new _ArgumentRecorder1(assert, _am1, 0);
-    assert(_ag1._rec(_ag1._tap(yield a, 'arguments/0/left') === 3, 'arguments/0'));
+    assert(_ag1._rec(_ag1._tap(yield a, 'arguments/0/left') === 3, 'arguments/0'), new _AssertionMessage1(_am1, -1));
 }

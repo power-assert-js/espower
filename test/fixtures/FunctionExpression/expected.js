@@ -345,4 +345,4 @@ assert(function (a, b) {
 });
 assert(_ag1._rec(_ag1._tap(baz, 'arguments/0/left') === _ag1._tap(function (a, b) {
     return a + b;
-}(_ag1._tap(foo, 'arguments/0/right/arguments/0'), _ag1._tap(bar, 'arguments/0/right/arguments/1')), 'arguments/0/right'), 'arguments/0'));
+}(_ag1._tap(foo, 'arguments/0/right/arguments/0'), _ag1._tap(bar, 'arguments/0/right/arguments/1')), 'arguments/0/right'), 'arguments/0'), new _AssertionMessage1(_am2, -1));

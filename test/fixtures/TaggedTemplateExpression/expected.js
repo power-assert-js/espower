@@ -343,6 +343,6 @@ var _am2 = _pwmeta1(0, 'assert(fn`a${ foo }b${ bar }c${ baz }`)', 'path/to/some_
 var _ag2 = new _ArgumentRecorder1(assert, _am2, 0);
 var _am3 = _pwmeta1(0, 'assert(fn`driver ${ bob.name }, navigator ${ alice.getName() }`)', 'path/to/some_test.js', 7);
 var _ag3 = new _ArgumentRecorder1(assert, _am3, 0);
-assert(_ag1._rec(fn`a${ 1 }`, 'arguments/0'));
-assert(_ag2._rec(fn`a${ _ag2._tap(foo, 'arguments/0/quasi/expressions/0') }b${ _ag2._tap(bar, 'arguments/0/quasi/expressions/1') }c${ _ag2._tap(baz, 'arguments/0/quasi/expressions/2') }`, 'arguments/0'));
-assert(_ag3._rec(fn`driver ${ _ag3._tap(_ag3._tap(bob, 'arguments/0/quasi/expressions/0/object').name, 'arguments/0/quasi/expressions/0') }, navigator ${ _ag3._tap(_ag3._tap(alice, 'arguments/0/quasi/expressions/1/callee/object').getName(), 'arguments/0/quasi/expressions/1') }`, 'arguments/0'));
+assert(_ag1._rec(fn`a${ 1 }`, 'arguments/0'), new _AssertionMessage1(_am1, -1));
+assert(_ag2._rec(fn`a${ _ag2._tap(foo, 'arguments/0/quasi/expressions/0') }b${ _ag2._tap(bar, 'arguments/0/quasi/expressions/1') }c${ _ag2._tap(baz, 'arguments/0/quasi/expressions/2') }`, 'arguments/0'), new _AssertionMessage1(_am2, -1));
+assert(_ag3._rec(fn`driver ${ _ag3._tap(_ag3._tap(bob, 'arguments/0/quasi/expressions/0/object').name, 'arguments/0/quasi/expressions/0') }, navigator ${ _ag3._tap(_ag3._tap(alice, 'arguments/0/quasi/expressions/1/callee/object').getName(), 'arguments/0/quasi/expressions/1') }`, 'arguments/0'), new _AssertionMessage1(_am3, -1));

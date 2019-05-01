@@ -351,7 +351,7 @@ describe('Array', function () {
             var _am1 = _pwmeta1(0, 'assert(this.ary.indexOf(who) === two)', 'path/to/some_test.js', 12);
             var _ag1 = new _ArgumentRecorder1(assert, _am1, 0);
             var who = 'ariya', two = 2;
-            assert(_ag1._rec(_ag1._tap(_ag1._tap(this.ary, 'arguments/0/left/callee/object').indexOf(_ag1._tap(who, 'arguments/0/left/arguments/0')), 'arguments/0/left') === _ag1._tap(two, 'arguments/0/right'), 'arguments/0'));
+            assert(_ag1._rec(_ag1._tap(_ag1._tap(this.ary, 'arguments/0/left/callee/object').indexOf(_ag1._tap(who, 'arguments/0/left/arguments/0')), 'arguments/0/left') === _ag1._tap(two, 'arguments/0/right'), 'arguments/0'), new _AssertionMessage1(_am1, -1));
         });
         it('should return -1 when the value is not present', function () {
             var _am2 = _pwmeta1(1, 'assert.ok(this.ary.indexOf(two) === minusOne, \'THIS IS AN ASSERTION MESSAGE\')', 'path/to/some_test.js', 16);
@@ -365,7 +365,7 @@ describe('Array', function () {
         var _ag3 = new _ArgumentRecorder1(assert.equal, _am3, 0);
         var _ag4 = new _ArgumentRecorder1(assert.equal, _am3, 1);
         var four = 4;
-        assert.equal(_ag3._rec(_ag3._tap(this.ary, 'arguments/0/object').length, 'arguments/0'), _ag4._rec(four, 'arguments/1'));
+        assert.equal(_ag3._rec(_ag3._tap(this.ary, 'arguments/0/object').length, 'arguments/0'), _ag4._rec(four, 'arguments/1'), new _AssertionMessage1(_am3, -1));
     });
     it('#length assertion with message', function () {
         var _am4 = _pwmeta1(2, 'assert.equal(this.ary.length, four, \'THIS IS AN ASSERTION MESSAGE\')', 'path/to/some_test.js', 25);

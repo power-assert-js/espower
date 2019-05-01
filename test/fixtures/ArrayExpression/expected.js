@@ -347,14 +347,14 @@ var _ag4 = new _ArgumentRecorder1(assert.notDeepEqual, _am3, 1);
 assert(_ag1._rec([
     _ag1._tap(foo, 'arguments/0/elements/0'),
     _ag1._tap(bar, 'arguments/0/elements/1')
-], 'arguments/0'));
+], 'arguments/0'), new _AssertionMessage1(_am1, -1));
 assert(_ag2._rec(_ag2._tap(typeof _ag2._tap([
     _ag2._tap([
         _ag2._tap(_ag2._tap(foo, 'arguments/0/left/argument/elements/0/elements/0/object').bar, 'arguments/0/left/argument/elements/0/elements/0'),
         _ag2._tap(baz(_ag2._tap(moo, 'arguments/0/left/argument/elements/0/elements/1/arguments/0')), 'arguments/0/left/argument/elements/0/elements/1')
     ], 'arguments/0/left/argument/elements/0'),
     _ag2._tap(+_ag2._tap(fourStr, 'arguments/0/left/argument/elements/1/argument'), 'arguments/0/left/argument/elements/1')
-], 'arguments/0/left/argument'), 'arguments/0/left') === 'number', 'arguments/0'));
+], 'arguments/0/left/argument'), 'arguments/0/left') === 'number', 'arguments/0'), new _AssertionMessage1(_am2, -1));
 assert.notDeepEqual(_ag3._rec([
     _ag3._tap(foo, 'arguments/0/elements/0'),
     _ag3._tap(bar, 'arguments/0/elements/1')
@@ -362,4 +362,4 @@ assert.notDeepEqual(_ag3._rec([
     _ag4._tap(hoge, 'arguments/1/elements/0'),
     _ag4._tap(fuga, 'arguments/1/elements/1'),
     _ag4._tap(piyo, 'arguments/1/elements/2')
-], 'arguments/1'));
+], 'arguments/1'), new _AssertionMessage1(_am3, -1));

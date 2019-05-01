@@ -343,8 +343,8 @@ var _ag2 = new _ArgumentRecorder1(assert, _am2, 0);
 var assert = require('assert');
 for (var i = 0; i < 3; i += 1) {
     if (foo) {
-        assert(_ag1._rec(_ag1._tap(foo, 'arguments/0/left') === 'FOO', 'arguments/0'));
+        assert(_ag1._rec(_ag1._tap(foo, 'arguments/0/left') === 'FOO', 'arguments/0'), new _AssertionMessage1(_am1, -1));
     } else {
-        assert(_ag2._rec(bar, 'arguments/0'));
+        assert(_ag2._rec(bar, 'arguments/0'), new _AssertionMessage1(_am2, -1));
     }
 }
