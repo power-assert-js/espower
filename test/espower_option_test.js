@@ -150,7 +150,7 @@ describe('instrumentation tests for options', function () {
       postlude: [
         "var _am1=_pwmeta1(0,'browser.assert.element(foo)','path/to/some_test.js',1);",
         'var _ag1=new _ArgumentRecorder1(browser.assert.element,_am1,0);',
-        "browser.assert.element(_ag1._rec(foo,'arguments/0'));"
+        "browser.assert.element(_ag1._rec(foo,'arguments/0'),new _AssertionMessage1(_am1,-1));"
       ]
     });
   });
@@ -356,7 +356,7 @@ describe('incoming SourceMap support', function () {
           `var _ag2=new _ArgumentRecorder1(assert.equal,_am1,1);`,
           `var str='foo';`,
           `var anotherStr='bar';`,
-          `assert.equal(_ag1._rec(str,'arguments/0'),_ag2._rec(anotherStr,'arguments/1'));`
+          `assert.equal(_ag1._rec(str,'arguments/0'),_ag2._rec(anotherStr,'arguments/1'),new _AssertionMessage1(_am1,-1));`
         ]
       });
     });

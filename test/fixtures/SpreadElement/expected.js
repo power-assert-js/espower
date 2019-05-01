@@ -343,15 +343,15 @@ var _am2 = _pwmeta1(0, 'assert([head,...tail].length)', 'path/to/some_test.js', 
 var _ag2 = new _ArgumentRecorder1(assert, _am2, 0);
 var _am3 = _pwmeta1(0, 'assert(f(head, ...iter(), ...[foo,bar]))', 'path/to/some_test.js', 7);
 var _ag3 = new _ArgumentRecorder1(assert, _am3, 0);
-assert(_ag1._rec(hello(..._ag1._tap(names, 'arguments/0/arguments/0/argument')), 'arguments/0'));
+assert(_ag1._rec(hello(..._ag1._tap(names, 'arguments/0/arguments/0/argument')), 'arguments/0'), new _AssertionMessage1(_am1, -1));
 assert(_ag2._rec(_ag2._tap([
     _ag2._tap(head, 'arguments/0/object/elements/0'),
     ..._ag2._tap(tail, 'arguments/0/object/elements/1/argument')
-], 'arguments/0/object').length, 'arguments/0'));
+], 'arguments/0/object').length, 'arguments/0'), new _AssertionMessage1(_am2, -1));
 assert(_ag3._rec(f(_ag3._tap(head, 'arguments/0/arguments/0'), ..._ag3._tap(iter(), 'arguments/0/arguments/1/argument'), ..._ag3._tap([
     _ag3._tap(foo, 'arguments/0/arguments/2/argument/elements/0'),
     _ag3._tap(bar, 'arguments/0/arguments/2/argument/elements/1')
-], 'arguments/0/arguments/2/argument')), 'arguments/0'));
+], 'arguments/0/arguments/2/argument')), 'arguments/0'), new _AssertionMessage1(_am3, -1));
 assert(...iter());
 assert(...[
     foo,

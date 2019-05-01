@@ -347,18 +347,18 @@ var _ag4 = new _ArgumentRecorder1(assert.deepEqual, _am3, 1);
 assert(_ag1._rec({
     foo: _ag1._tap(bar, 'arguments/0/properties/0/value'),
     hoge: _ag1._tap(fuga, 'arguments/0/properties/1/value')
-}, 'arguments/0'));
+}, 'arguments/0'), new _AssertionMessage1(_am1, -1));
 assert(_ag2._rec(!_ag2._tap({
     foo: _ag2._tap(_ag2._tap(bar, 'arguments/0/argument/properties/0/value/object').baz, 'arguments/0/argument/properties/0/value'),
     name: _ag2._tap(nameOf(_ag2._tap({
         firstName: _ag2._tap(first, 'arguments/0/argument/properties/1/value/arguments/0/properties/0/value'),
         lastName: _ag2._tap(last, 'arguments/0/argument/properties/1/value/arguments/0/properties/1/value')
     }, 'arguments/0/argument/properties/1/value/arguments/0')), 'arguments/0/argument/properties/1/value')
-}, 'arguments/0/argument'), 'arguments/0'));
+}, 'arguments/0/argument'), 'arguments/0'), new _AssertionMessage1(_am2, -1));
 assert.deepEqual(_ag3._rec({
     foo: _ag3._tap(bar, 'arguments/0/properties/0/value'),
     hoge: _ag3._tap(fuga, 'arguments/0/properties/1/value')
 }, 'arguments/0'), _ag4._rec({
     hoge: _ag4._tap(fuga, 'arguments/1/properties/0/value'),
     foo: _ag4._tap(bar, 'arguments/1/properties/1/value')
-}, 'arguments/1'));
+}, 'arguments/1'), new _AssertionMessage1(_am3, -1));

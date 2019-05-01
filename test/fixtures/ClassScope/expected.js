@@ -346,4 +346,4 @@ class Dog {
     }
 }
 const d = new Dog();
-assert(_ag1._rec(_ag1._tap(d, 'arguments/0/callee/object').say(), 'arguments/0'));
+assert(_ag1._rec(_ag1._tap(d, 'arguments/0/callee/object').say(), 'arguments/0'), new _AssertionMessage1(_am1, -1));

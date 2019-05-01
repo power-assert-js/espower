@@ -349,7 +349,7 @@ describe('Array#indexOf()', function () {
         var _am1 = _pwmeta1(0, 'assert(this.ary.indexOf(who) === two)', 'path/to/some_test.js', 9);
         var _ag1 = new _ArgumentRecorder1(assert, _am1, 0);
         var who = 'ariya', two = 2;
-        assert(_ag1._rec(_ag1._tap(_ag1._tap(this.ary, 'arguments/0/left/callee/object').indexOf(_ag1._tap(who, 'arguments/0/left/arguments/0')), 'arguments/0/left') === _ag1._tap(two, 'arguments/0/right'), 'arguments/0'));
+        assert(_ag1._rec(_ag1._tap(_ag1._tap(this.ary, 'arguments/0/left/callee/object').indexOf(_ag1._tap(who, 'arguments/0/left/arguments/0')), 'arguments/0/left') === _ag1._tap(two, 'arguments/0/right'), 'arguments/0'), new _AssertionMessage1(_am1, -1));
     });
     it('should return -1 when the value is not present', function () {
         var _am2 = _pwmeta1(1, 'assert.ok(this.ary.indexOf(two) === minusOne, \'THIS IS AN ASSERTION MESSAGE\')', 'path/to/some_test.js', 13);

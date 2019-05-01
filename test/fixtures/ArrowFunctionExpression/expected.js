@@ -350,10 +350,10 @@ assert(v => ({
     even: v,
     odd: v + 1
 }));
-assert(_ag1._rec(_ag1._tap(seven, 'arguments/0/left') === _ag1._tap(((v, i) => v + i)(_ag1._tap(four, 'arguments/0/right/arguments/0'), _ag1._tap(five, 'arguments/0/right/arguments/1')), 'arguments/0/right'), 'arguments/0'));
-test('test name', () => assert(_ag2._rec(_ag2._tap(_ag2._tap(user, 'arguments/0/left/object').name, 'arguments/0/left') === 'Bob', 'arguments/0')));
+assert(_ag1._rec(_ag1._tap(seven, 'arguments/0/left') === _ag1._tap(((v, i) => v + i)(_ag1._tap(four, 'arguments/0/right/arguments/0'), _ag1._tap(five, 'arguments/0/right/arguments/1')), 'arguments/0/right'), 'arguments/0'), new _AssertionMessage1(_am4, -1));
+test('test name', () => assert(_ag2._rec(_ag2._tap(_ag2._tap(user, 'arguments/0/left/object').name, 'arguments/0/left') === 'Bob', 'arguments/0'), new _AssertionMessage1(_am5, -1)));
 test('promise', () => {
     var _am6 = _pwmeta1(0, 'assert(true === false)', 'path/to/some_test.js', 15);
     var _ag3 = new _ArgumentRecorder1(assert, _am6, 0);
-    return Promise.resolve().then(() => assert(_ag3._rec(true === false, 'arguments/0')));
+    return Promise.resolve().then(() => assert(_ag3._rec(true === false, 'arguments/0'), new _AssertionMessage1(_am6, -1)));
 });
