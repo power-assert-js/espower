@@ -2,7 +2,6 @@
 
 var espower = require('..');
 var acorn = require('acorn');
-require('acorn-es7-plugin')(acorn);
 var esprima = require('esprima');
 var escodegen = require('escodegen');
 var estraverse = require('estraverse');

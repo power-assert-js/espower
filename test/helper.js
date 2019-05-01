@@ -1,6 +1,5 @@
 const assert = require('assert');
 const acorn = require('acorn');
-require('acorn-es7-plugin')(acorn);
 const escodegen = require('escodegen');
 const espower = require('..');
 

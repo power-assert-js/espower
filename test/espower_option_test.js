@@ -4,7 +4,6 @@ const { assertPreludeAndPostlude, testGeneratedCode } = require('./helper');
 
 var espower = require('..');
 var acorn = require('acorn');
-require('acorn-es7-plugin')(acorn);
 var escodegen = require('escodegen');
 var estraverse = require('estraverse');
 var assert = require('assert');
