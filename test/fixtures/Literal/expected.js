@@ -358,7 +358,7 @@ assert(0);
 assert.equal(1, 0);
 assert(false, 'message');
 assert(false, new _AssertionMessage1(_am5, 1, _ag1._rec(messageStr, 'arguments/1')));
-assert.equal(_ag2._rec(foo, 'arguments/0'), 'bar', 'msg');
+assert.equal(_ag2._rec(foo, 'arguments/0'), 'bar', new _AssertionMessage1(_am6, 2, 'msg'));
 assert(_ag3._rec(/^not/.exec(_ag3._tap(str, 'arguments/0/arguments/0')), 'arguments/0'), new _AssertionMessage1(_am7, -1));
 assert(_ag4._rec(_ag4._tap(fuga, 'arguments/0/left') !== 'ふが', 'arguments/0'), new _AssertionMessage1(_am8, -1));
 assert(_ag5._rec('ほげ' !== 'ふが', 'arguments/0'), new _AssertionMessage1(_am9, -1));
