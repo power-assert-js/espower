@@ -361,6 +361,6 @@ assert(_ag3._rec(_ag3._tap(fuga, 'arguments/0/left') === _ag3._tap(piyo, 'argume
 assert(_ag4._rec(_ag4._tap(fuga, 'arguments/0/left') === _ag4._tap(piyo, 'arguments/0/right'), 'arguments/0'), new _AssertionMessage1(_am4, -1));
 assert(_ag5._rec(_ag5._tap(fuga, 'arguments/0/left') === _ag5._tap(piyo, 'arguments/0/right'), 'arguments/0'), new _AssertionMessage1(_am5, -1));
 assert(_ag6._rec(_ag6._tap(fuga, 'arguments/0/left') !== _ag6._tap(piyo, 'arguments/0/right'), 'arguments/0'), new _AssertionMessage1(_am6, -1));
-assert.ok(_ag7._rec(_ag7._tap(hoge, 'arguments/0/left') === _ag7._tap(fuga, 'arguments/0/right'), 'arguments/0'), 'comment');
+assert.ok(_ag7._rec(_ag7._tap(hoge, 'arguments/0/left') === _ag7._tap(fuga, 'arguments/0/right'), 'arguments/0'), new _AssertionMessage1(_am7, 1, 'comment'));
 assert(_ag8._rec(_ag8._tap(_ag8._tap(ary1, 'arguments/0/left/object').length, 'arguments/0/left') === _ag8._tap(_ag8._tap(ary2, 'arguments/0/right/object').length, 'arguments/0/right'), 'arguments/0'), new _AssertionMessage1(_am8, -1));
 assert(_ag9._rec(_ag9._tap(foo, 'arguments/0/left') instanceof _ag9._tap(Foo, 'arguments/0/right'), 'arguments/0'), new _AssertionMessage1(_am9, -1));

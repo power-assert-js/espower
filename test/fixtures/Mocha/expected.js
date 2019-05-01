@@ -357,7 +357,7 @@ describe('Array', function () {
             var _am2 = _pwmeta1(1, 'assert.ok(this.ary.indexOf(two) === minusOne, \'THIS IS AN ASSERTION MESSAGE\')', 'path/to/some_test.js', 16);
             var _ag2 = new _ArgumentRecorder1(assert.ok, _am2, 0);
             var minusOne = -1, two = 2;
-            assert.ok(_ag2._rec(_ag2._tap(_ag2._tap(this.ary, 'arguments/0/left/callee/object').indexOf(_ag2._tap(two, 'arguments/0/left/arguments/0')), 'arguments/0/left') === _ag2._tap(minusOne, 'arguments/0/right'), 'arguments/0'), 'THIS IS AN ASSERTION MESSAGE');
+            assert.ok(_ag2._rec(_ag2._tap(_ag2._tap(this.ary, 'arguments/0/left/callee/object').indexOf(_ag2._tap(two, 'arguments/0/left/arguments/0')), 'arguments/0/left') === _ag2._tap(minusOne, 'arguments/0/right'), 'arguments/0'), new _AssertionMessage1(_am2, 1, 'THIS IS AN ASSERTION MESSAGE'));
         });
     });
     it('#length', function () {
@@ -372,6 +372,6 @@ describe('Array', function () {
         var _ag5 = new _ArgumentRecorder1(assert.equal, _am4, 0);
         var _ag6 = new _ArgumentRecorder1(assert.equal, _am4, 1);
         var four = 4;
-        assert.equal(_ag5._rec(_ag5._tap(this.ary, 'arguments/0/object').length, 'arguments/0'), _ag6._rec(four, 'arguments/1'), 'THIS IS AN ASSERTION MESSAGE');
+        assert.equal(_ag5._rec(_ag5._tap(this.ary, 'arguments/0/object').length, 'arguments/0'), _ag6._rec(four, 'arguments/1'), new _AssertionMessage1(_am4, 2, 'THIS IS AN ASSERTION MESSAGE'));
     });
 });
