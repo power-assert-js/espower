@@ -160,7 +160,7 @@ VisitorKeys for AST traversal. See [estraverse.VisitorKeys](https://github.com/e
 |:--------------------|:--------------|
 | `function`          | N/A           |
 
-A function to parse pattern string specified by `options.patterns`. This property is optional.
+A function to parse pattern string specified by `options.patterns`. This property is optional and only required to parse a bit complicated custom pattern string like "browser.assert.element(selection, [message])".
 
 
 ### const options = espower.defaultOptions();

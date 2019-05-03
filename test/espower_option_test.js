@@ -176,6 +176,27 @@ describe('instrumentation tests for options', function () {
       assert(instrumentedCode.includes("var _am1=_pwmeta1(0,'assert(falsyStr)','path/to/baz_test.js',1);"));
     });
   });
+
+  describe('parse option', function () {
+    it('required to use pattern string like "browser.assert.element(selection, [message]);"', function () {
+      var ast = acorn.parse('browser.assert.element(foo);', { ecmaVersion: 6, locations: true });
+      try {
+        espower(ast, {
+          // parse: acorn.parse,  // if parse option is not specified
+          path: '/path/to/foo_test.js',
+          patterns: [
+            'browser.assert.element(selection, [message])'
+          ]
+        });
+        assert.ok(false, 'Error should be thrown');
+      } catch (e) {
+        assert.strictEqual(e.name, 'Error');
+        assert(e instanceof Error);
+        assert.strictEqual(e.message, '[espower] options.parse is required to parse a bit complicated custom pattern string "browser.assert.element(selection, [message])"');
+        assert(e.stack);
+      }
+    });
+  });
 });
 
 describe('option prerequisites', function () {
