@@ -76,7 +76,7 @@ describe('instrumentation tests for options', function () {
       it(testName, function () {
         var tree = acorn.parse('assert(falsyStr);', { ecmaVersion: 6, locations: true, ranges: true });
         var saved = deepCopy(tree);
-        var result = espower(tree, Object.assign({ parse: acorn.parse }, options));
+        var result = espower(tree, options);
         callback(assert, saved, tree, result);
       });
     }
@@ -88,7 +88,7 @@ describe('instrumentation tests for options', function () {
     it('options.destructive is deprecate and always treated as destructive:true', function () {
       var tree = acorn.parse('assert(falsyStr);', { ecmaVersion: 6, locations: true, ranges: true });
       assert.throws(function () {
-        espower(tree, { parse: acorn.parse, destructive: false });
+        espower(tree, { destructive: false });
       }, Error);
     });
     destructiveOptionTest('destructive: true', { destructive: true }, function (assert, before, tree, after) {
@@ -140,6 +140,7 @@ describe('instrumentation tests for options', function () {
       suite: 'deep callee chain: browser.assert.element(selection, [message])',
       input: 'browser.assert.element(foo);',
       espowerOptions: {
+        parse: acorn.parse,
         patterns: [
           'browser.assert.element(selection, [message])'
         ]
@@ -158,7 +159,7 @@ describe('instrumentation tests for options', function () {
   describe('path option.', function () {
     function instrument (jsCode, options) {
       var jsAST = acorn.parse(jsCode, { ecmaVersion: 7, locations: true, plugins: { asyncawait: true } });
-      var espoweredAST = espower(jsAST, Object.assign({ parse: acorn.parse }, options));
+      var espoweredAST = espower(jsAST, options);
       var instrumentedCode = escodegen.generate(espoweredAST, { format: { compact: true } });
       return instrumentedCode;
     }
@@ -184,7 +185,7 @@ describe('option prerequisites', function () {
   function optionPrerequisitesTest (name, options, expected) {
     it(name, function () {
       try {
-        espower(this.tree, Object.assign({ parse: acorn.parse }, options));
+        espower(this.tree, options);
         assert.ok(false, 'Error should be thrown');
       } catch (e) {
         assert.strictEqual(e.message, expected);
@@ -207,7 +208,7 @@ describe('AST prerequisites. Error should be thrown if location is missing.', fu
   });
   it('error message when path option is not specified', function () {
     try {
-      espower(this.tree, { parse: acorn.parse });
+      espower(this.tree);
       assert.ok(false, 'Error should be thrown');
     } catch (e) {
       assert.strictEqual(e.name, 'Error');
@@ -218,7 +219,7 @@ describe('AST prerequisites. Error should be thrown if location is missing.', fu
   });
   it('error message when path option is specified', function () {
     try {
-      espower(this.tree, { parse: acorn.parse, path: '/path/to/baz_test.js' });
+      espower(this.tree, { path: '/path/to/baz_test.js' });
       assert.ok(false, 'Error should be thrown');
     } catch (e) {
       assert.strictEqual(e.name, 'Error');
@@ -234,7 +235,7 @@ describe('AST prerequisites. Error should be thrown if AST is already instrument
     var alreadyEspoweredCode = "assert(_ag1._rec(falsyStr, 'arguments/0'), new _AssertionMessage1(_am1, -1));";
     var ast = acorn.parse(alreadyEspoweredCode, { ecmaVersion: 6, locations: true });
     try {
-      espower(ast, { parse: acorn.parse, path: '/path/to/baz_test.js' });
+      espower(ast, { path: '/path/to/baz_test.js' });
       assert.ok(false, 'Error should be thrown');
     } catch (e) {
       assert.strictEqual(e.name, 'Error');
@@ -269,7 +270,7 @@ describe('location information', function () {
   it('preserve location of instrumented nodes.', function () {
     var jsCode = 'assert((three * (seven * ten)) === three);';
     var tree = acorn.parse(jsCode, { ecmaVersion: 6, locations: true, ranges: true });
-    var result = espower(tree, { parse: acorn.parse, path: '/path/to/baz_test.js' });
+    var result = espower(tree, { path: '/path/to/baz_test.js' });
     estraverse.traverse(result, function (node) {
       if (typeof node.type === 'undefined') return;
       assert.ok(typeof node.loc !== 'undefined', 'type: ' + node.type);
@@ -335,7 +336,6 @@ describe('incoming SourceMap support', function () {
 
       var intermediateFilepath = '/path/to/absolute/intermediate/transformed_test.js';
       var espoweredAST = espower(acorn.parse(compactCode, { ecmaVersion: 6, locations: true, sourceFile: intermediateFilepath }), {
-        parse: acorn.parse,
         patterns: [
           'assert.equal(actual, expected, [message])'
         ],

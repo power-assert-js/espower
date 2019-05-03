@@ -6,7 +6,7 @@ const espower = require('..');
 const transpile = ({ input, espowerOptions = {}, parserOptions = {} }) => {
   const options = Object.assign({ ecmaVersion: 2018, locations: true, ranges: true, plugins: { asyncawait: true } }, parserOptions);
   const ast = acorn.parse(input, options);
-  const espoweredAST = espower(ast, Object.assign({ path: 'path/to/some_test.js', parse: acorn.parse }, espowerOptions));
+  const espoweredAST = espower(ast, Object.assign({ path: 'path/to/some_test.js' }, espowerOptions));
   const result = escodegen.generate(espoweredAST, { format: { compact: true } });
   const lines = result.split('\n');
   const lastLine = lines[lines.length - 1];
