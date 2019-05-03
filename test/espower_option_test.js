@@ -231,7 +231,7 @@ describe('AST prerequisites. Error should be thrown if location is missing.', fu
 
 describe('AST prerequisites. Error should be thrown if AST is already instrumented.', function () {
   it('when going to instrument "assert(falsyStr);" twice', function () {
-    var alreadyEspoweredCode = "assert(_rec1._expr(_rec1._capt(falsyStr,'arguments/0'),{content:'assert(falsyStr)',filepath:'/path/to/some_test.js',line:1}));";
+    var alreadyEspoweredCode = "assert(_ag1._rec(falsyStr, 'arguments/0'), new _AssertionMessage1(_am1, -1));";
     var ast = acorn.parse(alreadyEspoweredCode, { ecmaVersion: 6, locations: true });
     try {
       espower(ast, { parse: acorn.parse, path: '/path/to/baz_test.js' });
@@ -245,7 +245,7 @@ describe('AST prerequisites. Error should be thrown if AST is already instrument
   });
 
   it('when going to instrument "browser.assert.element(foo);" twice', function () {
-    var alreadyEspoweredCode = "browser.assert.element(_rec1._expr(_rec1._capt(foo,'arguments/0'),{content:'browser.assert.element(foo)',line:1}));";
+    var alreadyEspoweredCode = "browser.assert.element(_ag1._rec(foo, 'arguments/0'), new _AssertionMessage1(_am1, -1));";
     var ast = acorn.parse(alreadyEspoweredCode, { ecmaVersion: 6, locations: true });
     try {
       espower(ast, {
