@@ -16,7 +16,7 @@ function testWithParser (fixtureName, parse, manipulate) {
     var actualFilepath = path.resolve(__dirname, 'fixtures', fixtureName, 'actual.js');
 
     var jsAST = parse(fs.readFileSync(fixtureFilepath, 'utf8'));
-    var espoweredAST = manipulate(jsAST, { ecmaVersion: 2018, path: 'path/to/some_test.js', parse: parse });
+    var espoweredAST = manipulate(jsAST, { ecmaVersion: 2018, path: 'path/to/some_test.js' });
     var output = escodegen.generate(espoweredAST);
 
     var actual = output + '\n';

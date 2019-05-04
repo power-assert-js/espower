@@ -1,7 +1,6 @@
 'use strict';
 
 var espower = require('..');
-var acorn = require('acorn');
 var assert = require('assert');
 
 /// / original code of jsx_test.json:
@@ -28,6 +27,6 @@ var ast = require('./jsx_test.json');
 it('custom visitorKeys', function () {
   var visitorKeys = require('./visitor-keys.json');
   assert.doesNotThrow(function () {
-    espower(ast, { visitorKeys: visitorKeys, parse: acorn.parse });
+    espower(ast, { visitorKeys: visitorKeys });
   });
 });

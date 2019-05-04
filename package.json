@@ -18,6 +18,7 @@
   ],
   "dependencies": {
     "call-matcher": "^2.0.0",
+    "call-signature": "^0.0.2",
     "escodegen": "^1.7.0",
     "escope": "^3.3.0",
     "espower-location-detector": "^2.0.0",
