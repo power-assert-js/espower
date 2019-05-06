@@ -97,7 +97,7 @@ Configuration options. If not passed, default options will be used.
 Target patterns for power assert feature instrumentation.
 
 If callee name (for example, `assert.equal`) matches exactly and number of arguments is satisfied, then the assertion will be modified.
-Detection is done by [escallmatch](https://github.com/twada/escallmatch). Any arguments enclosed in bracket (for example, `[message]`) means optional parameters. Without bracket means mandatory parameters.
+Any arguments enclosed in bracket (for example, `[message]`) means optional parameters. Without bracket means mandatory parameters.
 
 
 #### options.ecmaVersion
