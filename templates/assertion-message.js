@@ -10,7 +10,7 @@ module.exports = function () {
      * @property {number} line
      * @property {number} version
      * @property {string} pattern
-     * @property {array} args
+     * @property {array} params
      * @property {boolean} [async] - true if enclosed in async function
      * @property {boolean} [generator] - true if enclosed in generator function
      * @property {string} [ast] - stringified AST
