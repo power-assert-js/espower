@@ -33,7 +33,7 @@ module.exports = function () {
      * @property {array} params
      * @property {boolean} [async] - true if enclosed in async function
      * @property {boolean} [generator] - true if enclosed in generator function
-     * @property {string} [ast] - stringified AST
+     * @property {string} [ast] - stringified AST (a part of API used in AVA)
      * @property {string} [tokens] - stringified tokens
      * @property {string} [visitorKeys] - stringified visitorKeys
      */
@@ -84,8 +84,8 @@ module.exports = function () {
      */
     _tap (value, espath) {
       this._logs.push({
-        value: wrap(value),
-        espath
+        value: wrap(value), // API (used in AVA)
+        espath // API (used in AVA)
       });
       return value;
     }
@@ -104,8 +104,8 @@ module.exports = function () {
         if (!espath) return this;
 
         const log = {
-          value: wrap(value),
-          espath
+          value: wrap(value), // API (used in AVA)
+          espath // API (used in AVA)
         };
         this._logs.push(log);
 
@@ -114,10 +114,10 @@ module.exports = function () {
             apply (target, thisArg, args) {
               try {
                 const ret = target.apply(thisArg, args);
-                log.value = wrap(ret);
+                log.value = wrap(ret); // API (used in AVA)
                 return ret;
               } catch (e) {
-                log.value = e;
+                log.value = e; // API (used in AVA)
                 throw e;
               }
             }

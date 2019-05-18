@@ -13,7 +13,7 @@ module.exports = function () {
      * @property {array} params
      * @property {boolean} [async] - true if enclosed in async function
      * @property {boolean} [generator] - true if enclosed in generator function
-     * @property {string} [ast] - stringified AST
+     * @property {string} [ast] - stringified AST (a part of API used in AVA)
      * @property {string} [tokens] - stringified tokens
      * @property {string} [visitorKeys] - stringified visitorKeys
      */
