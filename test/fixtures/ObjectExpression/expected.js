@@ -257,6 +257,8 @@ var _ArgumentRecorder1 = function () {
             try {
                 if (!empowered)
                     return value;
+                if (!espath)
+                    return this;
                 const log = {
                     value: wrap(value),
                     espath
@@ -276,12 +278,14 @@ var _ArgumentRecorder1 = function () {
                         }
                     });
                 }
-                this._recorded = {
-                    value,
-                    logs: [].concat(this._logs)
-                };
                 return this;
             } finally {
+                if (empowered) {
+                    this._recorded = {
+                        value,
+                        logs: [].concat(this._logs)
+                    };
+                }
                 this._val = value;
                 this._logs = [];
             }

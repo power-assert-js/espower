@@ -257,6 +257,8 @@ var _ArgumentRecorder1 = function () {
             try {
                 if (!empowered)
                     return value;
+                if (!espath)
+                    return this;
                 const log = {
                     value: wrap(value),
                     espath
@@ -276,12 +278,14 @@ var _ArgumentRecorder1 = function () {
                         }
                     });
                 }
-                this._recorded = {
-                    value,
-                    logs: [].concat(this._logs)
-                };
                 return this;
             } finally {
+                if (empowered) {
+                    this._recorded = {
+                        value,
+                        logs: [].concat(this._logs)
+                    };
+                }
                 this._val = value;
                 this._logs = [];
             }
@@ -352,6 +356,6 @@ var _ag6 = new _ArgumentRecorder1(assert, _am6, 0);
 assert((2, 1, 0));
 assert(_ag2._rec((_ag2._tap(foo, 'arguments/0/left/expressions/0'), _ag2._tap(bar, 'arguments/0/left/expressions/1')) === _ag2._tap(baz, 'arguments/0/right'), 'arguments/0'), new _AssertionMessage1(_am2, -1));
 assert(_ag3._rec(toto((_ag3._tap(tata, 'arguments/0/arguments/0/expressions/0'), _ag3._tap(titi, 'arguments/0/arguments/0/expressions/1'))), 'arguments/0'), new _AssertionMessage1(_am3, -1));
-assert(_ag4._rec((_ag4._tap(foo, 'arguments/0/expressions/0'), (_ag4._tap(bar, 'arguments/0/expressions/1/expressions/0'), _ag4._tap(baz, 'arguments/0/expressions/1/expressions/1'))), 'arguments/0'), new _AssertionMessage1(_am4, -1));
-assert(_ag5._rec((((((_ag5._tap(foo, 'arguments/0/expressions/0/expressions/0/expressions/0/expressions/0/expressions/0'), _ag5._tap(bar, 'arguments/0/expressions/0/expressions/0/expressions/0/expressions/0/expressions/1')), _ag5._tap(baz, 'arguments/0/expressions/0/expressions/0/expressions/0/expressions/1')), _ag5._tap(toto, 'arguments/0/expressions/0/expressions/0/expressions/1')), _ag5._tap(tata, 'arguments/0/expressions/0/expressions/1')), _ag5._tap(titi, 'arguments/0/expressions/1')), 'arguments/0'), new _AssertionMessage1(_am5, -1));
-assert(_ag6._rec((_ag6._tap(y = _ag6._tap(x, 'arguments/0/expressions/0/right'), 'arguments/0/expressions/0'), _ag6._tap(z, 'arguments/0/expressions/1')), 'arguments/0'), new _AssertionMessage1(_am6, -1));
+assert(_ag4._rec((_ag4._tap(foo, 'arguments/0/expressions/0'), (_ag4._tap(bar, 'arguments/0/expressions/1/expressions/0'), _ag4._tap(baz, 'arguments/0/expressions/1/expressions/1')))), new _AssertionMessage1(_am4, -1));
+assert(_ag5._rec((((((_ag5._tap(foo, 'arguments/0/expressions/0/expressions/0/expressions/0/expressions/0/expressions/0'), _ag5._tap(bar, 'arguments/0/expressions/0/expressions/0/expressions/0/expressions/0/expressions/1')), _ag5._tap(baz, 'arguments/0/expressions/0/expressions/0/expressions/0/expressions/1')), _ag5._tap(toto, 'arguments/0/expressions/0/expressions/0/expressions/1')), _ag5._tap(tata, 'arguments/0/expressions/0/expressions/1')), _ag5._tap(titi, 'arguments/0/expressions/1'))), new _AssertionMessage1(_am5, -1));
+assert(_ag6._rec((_ag6._tap(y = _ag6._tap(x, 'arguments/0/expressions/0/right'), 'arguments/0/expressions/0'), _ag6._tap(z, 'arguments/0/expressions/1'))), new _AssertionMessage1(_am6, -1));

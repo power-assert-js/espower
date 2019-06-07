@@ -257,6 +257,8 @@ var _ArgumentRecorder1 = function () {
             try {
                 if (!empowered)
                     return value;
+                if (!espath)
+                    return this;
                 const log = {
                     value: wrap(value),
                     espath
@@ -276,12 +278,14 @@ var _ArgumentRecorder1 = function () {
                         }
                     });
                 }
-                this._recorded = {
-                    value,
-                    logs: [].concat(this._logs)
-                };
                 return this;
             } finally {
+                if (empowered) {
+                    this._recorded = {
+                        value,
+                        logs: [].concat(this._logs)
+                    };
+                }
                 this._val = value;
                 this._logs = [];
             }
@@ -346,7 +350,7 @@ var _ag3 = new _ArgumentRecorder1(assert, _am3, 0);
 var _am4 = _pwmeta1(2, 'assert.equal(foo ? bar : baz, falsy ? truthy : truthy ? anotherFalsy : truthy)', 'path/to/some_test.js', 9);
 var _ag4 = new _ArgumentRecorder1(assert.equal, _am4, 0);
 var _ag5 = new _ArgumentRecorder1(assert.equal, _am4, 1);
-assert(_ag1._rec(_ag1._tap(foo, 'arguments/0/test') ? _ag1._tap(bar, 'arguments/0/consequent') : _ag1._tap(baz, 'arguments/0/alternate'), 'arguments/0'), new _AssertionMessage1(_am1, -1));
-assert(_ag2._rec(_ag2._tap(falsy, 'arguments/0/test') ? _ag2._tap(truthy, 'arguments/0/consequent') : _ag2._tap(truthy, 'arguments/0/alternate/test') ? _ag2._tap(anotherFalsy, 'arguments/0/alternate/consequent') : _ag2._tap(truthy, 'arguments/0/alternate/alternate'), 'arguments/0'), new _AssertionMessage1(_am2, -1));
-assert(_ag3._rec(_ag3._tap(foo(), 'arguments/0/test') ? _ag3._tap(_ag3._tap(bar, 'arguments/0/consequent/object').baz, 'arguments/0/consequent') : _ag3._tap(typeof goo, 'arguments/0/alternate'), 'arguments/0'), new _AssertionMessage1(_am3, -1));
-assert.equal(_ag4._rec(_ag4._tap(foo, 'arguments/0/test') ? _ag4._tap(bar, 'arguments/0/consequent') : _ag4._tap(baz, 'arguments/0/alternate'), 'arguments/0'), _ag5._rec(_ag5._tap(falsy, 'arguments/1/test') ? _ag5._tap(truthy, 'arguments/1/consequent') : _ag5._tap(truthy, 'arguments/1/alternate/test') ? _ag5._tap(anotherFalsy, 'arguments/1/alternate/consequent') : _ag5._tap(truthy, 'arguments/1/alternate/alternate'), 'arguments/1'), new _AssertionMessage1(_am4, -1));
+assert(_ag1._rec(_ag1._tap(foo, 'arguments/0/test') ? _ag1._tap(bar, 'arguments/0/consequent') : _ag1._tap(baz, 'arguments/0/alternate')), new _AssertionMessage1(_am1, -1));
+assert(_ag2._rec(_ag2._tap(falsy, 'arguments/0/test') ? _ag2._tap(truthy, 'arguments/0/consequent') : _ag2._tap(truthy, 'arguments/0/alternate/test') ? _ag2._tap(anotherFalsy, 'arguments/0/alternate/consequent') : _ag2._tap(truthy, 'arguments/0/alternate/alternate')), new _AssertionMessage1(_am2, -1));
+assert(_ag3._rec(_ag3._tap(foo(), 'arguments/0/test') ? _ag3._tap(_ag3._tap(bar, 'arguments/0/consequent/object').baz, 'arguments/0/consequent') : _ag3._tap(typeof goo, 'arguments/0/alternate')), new _AssertionMessage1(_am3, -1));
+assert.equal(_ag4._rec(_ag4._tap(foo, 'arguments/0/test') ? _ag4._tap(bar, 'arguments/0/consequent') : _ag4._tap(baz, 'arguments/0/alternate')), _ag5._rec(_ag5._tap(falsy, 'arguments/1/test') ? _ag5._tap(truthy, 'arguments/1/consequent') : _ag5._tap(truthy, 'arguments/1/alternate/test') ? _ag5._tap(anotherFalsy, 'arguments/1/alternate/consequent') : _ag5._tap(truthy, 'arguments/1/alternate/alternate')), new _AssertionMessage1(_am4, -1));

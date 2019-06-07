@@ -1014,6 +1014,25 @@
                               "alternate": null
                             },
                             {
+                              "type": "IfStatement",
+                              "test": {
+                                "type": "UnaryExpression",
+                                "operator": "!",
+                                "prefix": true,
+                                "argument": {
+                                  "type": "Identifier",
+                                  "name": "espath"
+                                }
+                              },
+                              "consequent": {
+                                "type": "ReturnStatement",
+                                "argument": {
+                                  "type": "ThisExpression"
+                                }
+                              },
+                              "alternate": null
+                            },
+                            {
                               "type": "VariableDeclaration",
                               "declarations": [
                                 {
@@ -1343,83 +1362,6 @@
                               "alternate": null
                             },
                             {
-                              "type": "ExpressionStatement",
-                              "expression": {
-                                "type": "AssignmentExpression",
-                                "operator": "=",
-                                "left": {
-                                  "type": "MemberExpression",
-                                  "object": {
-                                    "type": "ThisExpression"
-                                  },
-                                  "property": {
-                                    "type": "Identifier",
-                                    "name": "_recorded"
-                                  },
-                                  "computed": false
-                                },
-                                "right": {
-                                  "type": "ObjectExpression",
-                                  "properties": [
-                                    {
-                                      "type": "Property",
-                                      "key": {
-                                        "type": "Identifier",
-                                        "name": "value"
-                                      },
-                                      "value": {
-                                        "type": "Identifier",
-                                        "name": "value"
-                                      },
-                                      "kind": "init",
-                                      "method": false,
-                                      "shorthand": true,
-                                      "computed": false
-                                    },
-                                    {
-                                      "type": "Property",
-                                      "key": {
-                                        "type": "Identifier",
-                                        "name": "logs"
-                                      },
-                                      "value": {
-                                        "type": "CallExpression",
-                                        "callee": {
-                                          "type": "MemberExpression",
-                                          "object": {
-                                            "type": "ArrayExpression",
-                                            "elements": []
-                                          },
-                                          "property": {
-                                            "type": "Identifier",
-                                            "name": "concat"
-                                          },
-                                          "computed": false
-                                        },
-                                        "arguments": [
-                                          {
-                                            "type": "MemberExpression",
-                                            "object": {
-                                              "type": "ThisExpression"
-                                            },
-                                            "property": {
-                                              "type": "Identifier",
-                                              "name": "_logs"
-                                            },
-                                            "computed": false
-                                          }
-                                        ]
-                                      },
-                                      "kind": "init",
-                                      "method": false,
-                                      "shorthand": false,
-                                      "computed": false
-                                    }
-                                  ]
-                                }
-                              }
-                            },
-                            {
                               "type": "ReturnStatement",
                               "argument": {
                                 "type": "ThisExpression"
@@ -1431,6 +1373,96 @@
                         "finalizer": {
                           "type": "BlockStatement",
                           "body": [
+                            {
+                              "type": "IfStatement",
+                              "test": {
+                                "type": "Identifier",
+                                "name": "empowered"
+                              },
+                              "consequent": {
+                                "type": "BlockStatement",
+                                "body": [
+                                  {
+                                    "type": "ExpressionStatement",
+                                    "expression": {
+                                      "type": "AssignmentExpression",
+                                      "operator": "=",
+                                      "left": {
+                                        "type": "MemberExpression",
+                                        "object": {
+                                          "type": "ThisExpression"
+                                        },
+                                        "property": {
+                                          "type": "Identifier",
+                                          "name": "_recorded"
+                                        },
+                                        "computed": false
+                                      },
+                                      "right": {
+                                        "type": "ObjectExpression",
+                                        "properties": [
+                                          {
+                                            "type": "Property",
+                                            "key": {
+                                              "type": "Identifier",
+                                              "name": "value"
+                                            },
+                                            "value": {
+                                              "type": "Identifier",
+                                              "name": "value"
+                                            },
+                                            "kind": "init",
+                                            "method": false,
+                                            "shorthand": true,
+                                            "computed": false
+                                          },
+                                          {
+                                            "type": "Property",
+                                            "key": {
+                                              "type": "Identifier",
+                                              "name": "logs"
+                                            },
+                                            "value": {
+                                              "type": "CallExpression",
+                                              "callee": {
+                                                "type": "MemberExpression",
+                                                "object": {
+                                                  "type": "ArrayExpression",
+                                                  "elements": []
+                                                },
+                                                "property": {
+                                                  "type": "Identifier",
+                                                  "name": "concat"
+                                                },
+                                                "computed": false
+                                              },
+                                              "arguments": [
+                                                {
+                                                  "type": "MemberExpression",
+                                                  "object": {
+                                                    "type": "ThisExpression"
+                                                  },
+                                                  "property": {
+                                                    "type": "Identifier",
+                                                    "name": "_logs"
+                                                  },
+                                                  "computed": false
+                                                }
+                                              ]
+                                            },
+                                            "kind": "init",
+                                            "method": false,
+                                            "shorthand": false,
+                                            "computed": false
+                                          }
+                                        ]
+                                      }
+                                    }
+                                  }
+                                ]
+                              },
+                              "alternate": null
+                            },
                             {
                               "type": "ExpressionStatement",
                               "expression": {
