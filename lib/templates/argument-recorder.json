@@ -632,7 +632,7 @@
                             "type": "VariableDeclarator",
                             "id": {
                               "type": "Identifier",
-                              "name": "argconf"
+                              "name": "conf"
                             },
                             "init": {
                               "type": "MemberExpression",
@@ -644,7 +644,7 @@
                                 },
                                 "property": {
                                   "type": "Identifier",
-                                  "name": "args"
+                                  "name": "params"
                                 },
                                 "computed": false
                               },
@@ -686,7 +686,7 @@
                                 "type": "MemberExpression",
                                 "object": {
                                   "type": "Identifier",
-                                  "name": "argconf"
+                                  "name": "conf"
                                 },
                                 "property": {
                                   "type": "Identifier",
