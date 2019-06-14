@@ -12,7 +12,7 @@ describe('metadata generator function', () => {
       'const version=2,patterns=[',
       '{',
       "pattern:'assert(value, [message])',",
-      'args:[',
+      'params:[',
       "{index:0,name:'value',kind:'mandatory'},",
       "{index:1,name:'message',kind:'optional',message:true}",
       ']',
@@ -30,14 +30,14 @@ describe('metadata generator function', () => {
       patterns: [
         {
           pattern: 'assert(value, [message])',
-          args: [
+          params: [
             { name: 'value', options: { depth: 2 } },
             { name: 'message', message: true }
           ]
         },
         {
           pattern: 'assert.regex(re, a, b)',
-          args: [
+          params: [
             { name: 're', regex: /^re/ },
             { name: 'a', foo: undefined, bar: null, minus: -1, edge: -0 },
             { name: 'b', 'kebab-case': 'foo-bar' }
@@ -50,14 +50,14 @@ describe('metadata generator function', () => {
       'const version=2,patterns=[',
       '{',
       "pattern:'assert(value, [message])',",
-      'args:[',
+      'params:[',
       "{index:0,name:'value',kind:'mandatory',options:{depth:2}},",
       "{index:1,name:'message',kind:'optional',message:true}",
       ']',
       '},',
       '{',
       "pattern:'assert.regex(re, a, b)',",
-      'args:[',
+      'params:[',
       "{index:0,name:'re',kind:'mandatory',regex:/^re/},",
       "{index:1,name:'a',kind:'mandatory',foo:undefined,bar:null,minus:-1,edge:-0},",
       "{index:2,name:'b',kind:'mandatory','kebab-case':'foo-bar'}",

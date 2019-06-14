@@ -2,7 +2,7 @@ var _pwmeta1 = (ptnidx, content, filepath, line, extra) => {
     const version = 2, patterns = [
             {
                 pattern: 'assert(value, [message])',
-                args: [
+                params: [
                     {
                         index: 0,
                         name: 'value',
@@ -18,7 +18,7 @@ var _pwmeta1 = (ptnidx, content, filepath, line, extra) => {
             },
             {
                 pattern: 'assert.ok(value, [message])',
-                args: [
+                params: [
                     {
                         index: 0,
                         name: 'value',
@@ -34,7 +34,7 @@ var _pwmeta1 = (ptnidx, content, filepath, line, extra) => {
             },
             {
                 pattern: 'assert.equal(actual, expected, [message])',
-                args: [
+                params: [
                     {
                         index: 0,
                         name: 'actual',
@@ -55,7 +55,7 @@ var _pwmeta1 = (ptnidx, content, filepath, line, extra) => {
             },
             {
                 pattern: 'assert.notEqual(actual, expected, [message])',
-                args: [
+                params: [
                     {
                         index: 0,
                         name: 'actual',
@@ -76,7 +76,7 @@ var _pwmeta1 = (ptnidx, content, filepath, line, extra) => {
             },
             {
                 pattern: 'assert.strictEqual(actual, expected, [message])',
-                args: [
+                params: [
                     {
                         index: 0,
                         name: 'actual',
@@ -97,7 +97,7 @@ var _pwmeta1 = (ptnidx, content, filepath, line, extra) => {
             },
             {
                 pattern: 'assert.notStrictEqual(actual, expected, [message])',
-                args: [
+                params: [
                     {
                         index: 0,
                         name: 'actual',
@@ -118,16 +118,18 @@ var _pwmeta1 = (ptnidx, content, filepath, line, extra) => {
             },
             {
                 pattern: 'assert.deepEqual(actual, expected, [message])',
-                args: [
+                params: [
                     {
                         index: 0,
                         name: 'actual',
-                        kind: 'mandatory'
+                        kind: 'mandatory',
+                        options: { maxDepth: 2 }
                     },
                     {
                         index: 1,
                         name: 'expected',
-                        kind: 'mandatory'
+                        kind: 'mandatory',
+                        options: { maxDepth: 2 }
                     },
                     {
                         index: 2,
@@ -139,16 +141,18 @@ var _pwmeta1 = (ptnidx, content, filepath, line, extra) => {
             },
             {
                 pattern: 'assert.notDeepEqual(actual, expected, [message])',
-                args: [
+                params: [
                     {
                         index: 0,
                         name: 'actual',
-                        kind: 'mandatory'
+                        kind: 'mandatory',
+                        options: { maxDepth: 2 }
                     },
                     {
                         index: 1,
                         name: 'expected',
-                        kind: 'mandatory'
+                        kind: 'mandatory',
+                        options: { maxDepth: 2 }
                     },
                     {
                         index: 2,
@@ -160,16 +164,18 @@ var _pwmeta1 = (ptnidx, content, filepath, line, extra) => {
             },
             {
                 pattern: 'assert.deepStrictEqual(actual, expected, [message])',
-                args: [
+                params: [
                     {
                         index: 0,
                         name: 'actual',
-                        kind: 'mandatory'
+                        kind: 'mandatory',
+                        options: { maxDepth: 2 }
                     },
                     {
                         index: 1,
                         name: 'expected',
-                        kind: 'mandatory'
+                        kind: 'mandatory',
+                        options: { maxDepth: 2 }
                     },
                     {
                         index: 2,
@@ -181,16 +187,110 @@ var _pwmeta1 = (ptnidx, content, filepath, line, extra) => {
             },
             {
                 pattern: 'assert.notDeepStrictEqual(actual, expected, [message])',
-                args: [
+                params: [
                     {
                         index: 0,
                         name: 'actual',
-                        kind: 'mandatory'
+                        kind: 'mandatory',
+                        options: { maxDepth: 2 }
                     },
                     {
                         index: 1,
                         name: 'expected',
-                        kind: 'mandatory'
+                        kind: 'mandatory',
+                        options: { maxDepth: 2 }
+                    },
+                    {
+                        index: 2,
+                        name: 'message',
+                        kind: 'optional',
+                        message: true
+                    }
+                ]
+            },
+            {
+                pattern: 'assert.throws(fn, [error], [message])',
+                params: [
+                    {
+                        index: 0,
+                        name: 'fn',
+                        kind: 'mandatory',
+                        block: true
+                    },
+                    {
+                        index: 1,
+                        name: 'error',
+                        kind: 'optional',
+                        block: true
+                    },
+                    {
+                        index: 2,
+                        name: 'message',
+                        kind: 'optional',
+                        message: true
+                    }
+                ]
+            },
+            {
+                pattern: 'assert.doesNotThrow(fn, [error], [message])',
+                params: [
+                    {
+                        index: 0,
+                        name: 'fn',
+                        kind: 'mandatory',
+                        block: true
+                    },
+                    {
+                        index: 1,
+                        name: 'error',
+                        kind: 'optional',
+                        block: true
+                    },
+                    {
+                        index: 2,
+                        name: 'message',
+                        kind: 'optional',
+                        message: true
+                    }
+                ]
+            },
+            {
+                pattern: 'assert.rejects(asyncFn, [error], [message])',
+                params: [
+                    {
+                        index: 0,
+                        name: 'asyncFn',
+                        kind: 'mandatory',
+                        block: true
+                    },
+                    {
+                        index: 1,
+                        name: 'error',
+                        kind: 'optional',
+                        block: true
+                    },
+                    {
+                        index: 2,
+                        name: 'message',
+                        kind: 'optional',
+                        message: true
+                    }
+                ]
+            },
+            {
+                pattern: 'assert.doesNotReject(asyncFn, [error], [message])',
+                params: [
+                    {
+                        index: 0,
+                        name: 'asyncFn',
+                        kind: 'mandatory',
+                        block: true
+                    },
+                    {
+                        index: 1,
+                        name: 'error',
+                        kind: 'optional',
+                        block: true
                     },
                     {
                         index: 2,
@@ -232,8 +332,8 @@ var _ArgumentRecorder1 = function () {
             this._recorded = null;
             this._val = null;
             this._idx = matchIndex;
-            const argconf = am.args[matchIndex];
-            this._isBlock = !!argconf.block;
+            const conf = am.params[matchIndex];
+            this._isBlock = !!conf.block;
         }
         metadata() {
             return this._am;

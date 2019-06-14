@@ -30,10 +30,70 @@ describe('espower.defaultOptions()', function () {
       'assert.notEqual(actual, expected, [message])',
       'assert.strictEqual(actual, expected, [message])',
       'assert.notStrictEqual(actual, expected, [message])',
-      'assert.deepEqual(actual, expected, [message])',
-      'assert.notDeepEqual(actual, expected, [message])',
-      'assert.deepStrictEqual(actual, expected, [message])',
-      'assert.notDeepStrictEqual(actual, expected, [message])'
+      {
+        pattern: 'assert.deepEqual(actual, expected, [message])',
+        params: [
+          { name: 'actual', options: { maxDepth: 2 } },
+          { name: 'expected', options: { maxDepth: 2 } },
+          { name: 'message', message: true }
+        ]
+      },
+      {
+        pattern: 'assert.notDeepEqual(actual, expected, [message])',
+        params: [
+          { name: 'actual', options: { maxDepth: 2 } },
+          { name: 'expected', options: { maxDepth: 2 } },
+          { name: 'message', message: true }
+        ]
+      },
+      {
+        pattern: 'assert.deepStrictEqual(actual, expected, [message])',
+        params: [
+          { name: 'actual', options: { maxDepth: 2 } },
+          { name: 'expected', options: { maxDepth: 2 } },
+          { name: 'message', message: true }
+        ]
+      },
+      {
+        pattern: 'assert.notDeepStrictEqual(actual, expected, [message])',
+        params: [
+          { name: 'actual', options: { maxDepth: 2 } },
+          { name: 'expected', options: { maxDepth: 2 } },
+          { name: 'message', message: true }
+        ]
+      },
+      {
+        pattern: 'assert.throws(fn, [error], [message])',
+        params: [
+          { name: 'fn', block: true },
+          { name: 'error', block: true },
+          { name: 'message', message: true }
+        ]
+      },
+      {
+        pattern: 'assert.doesNotThrow(fn, [error], [message])',
+        params: [
+          { name: 'fn', block: true },
+          { name: 'error', block: true },
+          { name: 'message', message: true }
+        ]
+      },
+      {
+        pattern: 'assert.rejects(asyncFn, [error], [message])',
+        params: [
+          { name: 'asyncFn', block: true },
+          { name: 'error', block: true },
+          { name: 'message', message: true }
+        ]
+      },
+      {
+        pattern: 'assert.doesNotReject(asyncFn, [error], [message])',
+        params: [
+          { name: 'asyncFn', block: true },
+          { name: 'error', block: true },
+          { name: 'message', message: true }
+        ]
+      }
     ]);
   });
 });
@@ -108,7 +168,7 @@ describe('instrumentation tests for options', function () {
         ]
       },
       prelude: [
-        "var _pwmeta1=(ptnidx,content,filepath,line,extra)=>{const version=2,patterns=[{pattern:'refute(value)',args:[{index:0,name:'value',kind:'mandatory'}]}];return Object.assign({version,content,filepath,line},extra,patterns[ptnidx]);};"
+        "var _pwmeta1=(ptnidx,content,filepath,line,extra)=>{const version=2,patterns=[{pattern:'refute(value)',params:[{index:0,name:'value',kind:'mandatory'}]}];return Object.assign({version,content,filepath,line},extra,patterns[ptnidx]);};"
       ],
       postlude: [
         "var _am1=_pwmeta1(0,'refute(falsyStr)','path/to/some_test.js',1);",
@@ -126,7 +186,7 @@ describe('instrumentation tests for options', function () {
         ]
       },
       prelude: [
-        "var _pwmeta1=(ptnidx,content,filepath,line,extra)=>{const version=2,patterns=[{pattern:'refute.equal(actual, expected)',args:[{index:0,name:'actual',kind:'mandatory'},{index:1,name:'expected',kind:'mandatory'}]}];return Object.assign({version,content,filepath,line},extra,patterns[ptnidx]);};"
+        "var _pwmeta1=(ptnidx,content,filepath,line,extra)=>{const version=2,patterns=[{pattern:'refute.equal(actual, expected)',params:[{index:0,name:'actual',kind:'mandatory'},{index:1,name:'expected',kind:'mandatory'}]}];return Object.assign({version,content,filepath,line},extra,patterns[ptnidx]);};"
       ],
       postlude: [
         "var _am1=_pwmeta1(0,'refute.equal(foo, bar)','path/to/some_test.js',1);",
@@ -146,7 +206,7 @@ describe('instrumentation tests for options', function () {
         ]
       },
       prelude: [
-        "var _pwmeta1=(ptnidx,content,filepath,line,extra)=>{const version=2,patterns=[{pattern:'browser.assert.element(selection, [message])',args:[{index:0,name:'selection',kind:'mandatory'},{index:1,name:'message',kind:'optional',message:true}]}];return Object.assign({version,content,filepath,line},extra,patterns[ptnidx]);};"
+        "var _pwmeta1=(ptnidx,content,filepath,line,extra)=>{const version=2,patterns=[{pattern:'browser.assert.element(selection, [message])',params:[{index:0,name:'selection',kind:'mandatory'},{index:1,name:'message',kind:'optional',message:true}]}];return Object.assign({version,content,filepath,line},extra,patterns[ptnidx]);};"
       ],
       postlude: [
         "var _am1=_pwmeta1(0,'browser.assert.element(foo)','path/to/some_test.js',1);",
@@ -336,7 +396,7 @@ describe('lineSeparator', function () {
 });
 
 describe('incoming SourceMap support', function () {
-  const metagen = "var _pwmeta1=(ptnidx,content,filepath,line,extra)=>{const version=2,patterns=[{pattern:'assert.equal(actual, expected, [message])',args:[{index:0,name:'actual',kind:'mandatory'},{index:1,name:'expected',kind:'mandatory'},{index:2,name:'message',kind:'optional',message:true}]}];return Object.assign({version,content,filepath,line},extra,patterns[ptnidx]);};";
+  const metagen = "var _pwmeta1=(ptnidx,content,filepath,line,extra)=>{const version=2,patterns=[{pattern:'assert.equal(actual, expected, [message])',params:[{index:0,name:'actual',kind:'mandatory'},{index:1,name:'expected',kind:'mandatory'},{index:2,name:'message',kind:'optional',message:true}]}];return Object.assign({version,content,filepath,line},extra,patterns[ptnidx]);};";
 
   function incomingSourceMapTest (testName, opts) {
     it(testName, function () {
@@ -484,7 +544,7 @@ describe('sourceRoot option', function () {
         sourceFile: config.incomingFilepath
       },
       prelude: [
-        "var _pwmeta1=(ptnidx,content,filepath,line,extra)=>{const version=2,patterns=[{pattern:'assert(value)',args:[{index:0,name:'value',kind:'mandatory'}]}];return Object.assign({version,content,filepath,line},extra,patterns[ptnidx]);};"
+        "var _pwmeta1=(ptnidx,content,filepath,line,extra)=>{const version=2,patterns=[{pattern:'assert(value)',params:[{index:0,name:'value',kind:'mandatory'}]}];return Object.assign({version,content,filepath,line},extra,patterns[ptnidx]);};"
       ],
       postlude: [
         `var _am1=_pwmeta1(0,'assert(falsyStr)','${config.filepathInGeneratedCode}',1);`,
