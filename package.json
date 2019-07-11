@@ -1,7 +1,7 @@
 {
   "name": "espower",
   "description": "Power Assert feature instrumentor based on the ECMAScript AST",
-  "version": "2.1.2",
+  "version": "3.0.0-beta.1-pre",
   "author": {
     "name": "Takuto Wada",
     "email": "takuto.wada@gmail.com",
