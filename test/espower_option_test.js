@@ -1,7 +1,7 @@
 'use strict';
 
 const { assertPreludeAndPostlude, testGeneratedCode } = require('./helper');
-
+const pkg = require('../package.json');
 var espower = require('..');
 var acorn = require('acorn');
 var escodegen = require('escodegen');
@@ -169,7 +169,7 @@ describe('instrumentation tests for options', function () {
       },
       prelude: [
         `var _pwptn1=JSON.parse('[{"pattern":"refute(value)","params":[{"index":0,"name":"value","kind":"mandatory"}]}]');`,
-        `var _pwmeta1=(ptnidx,content,filepath,line,extra)=>{return Object.assign({version:2,content,filepath,line},extra,_pwptn1[ptnidx]);};`
+        `var _pwmeta1=(ptnidx,content,filepath,line,extra)=>{return Object.assign({transpiler:'espower',version:'${pkg.version}',content,filepath,line},extra,_pwptn1[ptnidx]);};`
       ],
       postlude: [
         "var _am1=_pwmeta1(0,'refute(falsyStr)','path/to/some_test.js',1);",
@@ -188,7 +188,7 @@ describe('instrumentation tests for options', function () {
       },
       prelude: [
         `var _pwptn1=JSON.parse('[{"pattern":"refute.equal(actual, expected)","params":[{"index":0,"name":"actual","kind":"mandatory"},{"index":1,"name":"expected","kind":"mandatory"}]}]');`,
-        `var _pwmeta1=(ptnidx,content,filepath,line,extra)=>{return Object.assign({version:2,content,filepath,line},extra,_pwptn1[ptnidx]);};`
+        `var _pwmeta1=(ptnidx,content,filepath,line,extra)=>{return Object.assign({transpiler:'espower',version:'${pkg.version}',content,filepath,line},extra,_pwptn1[ptnidx]);};`
       ],
       postlude: [
         "var _am1=_pwmeta1(0,'refute.equal(foo, bar)','path/to/some_test.js',1);",
@@ -209,7 +209,7 @@ describe('instrumentation tests for options', function () {
       },
       prelude: [
         `var _pwptn1=JSON.parse('[{"pattern":"browser.assert.element(selection, [message])","params":[{"index":0,"name":"selection","kind":"mandatory"},{"index":1,"name":"message","kind":"optional","message":true}]}]');`,
-        `var _pwmeta1=(ptnidx,content,filepath,line,extra)=>{return Object.assign({version:2,content,filepath,line},extra,_pwptn1[ptnidx]);};`
+        `var _pwmeta1=(ptnidx,content,filepath,line,extra)=>{return Object.assign({transpiler:'espower',version:'${pkg.version}',content,filepath,line},extra,_pwptn1[ptnidx]);};`
       ],
       postlude: [
         "var _am1=_pwmeta1(0,'browser.assert.element(foo)','path/to/some_test.js',1);",
@@ -399,7 +399,7 @@ describe('lineSeparator', function () {
 });
 
 describe('incoming SourceMap support', function () {
-  const metagen = `var _pwptn1=JSON.parse('[{"pattern":"assert.equal(actual, expected, [message])","params":[{"index":0,"name":"actual","kind":"mandatory"},{"index":1,"name":"expected","kind":"mandatory"},{"index":2,"name":"message","kind":"optional","message":true}]}]');var _pwmeta1=(ptnidx,content,filepath,line,extra)=>{return Object.assign({version:2,content,filepath,line},extra,_pwptn1[ptnidx]);};`;
+  const metagen = `var _pwptn1=JSON.parse('[{"pattern":"assert.equal(actual, expected, [message])","params":[{"index":0,"name":"actual","kind":"mandatory"},{"index":1,"name":"expected","kind":"mandatory"},{"index":2,"name":"message","kind":"optional","message":true}]}]');var _pwmeta1=(ptnidx,content,filepath,line,extra)=>{return Object.assign({transpiler:'espower',version:'${pkg.version}',content,filepath,line},extra,_pwptn1[ptnidx]);};`;
 
   function incomingSourceMapTest (testName, opts) {
     it(testName, function () {
@@ -548,7 +548,7 @@ describe('sourceRoot option', function () {
       },
       prelude: [
         `var _pwptn1=JSON.parse('[{"pattern":"assert(value)","params":[{"index":0,"name":"value","kind":"mandatory"}]}]');`,
-        `var _pwmeta1=(ptnidx,content,filepath,line,extra)=>{return Object.assign({version:2,content,filepath,line},extra,_pwptn1[ptnidx]);};`
+        `var _pwmeta1=(ptnidx,content,filepath,line,extra)=>{return Object.assign({transpiler:'espower',version:'${pkg.version}',content,filepath,line},extra,_pwptn1[ptnidx]);};`
       ],
       postlude: [
         `var _am1=_pwmeta1(0,'assert(falsyStr)','${config.filepathInGeneratedCode}',1);`,
