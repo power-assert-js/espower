@@ -114,7 +114,7 @@ describe('instrumentation tests for options', function () {
         if (key.lastIndexOf('_', 0) === 0) {
           continue;
         }
-        if (obj.hasOwnProperty(key)) {
+        if (Object.prototype.hasOwnProperty.call(obj, key)) {
           val = obj[key];
           if (typeof val === 'object' && val !== null) {
             if (val instanceof RegExp) {
@@ -168,7 +168,7 @@ describe('instrumentation tests for options', function () {
         ]
       },
       prelude: [
-        `var _pwptn1=JSON.parse('[{"pattern":"refute(value)","params":[{"index":0,"name":"value","kind":"mandatory"}]}]');`,
+        'var _pwptn1=JSON.parse(\'[{"pattern":"refute(value)","params":[{"index":0,"name":"value","kind":"mandatory"}]}]\');',
         `var _pwmeta1=(ptnidx,content,filepath,line,extra)=>{return Object.assign({transpiler:'espower',version:'${pkg.version}',content,filepath,line},extra,_pwptn1[ptnidx]);};`
       ],
       postlude: [
@@ -187,7 +187,7 @@ describe('instrumentation tests for options', function () {
         ]
       },
       prelude: [
-        `var _pwptn1=JSON.parse('[{"pattern":"refute.equal(actual, expected)","params":[{"index":0,"name":"actual","kind":"mandatory"},{"index":1,"name":"expected","kind":"mandatory"}]}]');`,
+        'var _pwptn1=JSON.parse(\'[{"pattern":"refute.equal(actual, expected)","params":[{"index":0,"name":"actual","kind":"mandatory"},{"index":1,"name":"expected","kind":"mandatory"}]}]\');',
         `var _pwmeta1=(ptnidx,content,filepath,line,extra)=>{return Object.assign({transpiler:'espower',version:'${pkg.version}',content,filepath,line},extra,_pwptn1[ptnidx]);};`
       ],
       postlude: [
@@ -208,7 +208,7 @@ describe('instrumentation tests for options', function () {
         ]
       },
       prelude: [
-        `var _pwptn1=JSON.parse('[{"pattern":"browser.assert.element(selection, [message])","params":[{"index":0,"name":"selection","kind":"mandatory"},{"index":1,"name":"message","kind":"optional","message":true}]}]');`,
+        'var _pwptn1=JSON.parse(\'[{"pattern":"browser.assert.element(selection, [message])","params":[{"index":0,"name":"selection","kind":"mandatory"},{"index":1,"name":"message","kind":"optional","message":true}]}]\');',
         `var _pwmeta1=(ptnidx,content,filepath,line,extra)=>{return Object.assign({transpiler:'espower',version:'${pkg.version}',content,filepath,line},extra,_pwptn1[ptnidx]);};`
       ],
       postlude: [
@@ -436,11 +436,11 @@ describe('incoming SourceMap support', function () {
         ],
         postlude: [
           `var _am1=_pwmeta1(0,'assert.equal(str, anotherStr)','${opts.expectedPath}',4);`,
-          `var _ag1=new _ArgumentRecorder1(assert.equal,_am1,0);`,
-          `var _ag2=new _ArgumentRecorder1(assert.equal,_am1,1);`,
-          `var str='foo';`,
-          `var anotherStr='bar';`,
-          `assert.equal(_ag1._rec(str,'arguments/0'),_ag2._rec(anotherStr,'arguments/1'),new _AssertionMessage1(_am1,-1));`
+          'var _ag1=new _ArgumentRecorder1(assert.equal,_am1,0);',
+          'var _ag2=new _ArgumentRecorder1(assert.equal,_am1,1);',
+          'var str=\'foo\';',
+          'var anotherStr=\'bar\';',
+          'assert.equal(_ag1._rec(str,\'arguments/0\'),_ag2._rec(anotherStr,\'arguments/1\'),new _AssertionMessage1(_am1,-1));'
         ]
       });
     });
@@ -547,7 +547,7 @@ describe('sourceRoot option', function () {
         sourceFile: config.incomingFilepath
       },
       prelude: [
-        `var _pwptn1=JSON.parse('[{"pattern":"assert(value)","params":[{"index":0,"name":"value","kind":"mandatory"}]}]');`,
+        'var _pwptn1=JSON.parse(\'[{"pattern":"assert(value)","params":[{"index":0,"name":"value","kind":"mandatory"}]}]\');',
         `var _pwmeta1=(ptnidx,content,filepath,line,extra)=>{return Object.assign({transpiler:'espower',version:'${pkg.version}',content,filepath,line},extra,_pwptn1[ptnidx]);};`
       ],
       postlude: [
