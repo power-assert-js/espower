@@ -19,11 +19,11 @@
   "dependencies": {
     "call-matcher": "^2.0.0",
     "call-signature": "^0.0.2",
-    "escodegen": "^1.7.0",
+    "escodegen": "^2.0.0",
     "escope": "^3.3.0",
     "espower-location-detector": "^2.0.0",
     "espurify": "^2.0.0",
-    "estraverse": "^4.1.0"
+    "estraverse": "^5.0.0"
   },
   "devDependencies": {
     "acorn": "^8.0.0",
