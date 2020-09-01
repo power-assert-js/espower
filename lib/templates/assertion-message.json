@@ -754,18 +754,8 @@
                             "name": "msg"
                           },
                           "right": {
-                            "type": "TemplateLiteral",
-                            "quasis": [
-                              {
-                                "type": "TemplateElement",
-                                "tail": true,
-                                "value": {
-                                  "raw": "\\n",
-                                  "cooked": "\n"
-                                }
-                              }
-                            ],
-                            "expressions": []
+                            "type": "Literal",
+                            "value": "\n"
                           }
                         }
                       },

@@ -135,7 +135,7 @@ var _AssertionMessage1 = function () {
             msg += `${ _s }# ${ this._am.filepath }:${ this._am.line }`;
             msg += `${ _s }${ this._am.content }`;
             msg += `${ _s }[WARNING] power-assert is not configured. see: https://github.com/power-assert-js/power-assert`;
-            msg += `\n`;
+            msg += '\n';
             return msg;
         }
     }
